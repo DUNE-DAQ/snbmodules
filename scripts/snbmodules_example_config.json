@@ -1,0 +1,16 @@
+{
+  "boot": {
+    "base_command_port": 4444,
+    "disable_trace": false,
+    "opmon_impl": "local",
+    "ers_impl": "local",
+    "pocket_url": "127.0.0.1",
+    "image": "",
+    "use_k8s": false
+  },
+
+  "snbmodules": {
+    "num_snbfiletransfers": 2,
+    "some_configured_value": 27182
+  }
+}
