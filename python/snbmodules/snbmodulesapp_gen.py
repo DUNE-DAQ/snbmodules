@@ -16,7 +16,7 @@ from daqconf.core.app import App, ModuleGraph
 from daqconf.core.daqmodule import DAQModule
 #from daqconf.core.conf_utils import Endpoint, Direction
 
-def get_snbmodules_app(nickname, num_snbfiletransfers, prefix_snb_connections, host="localhost"):
+def get_snbmodules_app(nickname, num_snbfiletransfers, some_configured_value, host="localhost"):
     """
     Here the configuration for an entire daq_application instance using DAQModules from snbmodules is generated.
     """
@@ -26,7 +26,7 @@ def get_snbmodules_app(nickname, num_snbfiletransfers, prefix_snb_connections, h
     for i in range(num_snbfiletransfers):
         modules += [DAQModule(name = f"nickname{i}", 
                               plugin = "SNBFileTransfer", 
-                              conf = snbfiletransfer.Conf(prefix_snb_connections = prefix_snb_connections
+                              conf = snbfiletransfer.Conf(some_configured_value = some_configured_value
                                 )
                     )]
 

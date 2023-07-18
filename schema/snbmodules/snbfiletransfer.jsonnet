@@ -10,41 +10,20 @@ local types = {
     uint8 :   s.number(  "uint8",   "u8",          doc="An unsigned integer of 8 bytes"),
     float4 :  s.number(  "float4",  "f4",          doc="A float of 4 bytes"),
     double8 : s.number(  "double8", "f8",          doc="A double of 8 bytes"),
-    boolean :  s.boolean( "Boolean",                doc="A boolean"),
-    string :   s.string(  "String",   		   doc="A string"),
-    string_array :   s.sequence(  "String Array",   		   doc="A string array"),  
-    json :   s.any(  "nlohmann::json",   		   doc="A json object"),   
-    protocol : s.enum("Protocols", ["BITTORRENT", "RCLONE", "SCP", "dummy"], docs="Protocols for file transfer"),
+    boolean:  s.boolean( "Boolean",                doc="A boolean"),
+    string:   s.string(  "String",   		   doc="A string"),   
 
+    // TO snbmodules DEVELOPERS: PLEASE DELETE THIS FOLLOWING COMMENT AFTER READING IT
+    // The following code is an example of a configuration record
+    // written in jsonnet. In the real world it would be written so as
+    // to allow the relevant members of SNBFileTransfer to be configured by
+    // Run Control
+  
     conf: s.record("Conf", [
-                            s.field("client_ip", self.string, "0.0.0.0:0",
-                                           doc="IPV4:PORT address of the client"),
-                            s.field("work_dir", self.string, "./",
-                                           doc="Path to the directory where the files are stored for this client"),
+                           s.field("some_configured_value", self.int4, 999999,
+                                           doc="This line is where you'd document the value"),
                            ],
-                   doc="Configuration of a new client"),
-
-    conf: s.record("Command", [
-                           s.field("transfer_id", self.string, "transfer0",
-                                           doc="ID of the transfer to be paused/resumed/cancelled"),
-                           ],
-                   doc="Configuration for standard commands (pause, resume, cancel)"),
-
-    conf: s.record("NewTransferCommand", [
-                           s.field("transfer_id", self.string, "transfer0",
-                                           doc="ID of the transfer to be created"),
-                           s.field("source", self.string, "client0",
-                                           doc="Client ID of the source of the transfer"),
-                           s.field("dests", self.string_array, [],
-                                           doc="List of the destination client_IDs of the transfer"),
-                           s.field("files", self.string_array, [],
-                                           doc="List of path to files to be transferred in source client"),
-                           s.field("protocol", self.protocol, "dummy",
-                                           doc="Communication protocol to be used for the transfer"),
-                           s.field("protocol_args", self.json, "{}",
-                                           doc="Specific arguments for the protocol, they may vary depending on the protocol used"),
-                           ],
-                   doc="Configuration for the creation of a new transfer"),
+                   doc="This configuration is for developer education only"),
 
 };
 

@@ -20,8 +20,8 @@ local cs = {
     monitoring_dest: s.enum(     "MonitoringDest", ["local", "cern", "pocket"]),
 
     snbmodules: s.record("snbmodules", [
+        s.field( "some_configured_value", self.int4, default=31415, doc="A value which configures the SNBFileTransfer DAQModule instance"),
         s.field( "num_snbfiletransfers", self.int4, default=1, doc="A value which configures the number of instances of SNBFileTransfer"),
-        s.field( "prefix_snb_connections", self.string, default="snbmodules", doc="Set the prefix for the snb connections"),
     ]),
 
     snbmodules_gen: s.record("snbmodules_gen", [

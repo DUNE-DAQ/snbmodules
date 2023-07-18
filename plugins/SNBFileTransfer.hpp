@@ -1,64 +1,69 @@
 /**
- * @file SNBFileTransfer.hpp Module to transfer files between nodes
+ * @file SNBFileTransfer.hpp
  *
- * This is part of the DUNE DAQ , copyright 2020.
+ * Developer(s) of this DAQModule have yet to replace this line with a brief description of the DAQModule.
+ *
+ * This is part of the DUNE DAQ Software Suite, copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
-
-#include "snbmodules/transfer_client.hpp"
-#include "snbmodules/common/protocols_enum.hpp"
+#ifndef SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_
+#define SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_
 
 #include "appfwk/DAQModule.hpp"
 
-#include "utilities/WorkerThread.hpp"
-
-#include <memory>
+#include <atomic>
+#include <limits>
 #include <string>
-#include <vector>
 
-namespace dunedaq
+namespace dunedaq::snbmodules {
+
+class SNBFileTransfer : public dunedaq::appfwk::DAQModule
 {
-    namespace snbmodules
-    {
-        /// @brief SNBFileTransfer is a DAQModule that transfers files between clients and send transfer status to a bookkeeper
-        class SNBFileTransfer : public dunedaq::appfwk::DAQModule
-        {
-        public:
-            explicit SNBFileTransfer(const std::string &name);
+public:
+  explicit SNBFileTransfer(const std::string& name);
 
-            SNBFileTransfer(const SNBFileTransfer &) = delete;
-            SNBFileTransfer &operator=(const SNBFileTransfer &) = delete;
-            SNBFileTransfer(SNBFileTransfer &&) = delete;
-            SNBFileTransfer &operator=(SNBFileTransfer &&) = delete;
+  void init(const data_t&) override;
 
-            void init(const nlohmann::json &obj) override;
-            // void get_info(opmonlib::InfoCollector &ci, int level) override;
+  void get_info(opmonlib::InfoCollector&, int /*level*/) override;
 
-        private:
-            // Commands
-            void do_conf(const nlohmann::json &obj);
-            void do_start(const nlohmann::json &obj);
-            void do_stop(const nlohmann::json &obj);
-            void do_scrap(const nlohmann::json &obj);
+  SNBFileTransfer(const SNBFileTransfer&) = delete;
+  SNBFileTransfer& operator=(const SNBFileTransfer&) = delete;
+  SNBFileTransfer(SNBFileTransfer&&) = delete;
+  SNBFileTransfer& operator=(SNBFileTransfer&&) = delete;
 
-            void do_tr_new(const nlohmann::json &args);
-            void do_tr_start(const nlohmann::json &args);
-            void do_tr_pause(const nlohmann::json &args);
-            void do_tr_resume(const nlohmann::json &args);
-            void do_tr_cancel(const nlohmann::json &args);
+  ~SNBFileTransfer() = default;
 
-            // Configuration
-            TransferClient *m_client;
-            std::string m_name;
+private:
+  // Commands SNBFileTransfer can receive
 
-            // Threading
-            dunedaq::utilities::WorkerThread *m_thread;
-        };
-    } // namespace readoutmodules
-} // namespace dunedaq
+  // TO snbmodules DEVELOPERS: PLEASE DELETE THIS FOLLOWING COMMENT AFTER READING IT
+  // For any run control command it is possible for a DAQModule to
+  // register an action that will be executed upon reception of the
+  // command. do_conf is a very common example of this; in
+  // SNBFileTransfer.cpp you would implement do_conf so that members of
+  // SNBFileTransfer get assigned values from a configuration passed as 
+  // an argument and originating from the CCM system.
+  // To see an example of this value assignment, look at the implementation of 
+  // do_conf in SNBFileTransfer.cpp
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
+  void do_conf(const data_t&);
+
+  int m_some_configured_value { std::numeric_limits<int>::max() }; // Intentionally-ridiculous value pre-configuration
+
+  // TO snbmodules DEVELOPERS: PLEASE DELETE THIS FOLLOWING COMMENT AFTER READING IT 
+  // m_total_amount and m_amount_since_last_get_info_call are examples
+  // of variables whose values get reported to OpMon
+  // (https://github.com/mozilla/opmon) each time get_info() is
+  // called. "amount" represents a (discrete) value which changes as SNBFileTransfer
+  // runs and whose value we'd like to keep track of during running;
+  // obviously you'd want to replace this "in real life"
+
+  std::atomic<int64_t> m_total_amount {0};
+  std::atomic<int>     m_amount_since_last_get_info_call {0};
+};
+
+} // namespace dunedaq::snbmodules
+
+#endif // SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_

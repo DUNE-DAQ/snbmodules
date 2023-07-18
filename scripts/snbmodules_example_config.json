@@ -8,8 +8,9 @@
     "image": "",
     "use_k8s": false
   },
+
   "snbmodules": {
     "num_snbfiletransfers": 2,
-    "prefix_snb_connections": "test"
+    "some_configured_value": 27182
   }
 }

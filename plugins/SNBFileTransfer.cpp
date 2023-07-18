@@ -1,121 +1,49 @@
 /**
- * @file DataRecorder.cpp DataRecorder implementation
+ * @file SNBFileTransfer.cpp
  *
- * This is part of the DUNE DAQ , copyright 2020.
+ * Implementations of SNBFileTransfer's functions
+ *
+ * This is part of the DUNE DAQ Software Suite, copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
 
 #include "SNBFileTransfer.hpp"
-#include "appfwk/DAQModuleHelper.hpp"
 
-#include "appfwk/cmd/Nljs.hpp"
+#include "snbmodules/snbfiletransfer/Nljs.hpp"
+#include "snbmodules/snbfiletransferinfo/InfoNljs.hpp"
 
 #include <string>
 
-namespace dunedaq
+namespace dunedaq::snbmodules {
+
+SNBFileTransfer::SNBFileTransfer(const std::string& name)
+  : dunedaq::appfwk::DAQModule(name)
 {
-    namespace snbmodules
-    {
+  register_command("conf", &SNBFileTransfer::do_conf);
+}
 
-        SNBFileTransfer::SNBFileTransfer(const std::string &name)
-            : DAQModule(name)
-        {
-            register_command("conf", &SNBFileTransfer::do_conf);
-            register_command("scrap", &SNBFileTransfer::do_scrap);
-            register_command("start", &SNBFileTransfer::do_start);
-            register_command("stop", &SNBFileTransfer::do_stop);
+void
+SNBFileTransfer::init(const data_t& /* structured args */)
+{}
 
-            register_command("new-transfer", &SNBFileTransfer::do_tr_new);
-            register_command("start-transfer", &SNBFileTransfer::do_tr_start);
-            register_command("pause-transfer", &SNBFileTransfer::do_tr_pause);
-            register_command("resume-transfer", &SNBFileTransfer::do_tr_resume);
-            register_command("cancel-transfer", &SNBFileTransfer::do_tr_cancel);
+void
+SNBFileTransfer::get_info(opmonlib::InfoCollector& ci, int /* level */)
+{
+  snbfiletransferinfo::Info info;
+  info.total_amount = m_total_amount;
+  info.amount_since_last_get_info_call = m_amount_since_last_get_info_call.exchange(0);
 
-            m_name = name;
-        }
+  ci.add(info);
+}
 
-        void
-        SNBFileTransfer::do_tr_new(const nlohmann::json &args)
-        {
-            TLOG() << "debug : New transfer request !";
-            auto src = args["src"].get<std::string>();
+void
+SNBFileTransfer::do_conf(const data_t& conf_as_json)
+{
+  auto conf_as_cpp = conf_as_json.get<snbfiletransfer::Conf>();
+  m_some_configured_value = conf_as_cpp.some_configured_value;
+}
 
-            if (src == m_name)
-            {
-                auto dests = args["dests"].get<std::set<std::string>>();
-                auto files = args["files"].get<std::set<std::filesystem::path>>();
-
-                m_client->create_new_transfer(args["transfer_id"].get<std::string>(), args["protocol"].get<std::string>(), dests, files, args["protocol_args"]);
-            }
-            else
-                ers::error(InvalidSourceCommandRequestError(ERS_HERE, "New Transfer"));
-        }
-        void
-        SNBFileTransfer::do_tr_start(const nlohmann::json &args)
-        {
-            m_client->start_transfer(args["transfer_id"].get<std::string>());
-        }
-        void
-        SNBFileTransfer::do_tr_pause(const nlohmann::json &args)
-        {
-            m_client->pause_transfer(args["transfer_id"].get<std::string>());
-        }
-        void
-        SNBFileTransfer::do_tr_resume(const nlohmann::json &args)
-        {
-            m_client->resume_transfer(args["transfer_id"].get<std::string>());
-        }
-        void
-        SNBFileTransfer::do_tr_cancel(const nlohmann::json &args)
-        {
-            m_client->cancel_transfer(args["transfer_id"].get<std::string>());
-        }
-
-        void
-        SNBFileTransfer::init(const nlohmann::json &args)
-        {
-            (void)args;
-        }
-
-        void
-        SNBFileTransfer::do_conf(const nlohmann::json &args)
-        {
-            m_client = new TransferClient(IPFormat(args["client_ip"].get<std::string>()), m_name, args["work_dir"].get<std::filesystem::path>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
-
-            m_client->lookups_connections();
-
-            m_thread = new dunedaq::utilities::WorkerThread(std::bind(&TransferClient::do_work, m_client, std::placeholders::_1));
-        }
-
-        void
-        SNBFileTransfer::do_scrap(const nlohmann::json &args)
-        {
-            (void)args;
-            m_thread->stop_working_thread();
-            // wait for thread to stop
-            while (m_thread->thread_running())
-                ;
-
-            delete m_thread;
-            delete m_client;
-        }
-
-        void
-        SNBFileTransfer::do_start(const nlohmann::json &args)
-        {
-            (void)args;
-            m_thread->start_working_thread();
-        }
-
-        void
-        SNBFileTransfer::do_stop(const nlohmann::json &args)
-        {
-            (void)args;
-            m_thread->stop_working_thread();
-        }
-
-    } // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 DEFINE_DUNE_DAQ_MODULE(dunedaq::snbmodules::SNBFileTransfer)
