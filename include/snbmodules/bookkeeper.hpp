@@ -64,7 +64,7 @@ namespace dunedaq::snbmodules
             set_bookkeeper_id(bookkeeper_id);
             set_ip(listening_ip);
             m_file_log_path = file_log_path;
-            m_refresh_rate(refresh_rate);
+            m_refresh_rate = refresh_rate;
             display_information();
         }
 
