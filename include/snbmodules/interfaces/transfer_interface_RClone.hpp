@@ -297,11 +297,10 @@ namespace dunedaq::snbmodules
                                        "\"type\": \"sftp\"," // HTTP/WebDAV/FTP/SFTP/DLNA/DOCKER
                                        "\"host\": \"%s\","
                                        "\"user\": \"%s\","
-                                       "\"port\": \"22\","
+                                       "\"port\": \"%d\","
                                        "\"key_file\": \"/home/ljoly/.ssh/id_rsa\","
                                        "\"disable_concurrent_writes\": \"false\","
-                                       "\"chunk_size\": \"256Ki\","
-                                       "\"concurrency\": \"128\""
+                                       "\"concurrency\": \"%d\""
                                        // "\"pubkey_file\": \"/home/ljoly/.ssh/id_rsa.pub\","
                                        //   "\"known_hosts_file\": \"/home/ljoly/.ssh/known_hosts\","
                                        //    "\"_path\": \"/home/ljoly/N23-04-17\""
@@ -326,12 +325,6 @@ namespace dunedaq::snbmodules
 
                                        "\"dstFs\": "
                                        "\"/\","
-                                       //    "{"
-                                       //    "\"type\": \"chunker\","
-                                       //    "\"remote\": \"%s\","
-                                       //    "\"chunk_size\": \"1Gi\","
-                                       //    "\"hash_type\": \"md5\""
-                                       //    "},"
                                        "\"dstRemote\": \"%s\","
 
                                        "\"_config\": {"
@@ -357,9 +350,11 @@ namespace dunedaq::snbmodules
                         // m_params.type.c_str(),
                         f_meta->get_src().get_ip().c_str(),
                         m_params.user.c_str(),
+                        m_params.port,
+                        m_params.simult_transfers,
+
                         // f_meta->get_file_path().remove_filename().string().c_str(),
                         f_meta->get_file_path().string().c_str(),
-
                         // destination
                         // dest.string().c_str(),
                         dest.append(f_meta->get_file_name()).string().c_str(),
@@ -375,6 +370,7 @@ namespace dunedaq::snbmodules
             }
 
             auto res = requestRPC("operations/copyfile", input_request);
+            TLOG() << "Requested copyfile operation with parameters : " << input_request;
 
             // sprintf(input_request, "{"
             //                        "\"url\": \"http://%s:8080%s\","

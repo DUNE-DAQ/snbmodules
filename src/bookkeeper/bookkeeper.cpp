@@ -313,7 +313,7 @@ namespace dunedaq::snbmodules
     void Bookkeeper::request_connection_and_available_files(std::string client)
     {
         // send connection request to client
-        send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 10000);
+        send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 1);
 
         // Listen to receive connection response and available files
         // auto msg = listen_for_notification(get_bookkeepers_conn().front(), client);

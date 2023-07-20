@@ -63,6 +63,21 @@ namespace dunedaq::snbmodules
         void resume_transfer(std::string transfer_id);
         void cancel_transfer(std::string transfer_id);
 
+        /// @brief Create a new session, you can precise the IP address of the session forcing to use a
+        /// specific network interface and different port that the client
+        /// @param transfer_options Transfer options for the protocol
+        /// @param type Type of the session (upload or download)
+        /// @param id ID of the session
+        /// @param listening_ip Listening IP\:PORT address of the session
+        /// @return Pointer to the new session
+        TransferSession *create_session(GroupMetadata *transfer_options, e_session_type type, std::string id, std::filesystem::path work_dir, IPFormat ip = IPFormat(), std::set<std::string> dest_clients = std::set<std::string>());
+
+        /// @brief Scan available files in the listening directory
+        /// @param previous_scan Set of files already scanned
+        /// @param folder Folder to scan
+        /// @param nested True if the function is called recursively
+        void scan_available_files(std::set<std::filesystem::path> *previous_scan, std::filesystem::path folder = std::filesystem::path(), bool nested = false);
+
         // Getters
         inline IPFormat get_ip() { return m_listening_ip; }
         inline std::string get_client_id() const { return m_client_id; }
@@ -75,7 +90,26 @@ namespace dunedaq::snbmodules
         inline void set_ip(std::string ip) { m_listening_ip.set_ip(ip); }
         inline void set_port(int port) { m_listening_ip.set_port(port); }
         inline void set_client_id(std::string client_id) { m_client_id = client_id; }
-        inline void set_listening_dir(std::filesystem::path listening_dir) { m_listening_dir = std::filesystem::absolute(listening_dir); }
+        inline void set_listening_dir(std::filesystem::path listening_dir)
+        {
+            // remove all occurences of ./ in the file path
+            std::string file_path_str = listening_dir.string();
+            std::string x = "./";
+
+            size_t pos = 0;
+            while (1)
+            {
+                pos = file_path_str.find(x, pos);
+                if (pos == std::string::npos)
+                {
+                    break;
+                }
+
+                file_path_str.replace(pos, x.length(), "");
+            }
+
+            m_listening_dir = std::filesystem::absolute(file_path_str);
+        }
 
     private:
         /// @brief IP address of the client
@@ -112,12 +146,6 @@ namespace dunedaq::snbmodules
         /// @return True if the notification was handled
         bool action_on_receive_notification(NotificationData notif) override;
 
-        /// @brief Scan available files in the listening directory
-        /// @param previous_scan Set of files already scanned
-        /// @param folder Folder to scan
-        /// @param nested True if the function is called recursively
-        void scan_available_files(std::set<std::filesystem::path> *previous_scan, std::filesystem::path folder = std::filesystem::path(), bool nested = false);
-
         /// @brief Share available files (in m_listening_dir)
         /// @param to_share Set of files to share
         /// @param dest Destination of the files
@@ -127,15 +155,6 @@ namespace dunedaq::snbmodules
         /// @param src Path of the file
         /// @return Metadata of the file
         TransferMetadata *create_metadata_from_file(std::filesystem::path src);
-
-        /// @brief Create a new session, you can precise the IP address of the session forcing to use a
-        /// specific network interface and different port that the client
-        /// @param transfer_options Transfer options for the protocol
-        /// @param type Type of the session (upload or download)
-        /// @param id ID of the session
-        /// @param listening_ip Listening IP\:PORT address of the session
-        /// @return Pointer to the new session
-        TransferSession *create_session(GroupMetadata *transfer_options, e_session_type type, std::string id, std::filesystem::path work_dir, IPFormat ip = IPFormat(), std::set<std::string> dest_clients = std::set<std::string>());
     };
 } // namespace dunedaq::snbmodules
 #endif // SNBMODULES_INCLUDE_SNBMODULES_CLIENT_HPP_

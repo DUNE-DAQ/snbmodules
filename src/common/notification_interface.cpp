@@ -12,6 +12,9 @@ namespace dunedaq::snbmodules
 
     std::optional<NotificationData> NotificationInterface::listen_for_notification(std::string id, std::string expected_from, int timeout, int tries)
     {
+        // Default value for tries
+        if (tries == -1)
+            tries = m_max_tries;
         // TLOG() << "debug : Listening for request from " << id;
 
         if (timeout == -1)
@@ -28,11 +31,11 @@ namespace dunedaq::snbmodules
             if (expected_from != "" && expected_from.find(msg.value().m_source_id) == std::string::npos)
             {
                 TLOG() << "debug : Received request from " << msg->m_source_id << " but expected from " << expected_from << " ignoring";
-                if (tries > m_max_tries - 1)
+                if (tries <= 1)
                 {
                     return std::nullopt;
                 }
-                return listen_for_notification(id, expected_from, timeout, ++tries);
+                return listen_for_notification(id, expected_from, timeout, --tries);
             }
         }
         return msg;
@@ -40,6 +43,10 @@ namespace dunedaq::snbmodules
 
     bool NotificationInterface::send_notification(e_notification_type notif, std::string src, std::string dst, std::string id_conn, std::string data, int tries)
     {
+        // Default value for tries
+        if (tries == -1)
+            tries = m_max_tries;
+
         // find connection with dst in it
         for (auto conn : m_bookkeepers_conn)
         {
@@ -69,7 +76,7 @@ namespace dunedaq::snbmodules
         if (result == false)
         {
             ers::error(NotificationSendError(ERS_HERE, id_conn));
-            if (tries > m_max_tries - 1)
+            if (tries <= 1)
             {
                 return false;
             }
@@ -77,7 +84,7 @@ namespace dunedaq::snbmodules
             // wait
             std::this_thread::sleep_for(std::chrono::milliseconds(m_timeout_send));
             TLOG() << "debug : Retrying send notification";
-            return send_notification(notif, src, dst, id_conn, data, ++tries);
+            return send_notification(notif, src, dst, id_conn, data, --tries);
         }
 
         return result;

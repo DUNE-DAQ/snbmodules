@@ -36,6 +36,8 @@ namespace dunedaq::snbmodules
         IPFormat m_source_ip;
 
     public:
+        static const std::string m_file_extension;
+
         void generate_metadata_file(std::filesystem::path dest = ".") override;
         void load_metadata_from_meta_file(std::filesystem::path src = ".") override;
         std::string export_to_string() override;
@@ -107,7 +109,26 @@ namespace dunedaq::snbmodules
         inline void set_source_id(std::string source_id) { this->m_source_id = source_id; }
         inline void set_expected_files(std::set<std::string> expected_files) { this->m_expected_files = expected_files; }
         void add_file(TransferMetadata *meta);
-        inline void add_expected_file(std::filesystem::path file) { this->m_expected_files.insert(std::filesystem::absolute(file)); }
+        inline void add_expected_file(std::filesystem::path file)
+        {
+            // remove all occurences of ./ in the file path
+            std::string file_path_str = file.string();
+            std::string x = "./";
+
+            size_t pos = 0;
+            while (1)
+            {
+                pos = file_path_str.find(x, pos);
+                if (pos == std::string::npos)
+                {
+                    break;
+                }
+
+                file_path_str.replace(pos, x.length(), "");
+            }
+
+            m_expected_files.insert(std::filesystem::absolute(file_path_str));
+        }
 
         // Getters
         inline std::string get_group_id() const { return this->m_group_id; }
@@ -120,5 +141,6 @@ namespace dunedaq::snbmodules
         inline IPFormat get_source_ip() const { return this->m_source_ip; }
         std::string to_string();
     };
+
 } // namespace dunedaq::snbmodules
 #endif // SNBMODULES_INCLUDE_SNBMODULES_GROUPMETADATA_HPP_
