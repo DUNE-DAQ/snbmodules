@@ -1,0 +1,58 @@
+{
+    "apps": {
+        "snbmodules0": {
+            "exec": "daq_application_ssh",
+            "host": "snbmodules0",
+            "port": 3333
+        }
+    },
+    "env": {
+        "DUNEDAQ_ERS_DEBUG_LEVEL": "getenv_ifset",
+        "DUNEDAQ_ERS_ERROR": "erstrace,throttle,lstdout",
+        "DUNEDAQ_ERS_FATAL": "erstrace,lstdout",
+        "DUNEDAQ_ERS_INFO": "erstrace,throttle,lstdout",
+        "DUNEDAQ_ERS_VERBOSITY_LEVEL": "getenv:1",
+        "DUNEDAQ_ERS_WARNING": "erstrace,throttle,lstdout"
+    },
+    "exec": {
+        "daq_application_ssh": {
+            "args": [
+                "--name",
+                "{APP_NAME}",
+                "-c",
+                "{CMD_FAC}",
+                "-i",
+                "{INFO_SVC}",
+                "--configurationService",
+                "{CONF_LOC}"
+            ],
+            "cmd": "daq_application",
+            "comment": "Application profile using PATH variables (lower start time)",
+            "env": {
+                "CET_PLUGIN_PATH": "getenv",
+                "CMD_FAC": "rest://localhost:{APP_PORT}",
+                "CONNECTION_PORT": "15000",
+                "CONNECTION_SERVER": "epdtdi105",
+                "DETCHANNELMAPS_SHARE": "getenv",
+                "DUNEDAQ_SHARE_PATH": "getenv",
+                "INFO_SVC": "file://info_{APP_NAME}_{APP_PORT}.json",
+                "LD_LIBRARY_PATH": "getenv",
+                "PATH": "getenv",
+                "TIMING_SHARE": "getenv",
+                "TRACE_FILE": "getenv:/tmp/trace_buffer_{APP_HOST}_{DUNEDAQ_PARTITION}"
+            }
+        }
+    },
+    "external_connections": [],
+    "hosts-ctrl": {
+        "snbmodules0": "epdtdi105",
+        "snbmodules1": "epdtdi104"
+    },
+    "hosts-data": {
+        "snbmodules0": "epdtdi105",
+        "snbmodules1": "epdtdi104"
+    },
+    "response_listener": {
+        "port": 56789
+    }
+}

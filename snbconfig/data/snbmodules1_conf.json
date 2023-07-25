@@ -1,0 +1,11 @@
+{
+    "modules": [
+        {
+            "data": {
+                "client_ip": "192.168.0.104:0",
+                "work_dir": "/mnt/pmem0/client2"
+            },
+            "match": "client2"
+        }
+    ]
+}

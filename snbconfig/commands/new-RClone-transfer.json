@@ -1,0 +1,36 @@
+{
+    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/new-RClone-transfer.json http://localhost:3333/command",
+    "data": {
+        "modules": [
+            {
+                "data": {
+                    "transfer_id": "transfer2",
+                    "files": [
+                        "/home/ljoly/N23-07-15/Makefile"
+                    ],
+                    "src": "client0",
+                    "dests": [
+                        "client1"
+                    ],
+                    "protocol": "RCLONE",
+                    "protocol_args": {
+                        "protocol": "http",
+                        "rate_limit": "off",
+                        "port": 8080,
+                        "refresh_rate": 5,
+                        "user": "ljoly",
+                        "simult_transfers": 200,
+                        "transfer_threads": 1,
+                        "checkers_threads": 2,
+                        "chunk_size": "8GiB",
+                        "buffer_size": "0",
+                        "use_mmap": false,
+                        "checksum": true
+                    }
+                },
+                "match": "client0"
+            }
+        ]
+    },
+    "id": "new-transfer"
+}

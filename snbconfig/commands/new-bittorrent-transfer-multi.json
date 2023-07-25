@@ -1,0 +1,31 @@
+{
+    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/new-bittorrent-transfer-multi.json http://localhost:3333/command",
+    "data": {
+        "modules": [
+            {
+                "data": {
+                    "transfer_id": "transfer1",
+                    "files": [
+                        "/mnt/md2/random_block_17",
+                        "/mnt/md2/random_block_269",
+                        "/mnt/md2/random_block_322",
+                        "/mnt/md2/random_block_389",
+                        "/mnt/md2/random_block_43"
+                    ],
+                    "src": "client0",
+                    "dests": [
+                        "client1",
+                        "client2"
+                    ],
+                    "protocol": "BITTORRENT",
+                    "protocol_args": {
+                        "port": "50495",
+                        "rate_limit": 268435456
+                    }
+                },
+                "match": "client0"
+            }
+        ]
+    },
+    "id": "new-transfer"
+}

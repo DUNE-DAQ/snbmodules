@@ -1,0 +1,12 @@
+{
+    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/bk-info.json http://localhost:3333/command",
+    "data": {
+        "modules": [
+            {
+                "data": {},
+                "match": ""
+            }
+        ]
+    },
+    "id": "info"
+}
