@@ -118,6 +118,7 @@ do
                     read -p "Enter buffer size (ex:'0'): " buffer_size
                     read -p "Enter use mmap (ex:'false'): " use_mmap
                     read -p "Enter checksum (ex:'true'): " checksum
+                    read -p "Enter root folder of http sharing (ex:'/'): " root_folder
 
                     command="${command}\t\t\t\t\t\t\"protocol\": \"${rclone_protocol}\",\n"
                     command="${command}\t\t\t\t\t\t\"rate_limit\": \"${rate_limit}\",\n"
@@ -129,7 +130,9 @@ do
                     command="${command}\t\t\t\t\t\t\"chunk_size\": \"${chunk_size}\",\n"
                     command="${command}\t\t\t\t\t\t\"buffer_size\": \"${buffer_size}\",\n"
                     command="${command}\t\t\t\t\t\t\"use_mmap\": ${use_mmap},\n"
-                    command="${command}\t\t\t\t\t\t\"checksum\": ${checksum}\n"
+                    command="${command}\t\t\t\t\t\t\"checksum\": ${checksum},\n"
+                    command="${command}\t\t\t\t\t\t\"root_folder\": ${root_folder}\n"
+                    
 
                     ;;
                 "BITTORRENT")

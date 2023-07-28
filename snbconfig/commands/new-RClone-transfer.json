@@ -25,7 +25,8 @@
                         "chunk_size": "8GiB",
                         "buffer_size": "0",
                         "use_mmap": false,
-                        "checksum": true
+                        "checksum": true,
+                        "root_folder": "/"
                     }
                 },
                 "match": "client0"
