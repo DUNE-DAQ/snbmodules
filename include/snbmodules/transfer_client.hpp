@@ -76,7 +76,7 @@ namespace dunedaq::snbmodules
         /// @param previous_scan Set of files already scanned
         /// @param folder Folder to scan
         /// @param nested True if the function is called recursively
-        void scan_available_files(std::set<std::filesystem::path> *previous_scan, std::filesystem::path folder = std::filesystem::path(), bool nested = false);
+        void scan_available_files(std::set<std::filesystem::path> *previous_scan, bool nested = false, std::filesystem::path folder = std::filesystem::path());
 
         // Getters
         inline IPFormat get_ip() { return m_listening_ip; }

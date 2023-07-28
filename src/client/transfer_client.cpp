@@ -268,7 +268,7 @@ namespace dunedaq::snbmodules
         {
             TLOG() << "debug : receive connection request, sending available files";
             std::set<std::filesystem::path> to_share;
-            scan_available_files(&to_share);
+            scan_available_files(&to_share, true);
             share_available_files(&to_share, notif.m_source_id);
             send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
             break;
@@ -414,7 +414,7 @@ namespace dunedaq::snbmodules
         return id;
     }
 
-    void TransferClient::scan_available_files(std::set<std::filesystem::path> *previous_scan, std::filesystem::path folder, bool nested)
+    void TransferClient::scan_available_files(std::set<std::filesystem::path> *previous_scan, bool nested, std::filesystem::path folder)
     {
         if (folder.empty())
         {
@@ -454,12 +454,6 @@ namespace dunedaq::snbmodules
                     }
                 }
             }
-            else if (entry.is_directory())
-            {
-                TLOG() << "debug : found directory " << entry.path();
-                if (nested)
-                    scan_available_files(previous_scan, entry.path(), nested);
-            }
         }
 
         for (const auto &entry : std::filesystem::directory_iterator(folder))
@@ -497,7 +491,7 @@ namespace dunedaq::snbmodules
             {
                 TLOG() << "debug : found directory " << entry.path();
                 if (nested)
-                    scan_available_files(previous_scan, entry.path(), nested);
+                    scan_available_files(previous_scan, nested, entry.path());
             }
         }
     }
