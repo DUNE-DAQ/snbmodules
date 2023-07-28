@@ -7,11 +7,13 @@ echo ""
 
 read -p "Enter destination application ip:port (ex:'localhost:3333'): " dest_port
 read -p "Enter answer port (ex:'56789'): " answer_port
+echo ""
 
 while [ true ]
 do
 
-    echo "Choose what you want to do: "
+    echo "Choose what you want to do: "3
+    echo "0. Run previously generated command"
     echo "1. Create a new transfer"
     echo "2. Start a transfer (created before)"
     echo "3. Pause a transfer"
@@ -22,19 +24,27 @@ do
     echo ""
 
     read -p "Enter your choice: " choice
-
-    if [ $choice -eq 7 ]
-    then
-        exit 0
-    fi
-
-    read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
-    read -p "Enter the destination client id (ex:'client0'): " client
+    echo ""
 
     command="{\n\t\"data\": {\n\t\t\"modules\": [\n\t\t\t{\n\t\t\t\t\"data\": {\n"
 
     case $choice in
+        0)
+            ls *.json
+            echo ""
+            read -p "Enter the command file name to execute: " file_name
+
+            echo ""
+            echo ""
+            echo "Sending command to ${dest_port}..."
+            echo "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: ${answer_port}' --request POST --data @${file_name} http://${dest_port}/command"
+            curl --header 'Content-Type: application/json' --header 'X-Answer-Port: ${answer_port}' --request POST --data @${file_name} http://${dest_port}/command
+            echo ""
+            continue
+            ;;
         1) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="new-transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\",\n"
 
@@ -132,29 +142,39 @@ do
                     ;;
                 *)
                     echo "Invalid protocol"
-                    exit 1
+                    continue
                     ;;
             esac
             command="${command}\t\t\t\t\t}\n"
 
             ;;
         2) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="start-transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         3) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="pause-transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         4) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="resume-transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         5) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="cancel-transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         6) 
+            read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
+            read -p "Enter the destination client id (ex:'client0'): " client
             command_id="info"
             ;;
         7)
@@ -162,7 +182,7 @@ do
             ;;
         *)
             echo "Invalid choice"
-            exit 1
+            continue
             ;;
     esac
 
