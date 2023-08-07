@@ -76,7 +76,7 @@ set(tests
     snb_ip_format_test
     snb_session_test
     snb_client_available_test
-    notification_test
+    snb_notification_test
 )
 
 set(INCLUDE_DIR "include/snbmodules/")

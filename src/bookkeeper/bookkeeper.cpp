@@ -271,6 +271,12 @@ namespace dunedaq::snbmodules
     {
         auto time_point = std::chrono::high_resolution_clock::now();
 
+        // Just one request on startup, after that the clients will have to send by themself
+        for (std::string client : get_clients_conn())
+        {
+            request_connection_and_available_files(client);
+        }
+
         while (true)
         {
             std::optional<NotificationData> msg = listen_for_notification(get_bookkeepers_conn().front());
