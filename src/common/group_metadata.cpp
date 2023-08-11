@@ -8,6 +8,8 @@
 namespace dunedaq::snbmodules
 {
 
+    const std::string GroupMetadata::m_file_extension = ".gmetadata";
+
     TransferMetadata *GroupMetadata::get_transfer_meta_from_file_path(std::string file_path)
     {
         for (auto meta : m_transfers_meta)
@@ -107,7 +109,7 @@ namespace dunedaq::snbmodules
     void GroupMetadata::generate_metadata_file(std::filesystem::path dest)
     {
         std::ofstream metadata_file;
-        metadata_file.open(dest.append(get_group_id()).string() + ".tmetadata");
+        metadata_file.open(dest.append(get_group_id()).string() + m_file_extension);
 
         metadata_file << export_to_string();
 

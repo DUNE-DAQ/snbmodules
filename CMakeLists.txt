@@ -64,23 +64,19 @@ else()
   )
 endif()
 
-set(tests
-    create_file_metadata_simple_test
-    client_test
-    ip_format_test
-    file_metadata_test
-    transfer_metadata_test
-    session_test
-    client_available_test
-    notification_test
-    bittorent_test
-    bittorent_resume_test
-    filetransform_file_to_file_test
-)
 
-set(apps
-    bookkeeper_app
-    transfer_client_app
+set(tests
+    snb_bookkeeper_app
+    snb_transfer_client_app
+    snb_bittorent_full_test
+    snb_rclone_full_test
+    snb_transfer_metadata_save_load
+    snb_group_metadata_save_load
+    snb_client_test
+    snb_ip_format_test
+    snb_session_test
+    snb_client_available_test
+    snb_notification_test
 )
 
 set(INCLUDE_DIR "include/snbmodules/")
@@ -173,9 +169,9 @@ daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRA
 ##############################################################################
 # Integration tests
 
-# foreach(t IN LISTS tests)
-#     daq_add_application( ${t} ${t}.cpp TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
-# endforeach()
+foreach(t IN LISTS tests)
+    daq_add_application( ${t} ${t}.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
+endforeach()
 
 ##############################################################################
 # Apps

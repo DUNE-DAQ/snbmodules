@@ -6,9 +6,24 @@ namespace dunedaq::snbmodules
     TransferClient::TransferClient(IPFormat listening_ip, std::string client_id, std::filesystem::path listening_dir, std::string connection_prefix, int timeout_send, int timeout_receive)
         : NotificationInterface(connection_prefix, timeout_send, timeout_receive),
           m_listening_ip(listening_ip),
-          m_client_id(client_id),
-          m_listening_dir(std::filesystem::absolute(listening_dir))
+          m_client_id(client_id)
     {
+        // remove all occurences of ./ in the file path
+        std::string file_path_str = listening_dir.string();
+        std::string x = "./";
+
+        size_t pos = 0;
+        while (1)
+        {
+            pos = file_path_str.find(x, pos);
+            if (pos == std::string::npos)
+            {
+                break;
+            }
+
+            file_path_str.replace(pos, x.length(), "");
+        }
+        m_listening_dir = std::filesystem::absolute(file_path_str);
         std::filesystem::create_directories(m_listening_dir);
     }
 
@@ -253,7 +268,7 @@ namespace dunedaq::snbmodules
         {
             TLOG() << "debug : receive connection request, sending available files";
             std::set<std::filesystem::path> to_share;
-            scan_available_files(&to_share);
+            scan_available_files(&to_share, true);
             share_available_files(&to_share, notif.m_source_id);
             send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
             break;
@@ -399,7 +414,7 @@ namespace dunedaq::snbmodules
         return id;
     }
 
-    void TransferClient::scan_available_files(std::set<std::filesystem::path> *previous_scan, std::filesystem::path folder, bool nested)
+    void TransferClient::scan_available_files(std::set<std::filesystem::path> *previous_scan, bool nested, std::filesystem::path folder)
     {
         if (folder.empty())
         {
@@ -408,39 +423,47 @@ namespace dunedaq::snbmodules
 
         TLOG() << "debug : scanning files in " << folder;
 
+        // First scan group metadata files
         for (const auto &entry : std::filesystem::directory_iterator(folder))
         {
-            if (entry.is_regular_file())
+            if (entry.is_regular_file() && entry.path().extension() == GroupMetadata::m_file_extension)
             {
                 if (previous_scan->insert(entry.path()).second)
                 {
                     TLOG() << "debug : found new file " << entry.path();
 
-                    if (entry.path().extension() == ".tmetadata")
+                    GroupMetadata *metadata = new GroupMetadata(entry.path());
+                    bool already_active = false;
+
+                    for (auto s : this->get_sessions())
                     {
-                        GroupMetadata *metadata = new GroupMetadata(entry.path());
-                        bool already_active = false;
-
-                        for (auto s : this->get_sessions())
+                        if (s.second->get_transfer_options() == *metadata)
                         {
-                            if (s.second->get_transfer_options() == *metadata)
-                            {
-                                already_active = true;
-                                break;
-                            }
-                        }
-
-                        if (!already_active)
-                        {
-                            create_session(metadata, Uploader, generate_session_id(), get_listening_dir().append("ses" + m_sessions.size()));
-                        }
-                        else
-                        {
-                            delete metadata;
+                            already_active = true;
+                            break;
                         }
                     }
 
-                    if (entry.path().extension() == ".fmetadata")
+                    if (!already_active)
+                    {
+                        create_session(metadata, Uploader, generate_session_id(), get_listening_dir().append("ses" + m_sessions.size()));
+                    }
+                    else
+                    {
+                        delete metadata;
+                    }
+                }
+            }
+        }
+
+        for (const auto &entry : std::filesystem::directory_iterator(folder))
+        {
+            if (entry.is_regular_file() && entry.path().extension() != GroupMetadata::m_file_extension)
+            {
+                if (previous_scan->insert(entry.path()).second)
+                {
+                    TLOG() << "debug : found new file " << entry.path();
+                    if (entry.path().extension() == TransferMetadata::m_file_extension)
                     {
                         TransferMetadata *metadata = new TransferMetadata(entry.path());
 
@@ -468,7 +491,7 @@ namespace dunedaq::snbmodules
             {
                 TLOG() << "debug : found directory " << entry.path();
                 if (nested)
-                    scan_available_files(previous_scan, entry.path(), nested);
+                    scan_available_files(previous_scan, nested, entry.path());
             }
         }
     }

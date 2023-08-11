@@ -3,6 +3,8 @@
 
 namespace dunedaq::snbmodules
 {
+    const std::string TransferMetadata::m_file_extension = ".tmetadata";
+
     std::string TransferMetadata::export_to_string_partial(bool force_all)
     {
         nlohmann::json j;
@@ -113,7 +115,7 @@ namespace dunedaq::snbmodules
     void TransferMetadata::generate_metadata_file(std::filesystem::path dest)
     {
         std::ofstream metadata_file;
-        metadata_file.open(dest.append(get_file_name()).string() + ".fmetadata");
+        metadata_file.open(dest.append(get_file_name()).string() + TransferMetadata::m_file_extension);
 
         metadata_file << export_to_string();
 

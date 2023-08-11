@@ -271,6 +271,12 @@ namespace dunedaq::snbmodules
     {
         auto time_point = std::chrono::high_resolution_clock::now();
 
+        // Just one request on startup, after that the clients will have to send by themself
+        for (std::string client : get_clients_conn())
+        {
+            request_connection_and_available_files(client);
+        }
+
         while (true)
         {
             std::optional<NotificationData> msg = listen_for_notification(get_bookkeepers_conn().front());
@@ -313,7 +319,7 @@ namespace dunedaq::snbmodules
     void Bookkeeper::request_connection_and_available_files(std::string client)
     {
         // send connection request to client
-        send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 10000);
+        send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 1);
 
         // Listen to receive connection response and available files
         // auto msg = listen_for_notification(get_bookkeepers_conn().front(), client);
@@ -443,20 +449,22 @@ namespace dunedaq::snbmodules
             output = &std::cout;
         }
 
-        *output << "***** Bookkeeper " << this->get_bookkeeper_id() << " " + this->get_ip().get_ip_port() << " informations display ****" << std::endl;
+        *output << "***** Bookkeeper " << this->get_bookkeeper_id() << " " + this->get_ip().get_ip_port() << " informations display *****" << std::endl;
         // *output << "q: quit, d : display info, n : new transfer, s : start transfer" << std::endl;
         *output << "Connected clients :" << std::endl;
 
         for (auto client : get_transfers())
         {
+            bool is_session = false;
             // If it's a session
             if (client.first.find("ses") != std::string::npos)
             {
-                *output << "\t\t > Session " << client.first << " is active" << std::endl;
+                *output << "\t* Session " << client.first << " is active" << std::endl;
+                is_session = true;
             }
             else
             {
-                *output << "\t > Client " << client.first << " is connected" << std::endl;
+                *output << "> Client " << client.first << " is connected" << std::endl;
             }
 
             // print for each file the status
@@ -484,23 +492,30 @@ namespace dunedaq::snbmodules
                                      << std::endl;
                 }
 
-                if (client.first.find("ses") != std::string::npos)
-                    *output << "\t\t\t - ";
-                else
+                if (is_session)
                     *output << "\t\t - ";
+                else
+                    *output << "\t - ";
 
-                *output << file->get_file_name() << "\t"
-                        << file->get_size() << " bytes\tfrom "
-                        << file->get_src().get_ip_port() << "\t"
-                        // << file->get_dest().get_ip_port() << "\t"
-                        << magic_enum::enum_name(file->get_status()) << "\t"
-                        << file->get_progress() << "%\t"
-                        << (file->get_transmission_speed() == 0 ? "-" : std::to_string(file->get_transmission_speed())) << "Bi/s\t"
-                        << file->get_start_time_str() << "\t"
-                        << file->get_total_duration_ms() << "ms\t"
-                        << file->get_end_time_str() << "\t"
-                        << file->get_error_code() << "\t"
-                        << std::endl;
+                if (is_session)
+                    *output << file->get_file_name() << "\t"
+                            << file->get_size() << " bytes\tfrom "
+                            << file->get_src().get_ip_port() << "\t"
+                            // << file->get_dest().get_ip_port() << "\t"
+                            << magic_enum::enum_name(file->get_status()) << "\t"
+                            << file->get_progress() << "%\t"
+                            << (file->get_transmission_speed() == 0 ? "-" : std::to_string(file->get_transmission_speed())) << "Bi/s\t"
+                            << file->get_start_time_str() << "\t"
+                            << file->get_total_duration_ms() << "ms\t"
+                            << file->get_end_time_str() << "\t"
+                            << file->get_error_code() << "\t"
+                            << std::endl;
+                else
+                    *output << "Available file "
+                            << file->get_file_path() << "\t"
+                            << file->get_size() << " bytes\tfrom "
+                            << file->get_src().get_ip_port() << "\t"
+                            << std::endl;
             }
         }
 

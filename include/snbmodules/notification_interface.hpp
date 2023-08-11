@@ -75,7 +75,7 @@ namespace dunedaq
             /// @param expected_from Expected source of the notification, if empty, accept any source
             /// @param timeout Timeout for receiving the notification in ms, if -1, use the default timeout
             /// @return std::optional<NotificationData> Notification received or not
-            virtual std::optional<NotificationData> listen_for_notification(std::string id, std::string expected_from = "", int timeout = -1, int tries = 1);
+            virtual std::optional<NotificationData> listen_for_notification(std::string id, std::string expected_from = "", int timeout = -1, int tries = -1);
 
             /// @brief Send a notification during m_timeout_send ms
             /// @param notif   Type of the notification
@@ -84,7 +84,7 @@ namespace dunedaq
             /// @param id_conn ID of the connection
             /// @param data Data of the notification (optional)
             /// @return
-            virtual bool send_notification(e_notification_type notif, std::string src, std::string dst, std::string id_conn, std::string data = "", int tries = 1);
+            virtual bool send_notification(e_notification_type notif, std::string src, std::string dst, std::string id_conn, std::string data = "", int tries = -1);
 
             /// @brief Action to do when receiving a notification
             /// @param notif Notification received
@@ -143,7 +143,7 @@ namespace dunedaq
             /// @param session_name Name of the session
             /// @param use_connectivity_service Use the connectivity service
             /// @param ip IP of the connectivity service
-            virtual inline void init_connection_interface(std::string session_name, bool use_connectivity_service = false, IPFormat ip = IPFormat("localhost", 5000))
+            virtual inline void init_connection_interface(std::string session_name = "SNBMODULES", bool use_connectivity_service = false, IPFormat ip = IPFormat("localhost", 5000))
             {
                 m_iomanager->init_connection_interface(session_name, use_connectivity_service, ip);
             }

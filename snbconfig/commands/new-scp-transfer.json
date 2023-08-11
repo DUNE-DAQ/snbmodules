@@ -1,0 +1,27 @@
+{
+    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/new-scp-transfer.json http://localhost:3333/command",
+    "data": {
+        "modules": [
+            {
+                "data": {
+                    "transfer_id": "transfer1",
+                    "files": [
+                        "/home/ljoly/N23-04-17/coucou.txt"
+                    ],
+                    "src": "client0",
+                    "dests": [
+                        "client1",
+                        "client2"
+                    ],
+                    "protocol": "SCP",
+                    "protocol_args": {
+                        "user": "ljoly",
+                        "use_password": false
+                    }
+                },
+                "match": "client0"
+            }
+        ]
+    },
+    "id": "new-transfer"
+}

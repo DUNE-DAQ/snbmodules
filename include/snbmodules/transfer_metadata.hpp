@@ -66,6 +66,8 @@ namespace dunedaq::snbmodules
         std::map<std::string, bool> m_modified_fields;
 
     public:
+        static const std::string m_file_extension;
+
         /// @brief Export only the modified fields to a string
         /// @param force_all Export everything if true
         /// @return String containing the metadata
@@ -110,8 +112,7 @@ namespace dunedaq::snbmodules
                          std::string group_id = "",
                          unsigned long bytes_transferred = 0,
                          e_status status = e_status::WAITING)
-            : m_file_path(std::filesystem::absolute(file_path)),
-              m_hash(hash),
+            : m_hash(hash),
               m_bytes_size(bytes_size),
               m_bytes_transferred(bytes_transferred),
               m_status(status),
@@ -120,6 +121,23 @@ namespace dunedaq::snbmodules
               m_group_id(group_id),
               m_modified_fields({{"hash", true}, {"size", true}, {"bytes_transferred", true}, {"transmission_speed", true}, {"status", true}, {"magnet_link", true}, {"error_code", true}, {"start_time", true}, {"end_time", true}, {"duration", true}})
         {
+            // remove all occurences of ./ in the file path
+            std::string file_path_str = file_path.string();
+            std::string x = "./";
+
+            size_t pos = 0;
+            while (1)
+            {
+                pos = file_path_str.find(x, pos);
+                if (pos == std::string::npos)
+                {
+                    break;
+                }
+
+                file_path_str.replace(pos, x.length(), "");
+            }
+
+            m_file_path = std::filesystem::absolute(file_path_str);
             if (group_id == "")
                 m_group_id = get_file_name();
         }
@@ -136,7 +154,25 @@ namespace dunedaq::snbmodules
         virtual ~TransferMetadata() {}
 
         // Setters
-        inline void set_file_path(std::filesystem::path file_path) { m_file_path = std::filesystem::absolute(file_path); }
+        inline void set_file_path(std::filesystem::path file_path)
+        {
+            // remove all occurences of ./ in the file path
+            std::string file_path_str = file_path.string();
+            std::string x = "./";
+
+            size_t pos = 0;
+            while (1)
+            {
+                pos = file_path_str.find(x, pos);
+                if (pos == std::string::npos)
+                {
+                    break;
+                }
+
+                file_path_str.replace(pos, x.length(), "");
+            }
+            m_file_path = std::filesystem::absolute(file_path_str);
+        }
         inline void set_group_id(std::string group_id) { m_group_id = group_id; }
         void set_src(IPFormat source)
         {
@@ -276,5 +312,6 @@ namespace dunedaq::snbmodules
             return ss.str();
         }
     };
+
 } // namespace dunedaq::snbmodules
 #endif // SNBMODULES_INCLUDE_SNBMODULES_FILE_HPP_
