@@ -1,19 +1,10 @@
 
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACEBITTORRENT_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACEBITTORRENT_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_BITTORRENT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_BITTORRENT_HPP_
 
 #include "snbmodules/interfaces/transfer_interface_abstract.hpp"
 #include "utilities/WorkerThread.hpp"
-
-#include <cstdio>  // for snprintf
-#include <cstdlib> // for atoi
-#include <cstring>
-#include <utility>
-#include <deque>
-#include <fstream>
-#include <regex>
-#include <algorithm> // for min()/max()
 
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/torrent_status.hpp"
@@ -49,9 +40,20 @@
 #include <dirent.h>
 #include <filesystem>
 
+#include <cstdio>  // for snprintf
+#include <cstdlib> // for atoi
+#include <cstring>
+#include <deque>
+#include <fstream>
+#include <regex>
+#include <algorithm> // for min()/max()
+
+#include <string>
+#include <vector>
+#include <map>
+
 namespace dunedaq::snbmodules
 {
-    using namespace std::placeholders;
     using clk = std::chrono::steady_clock;
     using lt::seconds;
     using std::chrono::duration_cast;
@@ -81,6 +83,21 @@ namespace dunedaq::snbmodules
 
     class TransferInterfaceBittorrent : public TransferInterfaceAbstract
     {
+
+    public:
+        TransferInterfaceBittorrent(GroupMetadata *config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip);
+        ~TransferInterfaceBittorrent();
+
+        void generate_torrents_files(std::filesystem::path dest, std::string tracker);
+        std::filesystem::path get_work_dir() { return m_work_dir; }
+
+        bool upload_file(TransferMetadata *f_meta) override;
+        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override;
+        bool pause_file(TransferMetadata *f_meta) override;
+        bool resume_file(TransferMetadata *f_meta) override;
+        bool hash_file(TransferMetadata *f_meta) override;
+        bool cancel_file(TransferMetadata *f_meta) override;
+
     private:
         lt::session ses;
         bool m_is_client;
@@ -131,57 +148,6 @@ namespace dunedaq::snbmodules
         // Threading
         dunedaq::utilities::WorkerThread m_thread;
         void do_work(std::atomic<bool> &);
-
-    public:
-        TransferInterfaceBittorrent(GroupMetadata *config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip);
-        ~TransferInterfaceBittorrent();
-
-        void generate_torrents_files(std::filesystem::path dest, std::string tracker);
-        std::filesystem::path get_work_dir() { return m_work_dir; }
-
-        virtual bool upload_file(TransferMetadata *f_meta) override;
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override;
-        virtual bool pause_file(TransferMetadata *f_meta) override;
-        virtual bool resume_file(TransferMetadata *f_meta) override;
-        virtual bool hash_file(TransferMetadata *f_meta) override;
-        virtual bool cancel_file(TransferMetadata *f_meta) override;
     };
 } // namespace dunedaq::snbmodules
-
-// namespace dunedaq::snbmodules
-// {
-//     class TransferInterfaceBittorrent : public TransferInterfaceAbstract
-//     {
-
-//     public:
-//         TransferInterfaceBittorrent(GroupMetadata *config) : TransferInterfaceAbstract(config) {}
-
-//         virtual bool upload_file(TransferMetadata *f_meta) override
-//         {
-//             (void)f_meta;
-//             return true;
-//         }
-//         virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
-//         {
-//             (void)dest;
-//             (void)f_meta;
-//             return true;
-//         }
-//         virtual bool pause_file(TransferMetadata *f_meta) override
-//         {
-//             (void)f_meta;
-//             return true;
-//         }
-//         virtual bool resume_file(TransferMetadata *f_meta) override
-//         {
-//             (void)f_meta;
-//             return true;
-//         }
-//         virtual bool hash_file(TransferMetadata *f_meta) override
-//         {
-//             (void)f_meta;
-//             return true;
-//         }
-//     };
-// } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_SRC_TRANSFERINTERFACEBITTORRENT_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_BITTORRENT_HPP_

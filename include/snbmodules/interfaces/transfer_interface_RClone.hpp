@@ -1,151 +1,29 @@
 
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACERCLONE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACERCLONE_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_RCLONE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_RCLONE_HPP_
 
 #include "snbmodules/interfaces/transfer_interface_abstract.hpp"
 #include "snbmodules/common/status_enum.hpp"
 
-#include "librclone.h"
 #include "appfwk/cmd/Nljs.hpp"
+
+#include <librclone.h>
 
 #include <chrono>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
 
+#include <string>
+#include <vector>
+#include <map>
+
 namespace dunedaq::snbmodules
 {
 
     class TransferInterfaceRClone : public TransferInterfaceAbstract
     {
-    private:
-        struct parameters
-        {
-            std::string protocol = "http";
-            std::string user;
-            int port = 8080;
-            std::string bwlimit = "off";
-            int refresh_rate = 10;
-            std::filesystem::path root_folder = "/";
-
-            // config
-            int simult_transfers = 16;
-            int transfer_threads = 16;
-            int checkers_threads = 16;
-
-            std::string chunk_size = "10G";
-            std::string buffer_size = "100G";
-            bool use_mmap = false;
-            bool checksum = true;
-
-        } m_params;
-
-        // job id to transfer metadata to keep track of the transfer and update the status
-        std::map<TransferMetadata *, int> m_jobs_id;
-        std::filesystem::path m_work_dir;
-
-        std::optional<nlohmann::json> requestRPC(std::string const method, std::string const input)
-        {
-            char *m = const_cast<char *>(method.c_str());
-            char *in = const_cast<char *>(input.c_str());
-
-            struct RcloneRPCResult out = RcloneRPC(m, in);
-            printf("debug : RClone : result status: %d\n", out.Status);
-            printf("debug : RClone : result output: %s\n", out.Output);
-            nlohmann::json j = nlohmann::json::parse(out.Output);
-            free(out.Output);
-
-            if (out.Status != 200)
-            {
-                return std::nullopt;
-            }
-            return j;
-        }
-
-        // Threading
-        dunedaq::utilities::WorkerThread m_thread;
-        void do_work(std::atomic<bool> &running)
-        {
-            while (running.load())
-            {
-                // requestRPC("cache/stats", "{}");
-                // requestRPC("core/memstats", "{}");
-                auto stats = requestRPC("core/stats", "{}");
-
-                if (stats.has_value())
-                {
-                    if (stats.value()["transferring"] != nullptr)
-                    {
-                        auto current_transfers = stats.value()["transferring"].get<std::vector<nlohmann::json>>();
-
-                        for (auto t : current_transfers)
-                        {
-                            std::string grp = t["group"].get<std::string>();
-                            int job_id = std::stoi(grp.substr(grp.find("/") + 1));
-
-                            for (auto [meta, id] : m_jobs_id)
-                            {
-                                if (id == job_id)
-                                {
-                                    meta->set_progress(t["percentage"].get<int>());
-                                    meta->set_transmission_speed(t["speedAvg"].get<unsigned long>());
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Update information about ongoing transfers
-                for (auto [meta, id] : m_jobs_id)
-                {
-                    // get refreshed infos
-                    char *input_request = (char *)malloc(100);
-                    sprintf(input_request, "{"
-                                           "\"jobid\": %d"
-                                           "}",
-                            id);
-
-                    auto res = requestRPC("job/status", input_request);
-                    free(input_request);
-
-                    if (res.has_value())
-                    {
-                        if (res.value()["finished"] != nullptr && res.value()["finished"].get<bool>())
-                        {
-                            if (res.value()["success"].get<bool>())
-                            {
-                                meta->set_status(e_status::FINISHED);
-                                meta->set_progress(100);
-                            }
-                            else
-                            {
-                                meta->set_status(e_status::ERROR);
-                                meta->set_error_code(res.value()["error"].get<std::string>());
-                            }
-                            meta->set_transmission_speed(0);
-                        }
-                    }
-                }
-
-                // wait
-                std::this_thread::sleep_for(std::chrono::seconds(m_params.refresh_rate));
-            }
-
-            for (auto meta : get_transfer_options()->get_transfers_meta())
-            {
-                if (meta->get_status() == e_status::UPLOADING)
-                {
-                    meta->set_status(e_status::FINISHED);
-                }
-                if (meta->get_status() == e_status::DOWNLOADING)
-                {
-                    meta->set_status(e_status::ERROR);
-                    meta->set_error_code("Transfer interrupted");
-                }
-            }
-        }
 
     public:
         TransferInterfaceRClone(GroupMetadata *config, std::filesystem::path work_dir)
@@ -178,7 +56,7 @@ namespace dunedaq::snbmodules
             m_params.checksum = config->get_protocol_options()["checksum"].get<bool>();
             m_params.root_folder = std::filesystem::absolute(config->get_protocol_options()["root_folder"].get<std::string>());
 
-            char *input_request = (char *)malloc(200);
+            char *input_request = new char[100];
             sprintf(input_request, "{"
                                    "\"rate\": \"%s\""
                                    "}",
@@ -204,7 +82,7 @@ namespace dunedaq::snbmodules
             RcloneFinalize();
         };
 
-        virtual bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : RClone : Uploading file " << f_meta->get_file_name();
 
@@ -229,11 +107,11 @@ namespace dunedaq::snbmodules
 
             return true;
         }
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
         {
             TLOG() << "debug : RClone : Downloading file " << f_meta->get_file_name();
 
-            char *input_request = (char *)malloc(1000);
+            char *input_request = new char[1000];
 
             if (m_params.protocol == "http")
             {
@@ -424,7 +302,8 @@ namespace dunedaq::snbmodules
 
             // auto res = requestRPC("operations/copyurl", input_request);
 
-            std::cout << input_request << std::endl;
+            TLOG() << input_request;
+
             free(input_request);
             if (res.has_value())
             {
@@ -441,7 +320,7 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        virtual bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : RClone : Pausing file " << f_meta->get_file_name();
             ers::warning(RCloneNotSupportError(ERS_HERE, "pausing a single file. Pausing everything."));
@@ -451,12 +330,12 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        virtual bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : RClone : Resuming file " << f_meta->get_file_name();
             ers::warning(RCloneNotSupportError(ERS_HERE, "resuming a single file. Resuming everything."));
 
-            char *input_request = (char *)malloc(200);
+            char *input_request = new char[100];
             sprintf(input_request, "{"
                                    "\"bytesPerSecond\": %s"
                                    "}",
@@ -468,14 +347,14 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        virtual bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : RClone : Hashing file " << f_meta->get_file_name();
 
             return true;
         }
 
-        virtual bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : RClone : Cancelling file " << f_meta->get_file_name();
 
@@ -491,7 +370,7 @@ namespace dunedaq::snbmodules
                 return false;
             }
 
-            char *input_request = (char *)malloc(100);
+            char *input_request = new char[100];
             sprintf(input_request, "{"
                                    "\"jobid\": %d"
                                    "}",
@@ -502,6 +381,134 @@ namespace dunedaq::snbmodules
 
             return true;
         }
+
+    private:
+        struct parameters
+        {
+            std::string protocol = "http";
+            std::string user;
+            int port = 8080;
+            std::string bwlimit = "off";
+            int refresh_rate = 10;
+            std::filesystem::path root_folder = "/";
+
+            // config
+            int simult_transfers = 16;
+            int transfer_threads = 16;
+            int checkers_threads = 16;
+
+            std::string chunk_size = "10G";
+            std::string buffer_size = "100G";
+            bool use_mmap = false;
+            bool checksum = true;
+
+        } m_params;
+
+        // job id to transfer metadata to keep track of the transfer and update the status
+        std::map<TransferMetadata *, int> m_jobs_id;
+        std::filesystem::path m_work_dir;
+
+        std::optional<nlohmann::json> requestRPC(std::string const method, std::string const input)
+        {
+            char *m = const_cast<char *>(method.c_str());
+            char *in = const_cast<char *>(input.c_str());
+
+            struct RcloneRPCResult out = RcloneRPC(m, in);
+            printf("debug : RClone : result status: %d\n", out.Status);
+            printf("debug : RClone : result output: %s\n", out.Output);
+            nlohmann::json j = nlohmann::json::parse(out.Output);
+            free(out.Output);
+
+            if (out.Status != 200)
+            {
+                return std::nullopt;
+            }
+            return j;
+        }
+
+        // Threading
+        dunedaq::utilities::WorkerThread m_thread;
+        void do_work(std::atomic<bool> &running)
+        {
+            while (running.load())
+            {
+                // requestRPC("cache/stats", "{}");
+                // requestRPC("core/memstats", "{}");
+                auto stats = requestRPC("core/stats", "{}");
+
+                if (stats.has_value())
+                {
+                    if (stats.value()["transferring"] != nullptr)
+                    {
+                        auto current_transfers = stats.value()["transferring"].get<std::vector<nlohmann::json>>();
+
+                        for (auto t : current_transfers)
+                        {
+                            std::string grp = t["group"].get<std::string>();
+                            int job_id = std::stoi(grp.substr(grp.find("/") + 1));
+
+                            for (auto [meta, id] : m_jobs_id)
+                            {
+                                if (id == job_id)
+                                {
+                                    meta->set_progress(t["percentage"].get<int>());
+                                    meta->set_transmission_speed(t["speedAvg"].get<uint64_t>());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Update information about ongoing transfers
+                for (auto [meta, id] : m_jobs_id)
+                {
+                    // get refreshed infos
+                    char *input_request = new char[100];
+                    sprintf(input_request, "{"
+                                           "\"jobid\": %d"
+                                           "}",
+                            id);
+
+                    auto res = requestRPC("job/status", input_request);
+                    free(input_request);
+
+                    if (res.has_value())
+                    {
+                        if (res.value()["finished"] != nullptr && res.value()["finished"].get<bool>())
+                        {
+                            if (res.value()["success"].get<bool>())
+                            {
+                                meta->set_status(e_status::FINISHED);
+                                meta->set_progress(100);
+                            }
+                            else
+                            {
+                                meta->set_status(e_status::ERROR);
+                                meta->set_error_code(res.value()["error"].get<std::string>());
+                            }
+                            meta->set_transmission_speed(0);
+                        }
+                    }
+                }
+
+                // wait
+                std::this_thread::sleep_for(std::chrono::seconds(m_params.refresh_rate));
+            }
+
+            for (auto meta : get_transfer_options()->get_transfers_meta())
+            {
+                if (meta->get_status() == e_status::UPLOADING)
+                {
+                    meta->set_status(e_status::FINISHED);
+                }
+                if (meta->get_status() == e_status::DOWNLOADING)
+                {
+                    meta->set_status(e_status::ERROR);
+                    meta->set_error_code("Transfer interrupted");
+                }
+            }
+        }
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_SRC_RCLONE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_RCLONE_HPP_

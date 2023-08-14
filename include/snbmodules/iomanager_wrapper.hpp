@@ -1,6 +1,6 @@
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_IOMANAGERWRAPPER_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_IOMANAGERWRAPPER_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_IOMANAGER_WRAPPER_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_IOMANAGER_WRAPPER_HPP_
 
 #include "snbmodules/common/notification_enum.hpp"
 #include "snbmodules/ip_format.hpp"
@@ -8,24 +8,14 @@
 #include "iomanager/IOManager.hpp"
 #include "iomanager/network/ConfigClient.hpp"
 #include "iomanager/network/NetworkIssues.hpp"
+
 #include <string>
 
 namespace dunedaq::snbmodules
 {
     // Singleton
     class IOManagerWrapper
-
     {
-    protected:
-        /// @brief Singleton instance
-        static IOManagerWrapper *m_instance_;
-
-        /// @brief List of connections
-        iomanager::connection::Connections_t m_connections;
-        /// @brief List of queues
-        iomanager::connection::Queues_t m_queues;
-
-        IOManagerWrapper() = default;
 
     public:
         // not cloneable
@@ -60,8 +50,19 @@ namespace dunedaq::snbmodules
             static IOManagerWrapper instance;
             return instance;
         }
+
+    protected:
+        /// @brief Singleton instance
+        static IOManagerWrapper *m_instance_;
+
+        /// @brief List of connections
+        iomanager::connection::Connections_t m_connections;
+        /// @brief List of queues
+        iomanager::connection::Queues_t m_queues;
+
+        IOManagerWrapper() = default;
     };
 
-}
+} // namespace dunedaq::snbmodules
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_IOMANAGERWRAPPER_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_IOMANAGER_WRAPPER_HPP_

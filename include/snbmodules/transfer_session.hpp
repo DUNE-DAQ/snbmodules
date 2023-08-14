@@ -1,11 +1,6 @@
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_SESSION_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_SESSION_HPP_
-
-// for fork (TODO : usefull ?)
-#include <sys/prctl.h>
-#include <sys/wait.h>
-#include <fstream>
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_SESSION_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_SESSION_HPP_
 
 #include "snbmodules/group_metadata.hpp"
 #include "snbmodules/transfer_metadata.hpp"
@@ -19,6 +14,13 @@
 #include "snbmodules/interfaces/transfer_interface_bittorrent.hpp"
 #include "snbmodules/interfaces/transfer_interface_SCP.hpp"
 #include "snbmodules/interfaces/transfer_interface_RClone.hpp"
+
+#include <sys/prctl.h>
+#include <sys/wait.h>
+#include <fstream>
+#include <string>
+#include <set>
+#include <vector>
 
 namespace dunedaq::snbmodules
 {
@@ -161,4 +163,4 @@ namespace dunedaq::snbmodules
     };
 
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFERSESSION_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_SESSION_HPP_

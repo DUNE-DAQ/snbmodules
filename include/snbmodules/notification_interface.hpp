@@ -1,17 +1,19 @@
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
-
-#include "snbmodules/common/notification_enum.hpp"
-#include "snbmodules/ip_format.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
 
 #include "iomanager/IOManager.hpp"
 #include "iomanager/network/ConfigClient.hpp"
 #include "iomanager/network/NetworkIssues.hpp"
-#include <string>
 
+#include "snbmodules/common/notification_enum.hpp"
+#include "snbmodules/ip_format.hpp"
+#include "snbmodules/tools/magic_enum.hpp"
 #include "snbmodules/iomanager_wrapper.hpp"
+
+#include <string>
+#include <set>
+#include <vector>
 
 namespace dunedaq
 {
@@ -51,7 +53,7 @@ namespace dunedaq
         {
 
         public:
-            NotificationInterface(std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
+            explicit NotificationInterface(std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
                 : m_timeout_send(timeout_send),
                   m_timeout_receive(timeout_receive),
                   m_connection_prefix(connection_prefix)
@@ -182,4 +184,4 @@ namespace dunedaq
 
 } // namespace dunedaq
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_

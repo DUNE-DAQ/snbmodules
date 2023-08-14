@@ -1,5 +1,5 @@
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFERMETADATA_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFERMETADATA_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_METADATA_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_METADATA_HPP_
 
 #include "snbmodules/metadata_abstract.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -19,51 +19,6 @@ namespace dunedaq::snbmodules
 {
     class TransferMetadata : public MetadataAbstract
     {
-    private:
-        /// @brief Path of the file on the src filesystem
-        std::filesystem::path m_file_path = "";
-
-        /// @brief TODO : Hash of the file sha1
-        std::string m_hash = "";
-
-        /// @brief Total size of the file in bytes
-        unsigned long m_bytes_size = 0;
-
-        /// @brief Number of bytes transferred or received
-        unsigned long m_bytes_transferred = 0;
-
-        /// @brief Transmission speed in bytes/s
-        unsigned long m_transmission_speed = 0;
-
-        /// @brief Status of the file transfer
-        e_status m_status = e_status::WAITING;
-
-        /// @brief Source of the file transfer
-        IPFormat m_src = IPFormat();
-
-        /// @brief Destination of the file transfer, not always initialized
-        IPFormat m_dest = IPFormat();
-
-        /// @brief Magnet link of the file only for bit torrent
-        std::string m_magnet_link = "";
-
-        /// @brief Group id of the file, used to group files together
-        std::string m_group_id = "";
-
-        /// @brief show the error exception in case of error
-        std::string m_error_code = "";
-
-        /// @brief Start time of the transfer, 0 if not started, reset if resumed
-        uint64_t m_start_time = 0;
-
-        /// @brief End time of the transfer, 0 if not finished
-        uint64_t m_end_time = 0;
-
-        /// @brief Duration of the transfer
-        uint64_t m_duration = 0;
-
-        /// @brief Vector of modified fields in order : to send only the modified fields
-        std::map<std::string, bool> m_modified_fields;
 
     public:
         static const std::string m_file_extension;
@@ -74,8 +29,8 @@ namespace dunedaq::snbmodules
         virtual std::string export_to_string_partial(bool force_all = false);
 
         // Overriden methods
-        virtual std::string export_to_string() override { return export_to_string_partial(true); }
-        virtual void from_string(std::string) override;
+        std::string export_to_string() override { return export_to_string_partial(true); }
+        void from_string(std::string) override;
 
         // Used to export the metadata to a json file
         void generate_metadata_file(std::filesystem::path dest = ".") override;
@@ -105,12 +60,12 @@ namespace dunedaq::snbmodules
         /// @param bytes_transferred
         /// @param status
         TransferMetadata(std::filesystem::path file_path,
-                         unsigned long bytes_size,
+                         uint64_t bytes_size,
                          IPFormat src,
                          std::string hash = "",
                          IPFormat dest = IPFormat(),
                          std::string group_id = "",
-                         unsigned long bytes_transferred = 0,
+                         uint64_t bytes_transferred = 0,
                          e_status status = e_status::WAITING)
             : m_hash(hash),
               m_bytes_size(bytes_size),
@@ -145,7 +100,7 @@ namespace dunedaq::snbmodules
         }
 
         /// @brief Load from file constructor
-        TransferMetadata(std::filesystem::path src, bool is_path = true)
+        explicit TransferMetadata(std::filesystem::path src, bool is_path = true)
         {
             if (is_path)
             {
@@ -212,12 +167,12 @@ namespace dunedaq::snbmodules
             m_modified_fields["hash"] = true;
         }
 
-        inline void set_size(unsigned long size)
+        inline void set_size(uint64_t size)
         {
             m_bytes_size = size;
             m_modified_fields["size"] = true;
         }
-        inline void set_bytes_transferred(unsigned long bytes_transferred)
+        inline void set_bytes_transferred(uint64_t bytes_transferred)
         {
             m_bytes_transferred = bytes_transferred;
             m_modified_fields["bytes_transferred"] = true;
@@ -259,7 +214,7 @@ namespace dunedaq::snbmodules
             m_error_code = error_code;
             m_modified_fields["error_code"] = true;
         }
-        inline void set_transmission_speed(unsigned long transmission_speed)
+        inline void set_transmission_speed(uint64_t transmission_speed)
         {
             m_transmission_speed = transmission_speed;
             m_modified_fields["transmission_speed"] = true;
@@ -286,15 +241,15 @@ namespace dunedaq::snbmodules
         inline std::string get_hash() { return m_hash; }
         inline IPFormat get_src() { return m_src; }
         inline IPFormat get_dest() { return m_dest; }
-        inline unsigned long get_size() { return m_bytes_size; }
-        inline unsigned long get_bytes_transferred() { return m_bytes_transferred; }
+        inline uint64_t get_size() { return m_bytes_size; }
+        inline uint64_t get_bytes_transferred() { return m_bytes_transferred; }
         inline e_status get_status() { return m_status; }
         inline std::string get_magnet_link() { return m_magnet_link; }
         inline std::string get_group_id() { return m_group_id; }
         inline int get_progress() { return m_bytes_size == 0 ? 0 : m_bytes_transferred * 100 / m_bytes_size; }
         inline std::string get_error_code() { return m_error_code; }
-        inline unsigned long get_transmission_speed() { return m_transmission_speed; }
-        unsigned long get_total_duration_ms()
+        inline uint64_t get_transmission_speed() { return m_transmission_speed; }
+        uint64_t get_total_duration_ms()
         {
             if (m_start_time == 0)
             {
@@ -309,8 +264,8 @@ namespace dunedaq::snbmodules
                 return m_end_time - m_start_time;
             }
         }
-        inline unsigned long get_start_time() { return m_start_time; }
-        inline unsigned long get_end_time() { return m_end_time; }
+        inline uint64_t get_start_time() { return m_start_time; }
+        inline uint64_t get_end_time() { return m_end_time; }
         std::string get_start_time_str()
         {
             if (m_start_time == 0)
@@ -335,7 +290,53 @@ namespace dunedaq::snbmodules
             ss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
             return ss.str();
         }
+
+    private:
+        /// @brief Path of the file on the src filesystem
+        std::filesystem::path m_file_path = "";
+
+        /// @brief TODO : Hash of the file sha1
+        std::string m_hash = "";
+
+        /// @brief Total size of the file in bytes
+        uint64_t m_bytes_size = 0;
+
+        /// @brief Number of bytes transferred or received
+        uint64_t m_bytes_transferred = 0;
+
+        /// @brief Transmission speed in bytes/s
+        uint64_t m_transmission_speed = 0;
+
+        /// @brief Status of the file transfer
+        e_status m_status = e_status::WAITING;
+
+        /// @brief Source of the file transfer
+        IPFormat m_src = IPFormat();
+
+        /// @brief Destination of the file transfer, not always initialized
+        IPFormat m_dest = IPFormat();
+
+        /// @brief Magnet link of the file only for bit torrent
+        std::string m_magnet_link = "";
+
+        /// @brief Group id of the file, used to group files together
+        std::string m_group_id = "";
+
+        /// @brief show the error exception in case of error
+        std::string m_error_code = "";
+
+        /// @brief Start time of the transfer, 0 if not started, reset if resumed
+        uint64_t m_start_time = 0;
+
+        /// @brief End time of the transfer, 0 if not finished
+        uint64_t m_end_time = 0;
+
+        /// @brief Duration of the transfer
+        uint64_t m_duration = 0;
+
+        /// @brief Vector of modified fields in order : to send only the modified fields
+        std::map<std::string, bool> m_modified_fields;
     };
 
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_FILE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_METADATA_HPP_

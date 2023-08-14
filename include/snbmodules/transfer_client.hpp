@@ -1,7 +1,7 @@
 
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_CLIENT_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_CLIENT_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_
 
 #include "snbmodules/transfer_session.hpp"
 #include "snbmodules/ip_format.hpp"
@@ -10,16 +10,16 @@
 #include "snbmodules/notification_interface.hpp"
 #include "snbmodules/iomanager_wrapper.hpp"
 
+// errors handling
+#include "snbmodules/common/errors_declaration.hpp"
+#include "logging/Logging.hpp"
+
 #include <unistd.h>
 #include <string>
 #include <filesystem>
 #include <set>
 #include <iostream>
 #include <map>
-
-// errors handling
-#include "snbmodules/common/errors_declaration.hpp"
-#include "logging/Logging.hpp"
 
 namespace dunedaq::snbmodules
 {
@@ -157,4 +157,4 @@ namespace dunedaq::snbmodules
         TransferMetadata *create_metadata_from_file(std::filesystem::path src);
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_CLIENT_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_

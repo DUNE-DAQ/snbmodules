@@ -1,6 +1,6 @@
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_STATUSENUM_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_STATUSENUM_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_COMMON_STATUS_ENUM_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_COMMON_STATUS_ENUM_HPP_
 namespace dunedaq::snbmodules
 {
     /// @brief Different type of session status
@@ -20,7 +20,7 @@ namespace dunedaq::snbmodules
         PAUSED,
         WAITING,
 
-        // TODO : specify ?
+        // TODO Aug-14-2022 Leo Joly leo.vincent.andre.joly@cern.ch : should we add more status and specify value ?
 
         CHECKING,
         HASHING,
@@ -28,4 +28,4 @@ namespace dunedaq::snbmodules
         DOWNLOADING,
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_STATUSENUM_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_COMMON_STATUS_ENUM_HPP_

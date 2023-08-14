@@ -18,8 +18,8 @@ Calling Methods :
         String 						as std::string
         CArray<String>				as std::string[CArraySize]
 ***********************************************************************/
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_SISortHPP_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_SISortHPP_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_TOOLS_NATURAL_SORT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_TOOLS_NATURAL_SORT_HPP_
 #include <cctype>
 #include <algorithm>
 #include <vector>
@@ -82,6 +82,31 @@ namespace SI
             template <typename ValueType, typename Iterator>
             struct compare_number
             {
+            public:
+                int operator()(
+                    Iterator lhs_begin, Iterator lhs_end, bool is_fractional_part1,
+                    Iterator rhs_begin, Iterator rhs_end, bool is_fractional_part2)
+                {
+                    if (is_fractional_part1 && !is_fractional_part2)
+                    {
+                        return true;
+                    } // 0<num1<1 && num2>=1
+                    if (!is_fractional_part1 && is_fractional_part2)
+                    {
+                        return false; // 0<num2<1 && num1>=1
+                    }
+
+                    // is_fraction_part1 == is_factional_part2
+                    if (is_fractional_part1)
+                    {
+                        return fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
+                    }
+                    else
+                    {
+                        return non_fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
+                    }
+                }
+
             private:
                 // If Number is Itself fractional Part
                 int fractional(Iterator lhs_begin, Iterator lhs_end, Iterator rhs_begin, Iterator rhs_end)
@@ -141,31 +166,6 @@ namespace SI
                         rhs_begin++;
                     }
                     return 0;
-                }
-
-            public:
-                int operator()(
-                    Iterator lhs_begin, Iterator lhs_end, bool is_fractional_part1,
-                    Iterator rhs_begin, Iterator rhs_end, bool is_fractional_part2)
-                {
-                    if (is_fractional_part1 && !is_fractional_part2)
-                    {
-                        return true;
-                    } // 0<num1<1 && num2>=1
-                    if (!is_fractional_part1 && is_fractional_part2)
-                    {
-                        return false; // 0<num2<1 && num1>=1
-                    }
-
-                    // is_fraction_part1 == is_factional_part2
-                    if (is_fractional_part1)
-                    {
-                        return fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
-                    }
-                    else
-                    {
-                        return non_fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
-                    }
                 }
             };
 
@@ -310,4 +310,4 @@ namespace SI
     } // namespace natural
 } // namespace SI
 
-#endif // SI_NATURAL_SORT_HPP
+#endif // SNBMODULES_INCLUDE_SNBMODULES_TOOLS_NATURAL_SORT_HPP_

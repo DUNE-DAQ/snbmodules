@@ -1,6 +1,6 @@
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_PROTOCOLENUM_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_PROTOCOLENUM_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_COMMON_PROTOCOLS_ENUM_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_COMMON_PROTOCOLS_ENUM_HPP_
 namespace dunedaq::snbmodules
 {
     /// @brief Different type of protocols available for communication
@@ -12,4 +12,4 @@ namespace dunedaq::snbmodules
         dummy,
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_PROTOCOLENUM_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_COMMON_PROTOCOLS_ENUM_HPP_

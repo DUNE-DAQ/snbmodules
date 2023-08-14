@@ -1,7 +1,7 @@
 
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACESCP_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACESCP_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_SCP_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_SCP_HPP_
 
 #include "snbmodules/interfaces/transfer_interface_abstract.hpp"
 #include "snbmodules/common/status_enum.hpp"
@@ -11,20 +11,14 @@
 #include <stdio.h>
 #include <fstream>
 
+#include <string>
+#include <map>
+
 namespace dunedaq::snbmodules
 {
 
     class TransferInterfaceSCP : public TransferInterfaceAbstract
     {
-    private:
-        struct scp_parameters
-        {
-            std::string user;
-            bool use_password = false;
-        } m_params;
-
-        bool m_is_uploader;
-        std::map<std::string, std::filesystem::path> m_files_being_transferred;
 
     public:
         TransferInterfaceSCP(GroupMetadata *config, bool is_uploader) : TransferInterfaceAbstract(config)
@@ -35,7 +29,7 @@ namespace dunedaq::snbmodules
         }
         virtual ~TransferInterfaceSCP() = default;
 
-        virtual bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : SCP : Uploading file " << f_meta->get_file_name();
             f_meta->set_status(e_status::UPLOADING);
@@ -46,7 +40,7 @@ namespace dunedaq::snbmodules
             f_meta->set_bytes_transferred(f_meta->get_size());
             return true;
         }
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
         {
             TLOG() << "debug : SCP : Downloading file " << f_meta->get_file_name();
             f_meta->set_status(e_status::DOWNLOADING);
@@ -82,7 +76,7 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        virtual bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : SCP : Pausing file " << f_meta->get_file_name();
             f_meta->set_status(e_status::PAUSED);
@@ -90,7 +84,7 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        virtual bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : SCP : Resuming file " << f_meta->get_file_name();
 
@@ -104,19 +98,29 @@ namespace dunedaq::snbmodules
             }
         }
 
-        virtual bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : SCP : Hashing file " << f_meta->get_file_name();
             f_meta->set_status(e_status::HASHING);
             return true;
         }
 
-        virtual bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata *f_meta) override
         {
             TLOG() << "debug : SCP : Cancelling file " << f_meta->get_file_name();
             f_meta->set_status(e_status::CANCELLED);
             return true;
         }
+
+    private:
+        struct scp_parameters
+        {
+            std::string user;
+            bool use_password = false;
+        } m_params;
+
+        bool m_is_uploader;
+        std::map<std::string, std::filesystem::path> m_files_being_transferred;
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACESCP_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_SCP_HPP_

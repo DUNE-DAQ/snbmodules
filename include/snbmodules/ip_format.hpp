@@ -1,29 +1,43 @@
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_IPFORMAT_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_IPFORMAT_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_IP_FORMAT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_IP_FORMAT_HPP_
 
 #define _CRT_SECURE_NO_WARNINGS
+
+#include "snbmodules/tools/natural_sort.hpp"
+
 #include <string>
 #include <filesystem>
 #include <string>
 #include <stdexcept>
 #include <iostream>
-#include <stdexcept>
+#include <vector>
 #include <string.h>
 
-#include "snbmodules/tools/natural_sort.hpp"
 namespace dunedaq::snbmodules
 {
     /// @brief Class that represents an IP address and a port
     /// TODO: should be replaced by something better ?
     class IPFormat
     {
-    private:
-        /// @brief IP address
-        std::string ip = "0.0.0.0";
-        /// @brief Port
-        int port = 0;
 
     public:
+        // Constructors
+        /// @brief  Constructor that set the IP address and the port
+        /// @param ip  IP address
+        /// @param port  Port
+        explicit IPFormat(std::string ip = "0.0.0.0", int port = 0)
+        {
+            set_port(port);
+            set_ip(ip);
+        }
+
+        /// @brief  Copy constructor
+        IPFormat(const IPFormat &o)
+        {
+            set_port(o.port);
+            set_ip(o.ip);
+        }
+
         /// @brief  Defualt = operator
         IPFormat &operator=(IPFormat const &) = default;
 
@@ -76,7 +90,7 @@ namespace dunedaq::snbmodules
 
             // Splitting the string IP:PORT or IP
             std::vector<std::string> ip_port_pair;
-            char *next_token = NULL;
+            char *next_token = nullptr;
 
             char *token = strtok_s(const_cast<char *>(ip.c_str()), ":", &next_token);
             while (token != nullptr)
@@ -89,7 +103,7 @@ namespace dunedaq::snbmodules
                 throw std::invalid_argument("Invalid IP address format (IP:PORT or IP)");
             }
 
-            // TODO : Check if the IPv4 address is valid
+            // TODO Aug-14-2022 Leo Joly leo.vincent.andre.joly@cern.ch : Check if the IPv4 address is valid
 
             // set values
             if (ip_port_pair.size() == 2)
@@ -104,22 +118,11 @@ namespace dunedaq::snbmodules
         std::string get_ip() { return this->ip; }
         int get_port() { return this->port; }
 
-        // Constructors
-        /// @brief  Constructor that set the IP address and the port
-        /// @param ip  IP address
-        /// @param port  Port
-        IPFormat(std::string ip = "0.0.0.0", int port = 0)
-        {
-            set_port(port);
-            set_ip(ip);
-        }
-
-        /// @brief  Copy constructor
-        IPFormat(const IPFormat &o)
-        {
-            set_port(o.port);
-            set_ip(o.ip);
-        }
+    private:
+        /// @brief IP address
+        std::string ip = "0.0.0.0";
+        /// @brief Port
+        int port = 0;
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_IPFORMAT_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_IP_FORMAT_HPP_

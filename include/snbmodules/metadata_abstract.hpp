@@ -1,9 +1,5 @@
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_METADATA_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_METADATA_HPP_
-
-#include <iostream>
-#include <fstream>
-#include <filesystem>
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_METADATA_ABSTRACT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_METADATA_ABSTRACT_HPP_
 
 // errors handling
 #include "snbmodules/common/errors_declaration.hpp"
@@ -12,7 +8,10 @@
 // json
 #include "appfwk/cmd/Nljs.hpp"
 
-#define DEBUG_LVL 10
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <string>
 
 namespace dunedaq::snbmodules
 {
@@ -44,4 +43,4 @@ namespace dunedaq::snbmodules
         virtual bool operator<(MetadataAbstract const &other) const = 0;
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_METADATA_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_METADATA_ABSTRACT_HPP_

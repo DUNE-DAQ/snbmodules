@@ -1,5 +1,5 @@
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_GROUPMETADATA_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_GROUPMETADATA_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_GROUP_METADATA_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_GROUP_METADATA_HPP_
 
 #include "snbmodules/metadata_abstract.hpp"
 #include "snbmodules/transfer_metadata.hpp"
@@ -9,31 +9,12 @@
 
 #include <set>
 #include <filesystem>
+#include <string>
+
 namespace dunedaq::snbmodules
 {
     class GroupMetadata : public MetadataAbstract
     {
-    private:
-        /// @brief Unique identifier for the transfer
-        std::string m_group_id;
-
-        /// @brief Protocol used for the transfer, every files in the transfer must use the same protocol
-        e_protocol_type m_protocol;
-
-        /// Specific options for the selected protocol
-        nlohmann::json m_protocol_options;
-
-        /// @brief Set of files to transfer
-        std::set<TransferMetadata *> m_transfers_meta;
-
-        /// @brief Set of expected files metadata to add later
-        std::set<std::string> m_expected_files;
-
-        /// @brief  Get source id
-        std::string m_source_id;
-
-        /// @brief  Get source ip
-        IPFormat m_source_ip;
 
     public:
         static const std::string m_file_extension;
@@ -75,7 +56,7 @@ namespace dunedaq::snbmodules
         }
 
         /// @brief Load from file constructor
-        GroupMetadata(std::filesystem::path src, bool is_path = true)
+        explicit GroupMetadata(std::filesystem::path src, bool is_path = true)
         {
             if (is_path)
             {
@@ -146,7 +127,29 @@ namespace dunedaq::snbmodules
         inline std::string get_source_id() const { return this->m_source_id; }
         inline IPFormat get_source_ip() const { return this->m_source_ip; }
         std::string to_string();
+
+    private:
+        /// @brief Unique identifier for the transfer
+        std::string m_group_id;
+
+        /// @brief Protocol used for the transfer, every files in the transfer must use the same protocol
+        e_protocol_type m_protocol;
+
+        /// Specific options for the selected protocol
+        nlohmann::json m_protocol_options;
+
+        /// @brief Set of files to transfer
+        std::set<TransferMetadata *> m_transfers_meta;
+
+        /// @brief Set of expected files metadata to add later
+        std::set<std::string> m_expected_files;
+
+        /// @brief  Get source id
+        std::string m_source_id;
+
+        /// @brief  Get source ip
+        IPFormat m_source_ip;
     };
 
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_GROUPMETADATA_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_GROUP_METADATA_HPP_

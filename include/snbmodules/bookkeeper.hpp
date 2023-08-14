@@ -7,54 +7,21 @@
 #include "snbmodules/notification_interface.hpp"
 #include "snbmodules/common/status_enum.hpp"
 
-#include <string>
-#include <algorithm>
-#include <chrono>
-
 // errors handling
 #include "snbmodules/common/errors_declaration.hpp"
 #include "logging/Logging.hpp"
+
+#include <string>
+#include <algorithm>
+#include <chrono>
+#include <map>
+#include <set>
+#include <vector>
 
 namespace dunedaq::snbmodules
 {
     class Bookkeeper : public NotificationInterface
     {
-    private:
-        /// @brief Unique identifier for the bookkeeper
-        std::string m_bookkeeper_id;
-
-        /// @brief IP address of the bookkeeper
-        IPFormat m_ip;
-
-        /// @brief map of group_id -> group_transfers
-        std::map<std::string, GroupMetadata *> m_grp_transfers;
-
-        /// @brief map of grp_transfer_id -> clients_id
-        std::map<std::string, std::set<std::string>> m_clients_per_grp_transfer;
-
-        /// @brief Map of files/current transfers, client_id -> set of transfers
-        std::map<std::string, std::vector<TransferMetadata *>> m_transfers;
-
-        /// @brief should the information pannel of transfers be displayed on the normal log or a specific file
-        std::string m_file_log_path = "";
-
-        /// @brief Refresh rate of the information pannel of transfers in seconds
-        int m_refresh_rate = 5;
-
-        /// @brief Send a notification to a clients id or connection to get available files
-        /// @param client client id or connection name
-        void request_connection_and_available_files(std::string client);
-
-        /// @brief Start a new transfer
-        [[deprecated("Now only the uploader can start a transfer")]] void start_transfers(std::string transfer_id);
-
-        /// @brief Usefull convertion from session id to client id
-        /// @param session_name session id
-        /// @return client id
-        std::string get_client_name_from_session_name(std::string session_name) const
-        {
-            return session_name.substr(0, session_name.find("_"));
-        }
 
     public:
         /// @brief Constructor with params
@@ -103,6 +70,43 @@ namespace dunedaq::snbmodules
         inline IPFormat get_ip() const { return m_ip; }
         inline std::map<std::string, GroupMetadata *> get_grp_transfers() const { return m_grp_transfers; }
         inline std::map<std::string, std::vector<TransferMetadata *>> get_transfers() const { return m_transfers; }
+
+    private:
+        /// @brief Unique identifier for the bookkeeper
+        std::string m_bookkeeper_id;
+
+        /// @brief IP address of the bookkeeper
+        IPFormat m_ip;
+
+        /// @brief map of group_id -> group_transfers
+        std::map<std::string, GroupMetadata *> m_grp_transfers;
+
+        /// @brief map of grp_transfer_id -> clients_id
+        std::map<std::string, std::set<std::string>> m_clients_per_grp_transfer;
+
+        /// @brief Map of files/current transfers, client_id -> set of transfers
+        std::map<std::string, std::vector<TransferMetadata *>> m_transfers;
+
+        /// @brief should the information pannel of transfers be displayed on the normal log or a specific file
+        std::string m_file_log_path = "";
+
+        /// @brief Refresh rate of the information pannel of transfers in seconds
+        int m_refresh_rate = 5;
+
+        /// @brief Send a notification to a clients id or connection to get available files
+        /// @param client client id or connection name
+        void request_connection_and_available_files(std::string client);
+
+        /// @brief Start a new transfer
+        [[deprecated("Now only the uploader can start a transfer")]] void start_transfers(std::string transfer_id);
+
+        /// @brief Usefull convertion from session id to client id
+        /// @param session_name session id
+        /// @return client id
+        std::string get_client_name_from_session_name(std::string session_name) const
+        {
+            return session_name.substr(0, session_name.find("_"));
+        }
     };
 } // namespace dunedaq::snbmodules
 #endif // SNBMODULES_INCLUDE_SNBMODULES_BOOKKEEPER_HPP_
