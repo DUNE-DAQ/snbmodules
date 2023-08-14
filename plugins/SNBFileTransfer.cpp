@@ -26,11 +26,11 @@ namespace dunedaq
             register_command("start", &SNBFileTransfer::do_start);
             register_command("stop", &SNBFileTransfer::do_stop);
 
-            register_command("new-transfer", &SNBFileTransfer::do_tr_new);
-            register_command("start-transfer", &SNBFileTransfer::do_tr_start);
-            register_command("pause-transfer", &SNBFileTransfer::do_tr_pause);
-            register_command("resume-transfer", &SNBFileTransfer::do_tr_resume);
-            register_command("cancel-transfer", &SNBFileTransfer::do_tr_cancel);
+            register_command("new_transfer", &SNBFileTransfer::do_tr_new);
+            register_command("start_transfer", &SNBFileTransfer::do_tr_start);
+            register_command("pause_transfer", &SNBFileTransfer::do_tr_pause);
+            register_command("resume_transfer", &SNBFileTransfer::do_tr_resume);
+            register_command("cancel_transfer", &SNBFileTransfer::do_tr_cancel);
 
             m_name = name;
         }
@@ -92,12 +92,15 @@ namespace dunedaq
         SNBFileTransfer::do_scrap(const nlohmann::json &args)
         {
             (void)args;
-            m_thread->stop_working_thread();
-            // wait for thread to stop
-            while (m_thread->thread_running())
-                ;
+            if (m_thread->thread_running())
+            {
+                m_thread->stop_working_thread();
+                // wait for thread to stop
+                while (m_thread->thread_running())
+                    ;
+                delete m_thread;
+            }
 
-            delete m_thread;
             delete m_client;
         }
 

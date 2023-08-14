@@ -58,9 +58,8 @@ def cli(config, json_dir):
     the_system = System()
     
     the_system.apps["snbmodulesapp"] = snbmodulesapp_gen.get_snbmodules_app(
-        nickname = "the_solo_app", 
-	num_snbfiletransfers = snbmodules.num_snbfiletransfers,
-	some_configured_value = snbmodules.some_configured_value
+        nickname = "snbFileTransfer",
+        port = snbmodules.port,
     )
 
     ####################################################################                                  

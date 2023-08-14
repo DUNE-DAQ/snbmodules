@@ -24,6 +24,8 @@ find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
 find_package(readoutlibs REQUIRED)
 
+daq_codegen( snbfiletransfer.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
+
 set(linked_libraries
     iomanager::iomanager
     logging::logging

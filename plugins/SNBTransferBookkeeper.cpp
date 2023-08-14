@@ -26,10 +26,10 @@ namespace dunedaq
             register_command("stop", &SNBTransferBookkeeper::do_stop);
             register_command("info", &SNBTransferBookkeeper::do_info);
 
-            register_command("new-transfer", &SNBTransferBookkeeper::do_tr_new);
-            register_command("start-transfer", &SNBTransferBookkeeper::do_tr_start);
-            register_command("pause-transfer", &SNBTransferBookkeeper::do_tr_pause);
-            register_command("resume-transfer", &SNBTransferBookkeeper::do_tr_resume);
+            register_command("new_transfer", &SNBTransferBookkeeper::do_tr_new);
+            register_command("start_transfer", &SNBTransferBookkeeper::do_tr_start);
+            register_command("pause_transfer", &SNBTransferBookkeeper::do_tr_pause);
+            register_command("resume_transfer", &SNBTransferBookkeeper::do_tr_resume);
             register_command("stop-transfer", &SNBTransferBookkeeper::do_tr_stop);
 
             m_name = name;

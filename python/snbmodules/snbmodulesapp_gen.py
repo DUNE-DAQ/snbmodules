@@ -16,19 +16,28 @@ from daqconf.core.app import App, ModuleGraph
 from daqconf.core.daqmodule import DAQModule
 #from daqconf.core.conf_utils import Endpoint, Direction
 
-def get_snbmodules_app(nickname, num_snbfiletransfers, prefix_snb_connections, host="localhost"):
+def get_snbmodules_app(nickname, port=0, host="localhost"):
     """
     Here the configuration for an entire daq_application instance using DAQModules from snbmodules is generated.
     """
-
+    
+    SNB_WORK_DIR = "./"
+    SNB_CONNECTION_PREFIX = "snbmodules"
+    SNB_TIMEOUT_SEND = 10
+    SNB_TIMEOUT_RECEIVE = 100
+  
     modules = []
 
-    for i in range(num_snbfiletransfers):
-        modules += [DAQModule(name = f"nickname{i}", 
-                              plugin = "SNBFileTransfer", 
-                              conf = snbfiletransfer.Conf(prefix_snb_connections = prefix_snb_connections
-                                )
-                    )]
+    modules += [DAQModule(name = f"nickname", 
+                          plugin = "SNBFileTransfer", 
+                          conf = snbfiletransfer.ConfParams(
+                            client_ip = host + ":" + str(port), 
+                            work_dir = SNB_WORK_DIR, 
+                            connection_prefix = SNB_CONNECTION_PREFIX, 
+                            timeout_send = SNB_TIMEOUT_SEND, 
+                            timeout_receive = SNB_TIMEOUT_RECEIVE, 
+                            )
+                )]
 
     mgraph = ModuleGraph(modules)
     snbmodules_app = App(modulegraph = mgraph, host = host, name = nickname)

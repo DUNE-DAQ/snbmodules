@@ -9,7 +9,6 @@
     "use_k8s": false
   },
   "snbmodules": {
-    "num_snbfiletransfers": 2,
-    "prefix_snb_connections": "test"
+    "port": 12345
   }
 }

@@ -1,10 +1,9 @@
 {
-    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/new-RClone-transfer.json http://localhost:3333/command",
     "data": {
         "modules": [
             {
                 "data": {
-                    "transfer_id": "transfer2",
+                    "transfer_id": "transfer0",
                     "files": [
                         "/home/ljoly/N23-07-15/Makefile"
                     ],
@@ -29,9 +28,11 @@
                         "root_folder": "/"
                     }
                 },
-                "match": "client0"
+                "match": "snbmodules/client0"
             }
         ]
     },
-    "id": "new_transfer"
+    "id": "new_transfer",
+    "entry_state": "READY",
+    "exit_state": "READY"
 }

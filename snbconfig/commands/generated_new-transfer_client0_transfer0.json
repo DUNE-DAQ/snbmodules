@@ -1,0 +1,37 @@
+{
+	"data": {
+		"modules": [
+			{
+				"data": {
+					"transfer_id": "transfer1",
+					"files": [
+						"/home/ljoly/N23-07-15/Makefile",
+						"/test.txt"
+					],
+					"src": "client0",
+					"dests": [
+						"client1",
+						"client2"
+					],
+					"protocol": "RCLONE",
+					"protocol_args": {
+						"protocol": "http",
+						"rate_limit": "off",
+						"port": 8080,
+						"refresh_rate": 5,
+						"simult_transfers": 200,
+						"transfer_threads": 1,
+						"checkers_threads": 2,
+						"chunk_size": "8GiB",
+						"buffer_size": "0",
+						"use_mmap": false,
+						"checksum": true,
+						"root_folder": "/home/ljoly"
+					}
+				},
+				"match": "client0"
+			}
+		]
+	},
+	"id": "new_transfer"
+}
