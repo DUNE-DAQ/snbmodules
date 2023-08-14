@@ -33,9 +33,13 @@ namespace dunedaq::snbmodules
     //         char buf[200];
     //         address const &addr = ep.address();
     //         if (addr.is_v6())
+    //         {
     //             std::snprintf(buf, sizeof(buf), "[%s]:%d", addr.to_string().c_str(), ep.port());
+    //         }
     //         else
+    //         {
     //             std::snprintf(buf, sizeof(buf), "%s:%d", addr.to_string().c_str(), ep.port());
+    //         }
     //         return buf;
     //     }
 
@@ -75,13 +79,19 @@ namespace dunedaq::snbmodules
     //         for (auto const &l : lines)
     //         {
     //             if (max_lines <= 0)
+    //             {
     //                 break;
+    //             }
     //             ++ret;
     //             out += indentation;
     //             if (print_ip)
+    //             {
     //                 out += ip;
+    //             }
     //             if (print_local_ip)
+    //             {
     //                 out += ip;
+    //             }
     //             out += l;
     //         }
     //         return ret;
@@ -93,25 +103,41 @@ namespace dunedaq::snbmodules
     //         using namespace lt;
     //         int pos = 0;
     //         if (print_ip)
+    //         {
     //             out += "IP                             ";
+    //         }
     //         if (print_local_ip)
+    //         {
     //             out += "local IP                       ";
+    //         }
     //         out += "progress        down     (total";
     //         if (print_peaks)
+    //         {
     //             out += " | peak  ";
+    //         }
     //         out += " )  up      (total";
     //         if (print_peaks)
+    //         {
     //             out += " | peak  ";
+    //         }
     //         out += " ) sent-req tmo bsy rcv flags            dn  up  source  ";
     //         if (print_fails)
+    //         {
     //             out += "fail hshf ";
+    //         }
     //         if (print_send_bufs)
+    //         {
     //             out += " rq sndb (recvb |alloc | wmrk ) q-bytes ";
+    //         }
     //         if (print_timers)
+    //         {
     //             out += "inactive wait timeout q-time ";
+    //         }
     //         out += "  v disk ^    rtt  ";
     //         if (print_block)
+    //         {
     //             out += "block-progress ";
+    //         }
     //         out += "client \x1b[K\n";
     //         ++pos;
 
@@ -177,7 +203,9 @@ namespace dunedaq::snbmodules
     //                 // timeout is only meaningful if there is at least one outstanding
     //                 // request to the peer
     //                 if (i->download_queue_length > 0)
+    //                 {
     //                     std::snprintf(req_timeout, sizeof(req_timeout), "%d", i->request_timeout);
+    //                 }
 
     //                 std::snprintf(str, sizeof(str), "%8d %4d %7s %6d ", int(total_seconds(i->last_active)), int(total_seconds(i->last_request)), req_timeout, int(total_seconds(i->download_queue_time)));
     //                 out += str;
@@ -222,7 +250,9 @@ namespace dunedaq::snbmodules
     //             out += "\x1b[K\n";
     //             ++pos;
     //             if (pos >= max_lines)
+    //             {
     //                 break;
+    //             }
     //         }
     //         return pos;
     //     }
@@ -261,7 +291,9 @@ namespace dunedaq::snbmodules
                 static auto const first_ts = a->timestamp();
 
                 if (log_file)
+                {
                     std::fprintf(log_file, "[%ld] %s\n", std::int64_t(duration_cast<std::chrono::milliseconds>(a->timestamp() - first_ts).count()), a->message().c_str());
+                }
 
                 if (auto at = lt::alert_cast<lt::add_torrent_alert>(a))
                 {
@@ -285,7 +317,9 @@ namespace dunedaq::snbmodules
                 {
                     (void)p;
                     // if (h == p->handle)
+                    // {
                     //     session_state.trackers = std::move(p->trackers);
+                    // }
                 }
 
                 // if (auto *p = lt::alert_cast<lt::file_progress_alert>(a))
@@ -306,7 +340,9 @@ namespace dunedaq::snbmodules
                     m_filename_to_metadata[p->torrent_name()]->set_bytes_transferred(m_filename_to_metadata[p->torrent_name()]->get_size());
 
                     if (finished_torrents == m_torrent_num && m_is_client)
+                    {
                         m_done = true;
+                    }
                 }
                 if (auto p = lt::alert_cast<lt::torrent_error_alert>(a))
                 {
@@ -314,7 +350,9 @@ namespace dunedaq::snbmodules
 
                     finished_torrents++;
                     if (finished_torrents == m_torrent_num && m_is_client)
+                    {
                         m_done = true;
+                    }
 
                     p->handle.save_resume_data(lt::torrent_handle::only_if_modified | lt::torrent_handle::save_info_dict);
                 }
@@ -327,14 +365,18 @@ namespace dunedaq::snbmodules
                     auto const b = write_resume_data_buf(rd->params);
                     of.write(b.data(), int(b.size()));
                     if (m_done)
+                    {
                         goto done;
+                    }
                 }
 
                 if (auto e = lt::alert_cast<lt::save_resume_data_failed_alert>(a))
                 {
                     ers::warning(BittorrentSaveResumeFileError(ERS_HERE, e->message()));
                     if (m_done)
+                    {
                         goto done;
+                    }
                 }
 
                 if (lt::alert_cast<lt::peer_connect_alert>(a))
@@ -354,7 +396,9 @@ namespace dunedaq::snbmodules
                     // f_meta->set_error_code("peer error: " + a->message());
 
                     if (m_peer_num == 0 && m_paused == 0 && !m_is_client)
+                    {
                         m_done = true;
+                    }
                 }
 
                 if (auto e = lt::alert_cast<lt::peer_disconnected_alert>(a))
@@ -367,14 +411,18 @@ namespace dunedaq::snbmodules
                     // h.connect_peer(lt::tcp::endpoint(boost::asio::ip::make_address(config->get_source_ip().get_ip(), ec), std::uint16_t(config->get_source_ip().get_port())));
                     ers::warning(BittorrentPeerDisconnectedError(ERS_HERE, e->message()));
                     if (m_peer_num <= 0 && m_paused == 0 && !m_is_client)
+                    {
                         m_done = true;
+                    }
                 }
 
                 if (auto st = lt::alert_cast<lt::state_update_alert>(a))
                 {
                     // TLOG() << "debug : State update alert";
                     if (st->status.empty())
+                    {
                         continue;
+                    }
 
                     for (long unsigned int i = 0; i < st->status.size(); i++)
                     {
@@ -399,9 +447,13 @@ namespace dunedaq::snbmodules
                                 break;
                             case lt::torrent_status::seeding:
                                 if (m_is_client)
+                                {
                                     m_filename_to_metadata[s.name]->set_status(e_status::FINISHED);
+                                }
                                 else
+                                {
                                     m_filename_to_metadata[s.name]->set_status(e_status::UPLOADING);
+                                }
                                 break;
                             case lt::torrent_status::checking_resume_data:
                                 m_filename_to_metadata[s.name]->set_status(e_status::CHECKING);
@@ -411,7 +463,9 @@ namespace dunedaq::snbmodules
                             }
 
                             // if (s.num_peers == 0)
+                            // {
                             //     m_filename_to_metadata[s.name]->set_status(e_status::WAITING);
+                            // }
                         }
 
                         m_filename_to_metadata[s.name]->set_bytes_transferred(s.total_done);
@@ -431,9 +485,13 @@ namespace dunedaq::snbmodules
                         // {
                         //     std::cout << ae.url << " ";
                         //     if (ae.verified)
+                        //     {
                         //         std::cout << "OK ";
+                        //     }
                         //     else
+                        //     {
                         //         std::cout << "-- ";
+                        //     }
                         //     std::cout << ae.tier << "\n";
                         // }
                         // auto &peers = client_state.peers;
@@ -481,13 +539,19 @@ namespace dunedaq::snbmodules
                         //         {
                         //             ++idx;
                         //             if (pos + 1 >= terminal_height)
+                        //             {
                         //                 break;
+                        //             }
                         //             if (!ep.enabled)
+                        //             {
                         //                 continue;
+                        //             }
                         //             for (lt::protocol_version const v : {lt::protocol_version::V1, lt::protocol_version::V2})
                         //             {
                         //                 if (!s.info_hashes.has(v))
+                        //                 {
                         //                     continue;
+                        //                 }
                         //                 auto const &av = ep.info_hashes[v];
 
                         //                 std::snprintf(str, sizeof(str), "  [%2d] %s fails: %-3d (%-3d) %s %5d \"%s\" %s\x1b[K\n", idx, v == lt::protocol_version::V1 ? "v1" : "v2", av.fails, ae.fail_limit, to_string(int(total_seconds(av.next_announce - now)), 8).c_str(), av.min_announce > now ? int(total_seconds(av.min_announce - now)) : 0, av.last_error ? av.last_error.message().c_str() : "", av.message.c_str());
@@ -496,13 +560,17 @@ namespace dunedaq::snbmodules
                         //                 // we only need to show this error once, not for every
                         //                 // endpoint
                         //                 if (av.last_error == boost::asio::error::host_not_found)
+                        //                 {
                         //                     goto tracker_done;
+                        //                 }
                         //             }
                         //         }
                         //     tracker_done:
 
                         //         if (pos + 1 >= terminal_height)
+                        //         {
                         //             break;
+                        //         }
                         //     }
                         // }
                     }
@@ -546,7 +614,9 @@ namespace dunedaq::snbmodules
 
         TLOG() << "\nBittorent session done, shutting down";
         if (log_file)
+        {
             std::fclose(log_file);
+        }
         return;
     }
     catch (std::exception &e)
@@ -572,7 +642,9 @@ namespace dunedaq::snbmodules
         // {
         //     p = lt::read_resume_data(resume_data, ec);
         //     if (ec)
+        //     {
         //         std::printf("  failed to load resume data: %s\n", ec.message().c_str());
+        //     }
         // }
 
         set_torrent_params(p, dest);
@@ -603,9 +675,13 @@ namespace dunedaq::snbmodules
         // {
         //     lt::add_torrent_params rd = lt::read_resume_data(resume_data, ec);
         //     if (ec)
+        //     {
         //         std::printf("  failed to load resume data: %s\n", ec.message().c_str());
+        //     }
         //     else
+        //     {
         //         atp = rd;
+        //     }
         // }
 
         set_torrent_params(p, dest);
@@ -647,24 +723,40 @@ namespace dunedaq::snbmodules
         p.flags &= ~lt::torrent_flags::auto_managed;
 
         if (super_seeding)
+        {
             p.flags |= lt::torrent_flags::super_seeding;
+        }
         else
+        {
             p.flags &= ~lt::torrent_flags::super_seeding;
+        }
 
         if (seed_mode)
+        {
             p.flags |= lt::torrent_flags::seed_mode;
+        }
         else
+        {
             p.flags &= ~lt::torrent_flags::seed_mode;
+        }
 
         if (upload_mode)
+        {
             p.flags |= lt::torrent_flags::upload_mode;
+        }
         else
+        {
             p.flags &= ~lt::torrent_flags::upload_mode;
+        }
 
         if (sequential_mode)
+        {
             p.flags |= lt::torrent_flags::sequential_download;
+        }
         else
+        {
             p.flags &= ~lt::torrent_flags::sequential_download;
+        }
 
         p.save_path = save_path;
         p.storage_mode = lt::storage_mode_allocate;
@@ -872,24 +964,34 @@ namespace dunedaq::snbmodules
     std::string TransferInterfaceBittorrent::branch_path(std::string const &f)
     {
         if (f.empty())
+        {
             return f;
+        }
 
         if (f == "/")
+        {
             return "";
+        }
 
         auto len = f.size();
         // if the last character is / or \ ignore it
         if (f[len - 1] == '/' || f[len - 1] == '\\')
+        {
             --len;
+        }
         while (len > 0)
         {
             --len;
             if (f[len] == '/' || f[len] == '\\')
+            {
                 break;
+            }
         }
 
         if (f[len] == '/' || f[len] == '\\')
+        {
             ++len;
+        }
         return std::string(f.c_str(), len);
     }
 
@@ -898,7 +1000,9 @@ namespace dunedaq::snbmodules
     bool TransferInterfaceBittorrent::file_filter(std::string const &f)
     {
         if (f.empty())
+        {
             return false;
+        }
 
         char const *first = f.c_str();
         char const *sep = strrchr(first, '/');
@@ -907,13 +1011,19 @@ namespace dunedaq::snbmodules
         // to point to the filename.
         // if there is a parent path, skip the '/' character
         if (sep == nullptr)
+        {
             sep = first;
+        }
         else
+        {
             ++sep;
+        }
 
         // return false if the first character of the filename is a .
         if (sep[0] == '.')
+        {
             return false;
+        }
 
         std::cerr << f << "\n";
         return true;
@@ -953,9 +1063,13 @@ namespace dunedaq::snbmodules
         for (std::string const &tr : trackers)
         {
             if (tr == "-")
+            {
                 ++tier;
+            }
             else
+            {
                 t.add_tracker(tr, tier);
+            }
         }
 
         t.add_tracker(tracker);
@@ -1104,7 +1218,9 @@ namespace dunedaq::snbmodules
                 //         int const peer_port = atoi(peer.data() + port);
                 //         error_code ec;
                 //         if (peer_port > 0)
+                //         {
                 //             h.connect_peer(tcp::endpoint(asio::ip::make_address(ip, ec), std::uint16_t(peer_port)));
+                //         }
                 //     }
                 // }
                 found = true;
@@ -1158,9 +1274,13 @@ namespace dunedaq::snbmodules
 
         // remove torrent file if uploader or file if downloader
         if (!m_is_client)
+        {
             std::filesystem::remove(get_work_dir().append(f_meta->get_file_name() + ".torrent"));
+        }
         else
+        {
             std::filesystem::remove(get_work_dir().append(f_meta->get_file_name()));
+        }
 
         return true;
     }
@@ -1286,9 +1406,13 @@ namespace dunedaq::snbmodules
     //                                             : pop(m_free_slots);
     //         auto storage = std::make_unique<temp_storage>(params.files);
     //         if (idx == m_torrents.end_index())
+    //         {
     //             m_torrents.emplace_back(std::move(storage));
+    //         }
     //         else
+    //         {
     //             m_torrents[idx] = std::move(storage);
+    //         }
     //         return lt::storage_holder(idx, *this);
     //     }
 

@@ -35,7 +35,9 @@ namespace SI
             bool natural_less(const ElementType &lhs, const ElementType &rhs)
             {
                 if (tolower(lhs) < tolower(rhs))
+                {
                     return true;
+                }
                 return false;
             }
 
@@ -52,9 +54,13 @@ namespace SI
                 int operator()(const Iterator &lhs, const Iterator &rhs) const
                 {
                     if (natural_less<ElementType>(*lhs, *rhs))
+                    {
                         return -1;
+                    }
                     if (natural_less<ElementType>(*rhs, *lhs))
+                    {
                         return +1;
+                    }
                     return 0;
                 }
             };
@@ -84,7 +90,9 @@ namespace SI
                     {
                         int local_compare = comp_over_iterator<ValueType, Iterator>()(lhs_begin, rhs_begin);
                         if (local_compare != 0)
+                        {
                             return local_compare;
+                        }
                         lhs_begin++;
                         rhs_begin++;
                     }
@@ -93,9 +101,13 @@ namespace SI
                     while (rhs_begin < rhs_end && *rhs_begin == '0')
                         rhs_begin++;
                     if (lhs_begin == lhs_end && rhs_begin != rhs_end)
+                    {
                         return -1;
+                    }
                     else if (lhs_begin != lhs_end && rhs_begin == rhs_end)
+                    {
                         return +1;
+                    }
                     else // lhs_begin==lhs_end && rhs_begin==rhs_end
                         return 0;
                 }
@@ -109,16 +121,22 @@ namespace SI
 
                     // Comparing By Length of Both String
                     if (lhs_end - lhs_begin < rhs_end - rhs_begin)
+                    {
                         return -1;
+                    }
                     if (lhs_end - lhs_begin > rhs_end - rhs_begin)
+                    {
                         return +1;
+                    }
 
                     // Equal In length
                     while (lhs_begin < lhs_end)
                     {
                         int local_compare = comp_over_iterator<ValueType, Iterator>()(lhs_begin, rhs_begin);
                         if (local_compare != 0)
+                        {
                             return local_compare;
+                        }
                         lhs_begin++;
                         rhs_begin++;
                     }
@@ -131,15 +149,23 @@ namespace SI
                     Iterator rhs_begin, Iterator rhs_end, bool is_fractional_part2)
                 {
                     if (is_fractional_part1 && !is_fractional_part2)
-                        return true; // 0<num1<1 && num2>=1
+                    {
+                        return true;
+                    } // 0<num1<1 && num2>=1
                     if (!is_fractional_part1 && is_fractional_part2)
+                    {
                         return false; // 0<num2<1 && num1>=1
+                    }
 
                     // is_fraction_part1 == is_factional_part2
                     if (is_fractional_part1)
+                    {
                         return fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
+                    }
                     else
+                    {
                         return non_fractional(lhs_begin, lhs_end, rhs_begin, rhs_end);
+                    }
                 }
             };
 
@@ -179,21 +205,29 @@ namespace SI
                     current1++;
                 flag_found_space1 = false;
                 if (*current1 == ' ')
+                {
                     flag_found_space1 = true;
+                }
 
                 while (flag_found_space2 && current2 != rhs_end && *current2 == ' ')
                     current2++;
                 flag_found_space2 = false;
                 if (*current2 == ' ')
+                {
                     flag_found_space2 = true;
+                }
 
                 if (!isdigit(*current1) || !isdigit(*current2))
                 {
                     // Normal comparision if any of character is non digit character
                     if (detail::natural_less<ElementType>(*current1, *current2))
+                    {
                         return true;
+                    }
                     if (detail::natural_less<ElementType>(*current2, *current1))
+                    {
                         return false;
+                    }
                     current1++;
                     current2++;
                 }
@@ -210,9 +244,13 @@ namespace SI
                         current1, last_nondigit1, (current1 > lhs_begin && *(current1 - 1) == '.'),
                         current2, last_nondigit2, (current2 > rhs_begin && *(current2 - 1) == '.'));
                     if (result < 0)
+                    {
                         return true;
+                    }
                     if (result > 0)
+                    {
                         return false;
+                    }
                     current1 = last_nondigit1;
                     current2 = last_nondigit2;
                 }

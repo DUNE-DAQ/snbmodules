@@ -133,9 +133,13 @@ namespace dunedaq
                 m_iomanager->add_connection(ip, connection_name, data_type);
 
                 if (is_client)
+                {
                     m_clients_conn.insert(connection_name);
+                }
                 else
+                {
                     m_bookkeepers_conn.push_back(connection_name);
+                }
             }
 
             /// @brief Init the connection interface,

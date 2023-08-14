@@ -52,7 +52,9 @@ namespace dunedaq::snbmodules
             for (TransferMetadata *transfer : m_transfers_meta)
             {
                 if (transfer->get_status() > status)
+                {
                     status = transfer->get_status();
+                }
             }
             return status;
         }
@@ -76,9 +78,13 @@ namespace dunedaq::snbmodules
         GroupMetadata(std::filesystem::path src, bool is_path = true)
         {
             if (is_path)
+            {
                 load_metadata_from_meta_file(src);
+            }
             else
+            {
                 from_string(src.string());
+            }
         }
 
         virtual ~GroupMetadata() = default;

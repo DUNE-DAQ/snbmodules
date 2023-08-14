@@ -90,15 +90,23 @@ int main()
             std::cout << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
                       << ")" << std::endl;
             if (status.si_status == 2)
+            {
                 success_counter++;
+            }
             else
+            {
                 std::cout << "App " << pid << " failed" << std::endl;
+            }
         }
 
         if (success_counter == n_apps)
+        {
             std::cout << "Test passed" << std::endl;
+        }
         else
+        {
             std::cout << "Test failed" << std::endl;
+        }
     }
     catch (const std::exception &e)
     {

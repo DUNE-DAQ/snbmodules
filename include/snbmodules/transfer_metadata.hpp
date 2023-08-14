@@ -139,16 +139,22 @@ namespace dunedaq::snbmodules
 
             m_file_path = std::filesystem::absolute(file_path_str);
             if (group_id == "")
+            {
                 m_group_id = get_file_name();
+            }
         }
 
         /// @brief Load from file constructor
         TransferMetadata(std::filesystem::path src, bool is_path = true)
         {
             if (is_path)
+            {
                 load_metadata_from_meta_file(src);
+            }
             else
+            {
                 from_string(src.string());
+            }
         }
 
         virtual ~TransferMetadata() {}
@@ -178,18 +184,26 @@ namespace dunedaq::snbmodules
         {
             // Check if the source is not equal to the dest
             if (!(source == m_dest))
+            {
                 m_src = source;
+            }
             else
+            {
                 throw std::invalid_argument("The source cannot be equal to the destination");
+            }
         }
 
         void set_dest(IPFormat dest)
         {
             // Check if the dest is not equal to the source
             if (!(dest == m_src))
+            {
                 m_dest = dest;
+            }
             else
+            {
                 throw std::invalid_argument("The destination cannot be equal to the source");
+            }
         }
 
         inline void set_hash(std::string hash)
@@ -211,7 +225,9 @@ namespace dunedaq::snbmodules
         void set_progress(int purcent)
         {
             if (purcent < 0 || purcent > 100)
+            {
                 throw std::invalid_argument("The progress must be between 0 and 100");
+            }
             set_bytes_transferred((purcent * m_bytes_size) / 100);
         }
         void set_status(e_status status)
@@ -227,7 +243,9 @@ namespace dunedaq::snbmodules
                 m_duration += m_end_time - m_start_time;
             }
             if (status == e_status::PAUSED)
+            {
                 m_duration += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - m_start_time;
+            }
 
             m_modified_fields["status"] = true;
         }
@@ -279,7 +297,9 @@ namespace dunedaq::snbmodules
         unsigned long get_total_duration_ms()
         {
             if (m_start_time == 0)
+            {
                 return 0;
+            }
             else if (m_end_time == 0)
             {
                 return m_duration + (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - m_start_time);
@@ -294,7 +314,9 @@ namespace dunedaq::snbmodules
         std::string get_start_time_str()
         {
             if (m_start_time == 0)
+            {
                 return "N/A";
+            }
             std::time_t t = m_start_time / 1000;
             std::tm tm = *std::localtime(&t);
             std::stringstream ss;
@@ -304,7 +326,9 @@ namespace dunedaq::snbmodules
         std::string get_end_time_str()
         {
             if (m_end_time == 0)
+            {
                 return "N/A";
+            }
             std::time_t t = m_end_time / 1000;
             std::tm tm = *std::localtime(&t);
             std::stringstream ss;

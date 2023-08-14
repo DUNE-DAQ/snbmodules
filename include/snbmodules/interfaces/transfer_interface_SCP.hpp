@@ -59,7 +59,9 @@ namespace dunedaq::snbmodules
                 sprintf(exec, "scp %s@%s:%s %s", m_params.user.c_str(), f_meta->get_src().get_ip().c_str(), f_meta->get_file_path().string().c_str(), dest.c_str());
             }
             else
+            {
                 sprintf(exec, "scp -o PasswordAuthentication='no' %s@%s:%s %s", m_params.user.c_str(), f_meta->get_src().get_ip().c_str(), f_meta->get_file_path().string().c_str(), dest.c_str());
+            }
 
             TLOG() << "debug : executing " << exec;
             if (system(exec) == 0)

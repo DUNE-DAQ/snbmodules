@@ -165,7 +165,9 @@ namespace dunedaq::snbmodules
             res = upload_file(f_meta);
         }
         else
+        {
             ers::error(SessionTypeNotSupportedError(ERS_HERE, get_session_id()));
+        }
 
         return res;
     }
@@ -180,9 +182,13 @@ namespace dunedaq::snbmodules
 
         bool res = m_transfer_interface->pause_file(f_meta);
         if (res)
+        {
             f_meta->set_status(e_status::PAUSED);
+        }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
 
         if (!is_multiple)
         {
@@ -214,7 +220,9 @@ namespace dunedaq::snbmodules
             }
         }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
 
         if (!is_multiple)
         {
@@ -235,9 +243,13 @@ namespace dunedaq::snbmodules
 
         bool res = m_transfer_interface->hash_file(f_meta);
         if (res)
+        {
             f_meta->set_status(e_status::HASHING);
+        }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
 
         if (!is_multiple)
         {
@@ -257,9 +269,13 @@ namespace dunedaq::snbmodules
 
         bool res = m_transfer_interface->cancel_file(f_meta);
         if (res)
+        {
             f_meta->set_status(e_status::CANCELLED);
+        }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
 
         if (!is_multiple)
         {
@@ -272,7 +288,9 @@ namespace dunedaq::snbmodules
     bool TransferSession::upload_file(TransferMetadata *f_meta, bool is_multiple)
     {
         if (m_type != e_session_type::Uploader)
+        {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "upload_file"));
+        }
 
         if (f_meta->get_status() != e_status::WAITING)
         {
@@ -282,9 +300,13 @@ namespace dunedaq::snbmodules
 
         bool res = m_transfer_interface->upload_file(f_meta);
         if (res)
+        {
             f_meta->set_status(e_status::UPLOADING);
+        }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
 
         if (!is_multiple)
         {
@@ -297,7 +319,9 @@ namespace dunedaq::snbmodules
     bool TransferSession::download_file(TransferMetadata *f_meta, std::filesystem::path dest, bool is_multiple)
     {
         if (m_type != e_session_type::Downloader)
+        {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "download_file"));
+        }
 
         if (f_meta->get_status() != e_status::WAITING)
         {
@@ -310,9 +334,13 @@ namespace dunedaq::snbmodules
 
         bool res = m_transfer_interface->download_file(f_meta, dest);
         if (res)
+        {
             f_meta->set_status(e_status::DOWNLOADING);
+        }
         else
+        {
             f_meta->set_status(e_status::ERROR);
+        }
         if (!is_multiple)
         {
             update_metadata_to_bookkeeper(f_meta);
@@ -323,9 +351,13 @@ namespace dunedaq::snbmodules
     bool TransferSession::start_all()
     {
         if (is_downloader())
+        {
             return download_all(m_work_dir);
+        }
         else if (is_uploader())
+        {
             return upload_all();
+        }
         else
         {
             ers::error(SessionTypeNotSupportedError(ERS_HERE, get_session_id()));
@@ -384,7 +416,9 @@ namespace dunedaq::snbmodules
     bool TransferSession::download_all(std::filesystem::path dest)
     {
         if (m_type != e_session_type::Downloader)
+        {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "download_all"));
+        }
 
         bool result = true;
         for (auto file : m_transfer_options.get_transfers_meta())
@@ -399,7 +433,9 @@ namespace dunedaq::snbmodules
     bool TransferSession::upload_all()
     {
         if (m_type != e_session_type::Uploader)
+        {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "upload_all"));
+        }
 
         bool result = true;
         for (auto file : m_transfer_options.get_transfers_meta())

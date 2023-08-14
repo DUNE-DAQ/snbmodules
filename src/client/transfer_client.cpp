@@ -304,7 +304,9 @@ namespace dunedaq::snbmodules
                 get_sessions()[notif.m_target_id]->add_file(fmeta);
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
             break;
         }
@@ -315,12 +317,18 @@ namespace dunedaq::snbmodules
             if (get_sessions()[notif.m_target_id] != nullptr)
             {
                 if (notif.m_data == "")
+                {
                     get_sessions()[notif.m_target_id]->start_all();
+                }
                 else
+                {
                     get_sessions()[notif.m_target_id]->start_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
         }
 
@@ -330,12 +338,18 @@ namespace dunedaq::snbmodules
             if (get_sessions()[notif.m_target_id] != nullptr)
             {
                 if (notif.m_data == "")
+                {
                     get_sessions()[notif.m_target_id]->pause_all();
+                }
                 else
+                {
                     get_sessions()[notif.m_target_id]->pause_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
             break;
         }
@@ -346,12 +360,18 @@ namespace dunedaq::snbmodules
             if (get_sessions()[notif.m_target_id] != nullptr)
             {
                 if (notif.m_data == "")
+                {
                     get_sessions()[notif.m_target_id]->resume_all();
+                }
                 else
+                {
                     get_sessions()[notif.m_target_id]->resume_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
         }
 
@@ -361,12 +381,18 @@ namespace dunedaq::snbmodules
             if (get_sessions()[notif.m_target_id] != nullptr)
             {
                 if (notif.m_data == "")
+                {
                     get_sessions()[notif.m_target_id]->cancel_all();
+                }
                 else
+                {
                     get_sessions()[notif.m_target_id]->cancel_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
             break;
         }
@@ -377,12 +403,18 @@ namespace dunedaq::snbmodules
             if (get_sessions()[notif.m_target_id] != nullptr)
             {
                 if (notif.m_data == "")
+                {
                     get_sessions()[notif.m_target_id]->update_metadatas_to_bookkeeper();
+                }
                 else
+                {
                     get_sessions()[notif.m_target_id]->update_metadata_to_bookkeeper(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
             break;
             break;
         }
@@ -491,7 +523,9 @@ namespace dunedaq::snbmodules
             {
                 TLOG() << "debug : found directory " << entry.path();
                 if (nested)
+                {
                     scan_available_files(previous_scan, nested, entry.path());
+                }
             }
         }
     }

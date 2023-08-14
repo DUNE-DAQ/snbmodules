@@ -15,25 +15,45 @@ namespace dunedaq::snbmodules
 
         // not mandatory : to be refreshed when needed
         if (force_all || m_modified_fields["hash"] == true)
+        {
             j["hash"] = get_hash();
+        }
         if (force_all || m_modified_fields["size"] == true)
+        {
             j["size"] = get_size();
+        }
         if (force_all || m_modified_fields["bytes_transferred"] == true)
+        {
             j["transfered"] = get_bytes_transferred();
+        }
         if (force_all || m_modified_fields["transmission_speed"] == true)
+        {
             j["speed"] = get_transmission_speed();
+        }
         if (force_all || m_modified_fields["status"] == true)
+        {
             j["status"] = static_cast<std::string>(magic_enum::enum_name(get_status()));
+        }
         if (force_all || m_modified_fields["magnet_link"] == true)
+        {
             j["magnet_link"] = get_magnet_link();
+        }
         if (force_all || m_modified_fields["error_code"] == true)
+        {
             j["error_code"] = get_error_code();
+        }
         if (force_all || m_modified_fields["start_time"] == true)
+        {
             j["start_t"] = get_start_time();
+        }
         if (force_all || m_modified_fields["end_time"] == true)
+        {
             j["end_t"] = get_end_time();
+        }
         if (force_all || m_modified_fields["duration"] == true)
+        {
             j["duration"] = m_duration;
+        }
 
         m_modified_fields.clear();
 

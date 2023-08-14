@@ -493,9 +493,13 @@ namespace dunedaq::snbmodules
                 }
 
                 if (is_session)
+                {
                     *output << "\t\t - ";
+                }
                 else
+                {
                     *output << "\t - ";
+                }
 
                 if (is_session)
                     *output << file->get_file_name() << "\t"
@@ -563,7 +567,9 @@ namespace dunedaq::snbmodules
             ((std::ofstream *)output_line_log)->close();
         }
         else
+        {
             output->flush();
+        }
     }
 
     void Bookkeeper::add_update_transfer(std::string client_id, std::string data)

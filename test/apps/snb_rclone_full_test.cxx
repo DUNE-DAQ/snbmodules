@@ -82,9 +82,13 @@ int main()
         io::mapped_file_source f2("./client0/transfer0/test.txt");
 
         if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data()))
+        {
             TLOG() << "The files are equal";
+        }
         else
+        {
             TLOG() << "The files are not equal";
+        }
 
         // Clean files
         std::filesystem::remove_all("client0");

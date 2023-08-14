@@ -49,7 +49,9 @@ namespace dunedaq
                 m_client->create_new_transfer(args["transfer_id"].get<std::string>(), args["protocol"].get<std::string>(), dests, files, args["protocol_args"]);
             }
             else
+            {
                 ers::error(InvalidSourceCommandRequestError(ERS_HERE, "New Transfer"));
+            }
         }
         void
         SNBFileTransfer::do_tr_start(const nlohmann::json &args)

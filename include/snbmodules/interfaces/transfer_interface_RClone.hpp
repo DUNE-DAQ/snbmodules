@@ -57,7 +57,9 @@ namespace dunedaq::snbmodules
             free(out.Output);
 
             if (out.Status != 200)
+            {
                 return std::nullopt;
+            }
             return j;
         }
 
@@ -134,7 +136,9 @@ namespace dunedaq::snbmodules
             for (auto meta : get_transfer_options()->get_transfers_meta())
             {
                 if (meta->get_status() == e_status::UPLOADING)
+                {
                     meta->set_status(e_status::FINISHED);
+                }
                 if (meta->get_status() == e_status::DOWNLOADING)
                 {
                     meta->set_status(e_status::ERROR);
@@ -423,9 +427,13 @@ namespace dunedaq::snbmodules
             std::cout << input_request << std::endl;
             free(input_request);
             if (res.has_value())
+            {
                 m_jobs_id[f_meta] = res.value()["jobid"];
+            }
             else
+            {
                 return false;
+            }
 
             // print local options of the transfer
             requestRPC("options/local", "");

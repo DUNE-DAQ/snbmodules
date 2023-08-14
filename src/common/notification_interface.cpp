@@ -14,11 +14,15 @@ namespace dunedaq::snbmodules
     {
         // Default value for tries
         if (tries == -1)
+        {
             tries = m_max_tries;
+        }
         // TLOG() << "debug : Listening for request from " << id;
 
         if (timeout == -1)
+        {
             timeout = m_timeout_receive;
+        }
 
         std::optional<NotificationData> msg = iomanager::IOManager::get()
                                                   ->get_receiver<NotificationData>(id)
@@ -45,7 +49,9 @@ namespace dunedaq::snbmodules
     {
         // Default value for tries
         if (tries == -1)
+        {
             tries = m_max_tries;
+        }
 
         // find connection with dst in it
         for (auto conn : m_bookkeepers_conn)
