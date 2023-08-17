@@ -12,12 +12,14 @@
 
 #include <chrono>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <fstream>
 
 #include <string>
+#include <cstring>
 #include <vector>
 #include <map>
+#include <utility>
 
 namespace dunedaq::snbmodules
 {
@@ -26,7 +28,7 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        TransferInterfaceRClone(GroupMetadata *config, std::filesystem::path work_dir)
+        TransferInterfaceRClone(GroupMetadata &config, const std::filesystem::path &work_dir)
             : TransferInterfaceAbstract(config),
               m_work_dir(work_dir),
               m_thread(std::bind(&TransferInterfaceRClone::do_work, this, std::placeholders::_1))
@@ -34,27 +36,28 @@ namespace dunedaq::snbmodules
             RcloneInitialize();
             m_thread.start_working_thread();
 
-            m_params.protocol = config->get_protocol_options()["protocol"].get<std::string>();
+            m_params.protocol = config.get_protocol_options()["protocol"].get<std::string>();
+
+            std::cout << "Protocol: " << m_params.protocol << std::endl;
 
             if (m_params.protocol == "sftp")
             {
-                m_params.user = config->get_protocol_options()["user"].get<std::string>();
+                m_params.user = config.get_protocol_options()["user"].get<std::string>();
             }
 
-            m_params.bwlimit = config->get_protocol_options()["rate_limit"].get<std::string>();
-            m_params.refresh_rate = config->get_protocol_options()["refresh_rate"].get<int>();
-            m_params.port = config->get_protocol_options()["port"].get<int>();
-
+            m_params.bwlimit = config.get_protocol_options()["rate_limit"].get<std::string>();
+            m_params.refresh_rate = config.get_protocol_options()["refresh_rate"].get<int>();
+            m_params.port = config.get_protocol_options()["port"].get<int>();
             // config parameters
-            m_params.simult_transfers = config->get_protocol_options()["simult_transfers"].get<int>();
-            m_params.transfer_threads = config->get_protocol_options()["transfer_threads"].get<int>();
-            m_params.checkers_threads = config->get_protocol_options()["checkers_threads"].get<int>();
+            m_params.simult_transfers = config.get_protocol_options()["simult_transfers"].get<int>();
+            m_params.transfer_threads = config.get_protocol_options()["transfer_threads"].get<int>();
+            m_params.checkers_threads = config.get_protocol_options()["checkers_threads"].get<int>();
 
-            m_params.chunk_size = config->get_protocol_options()["chunk_size"].get<std::string>();
-            m_params.buffer_size = config->get_protocol_options()["buffer_size"].get<std::string>();
-            m_params.use_mmap = config->get_protocol_options()["use_mmap"].get<bool>();
-            m_params.checksum = config->get_protocol_options()["checksum"].get<bool>();
-            m_params.root_folder = std::filesystem::absolute(config->get_protocol_options()["root_folder"].get<std::string>());
+            m_params.chunk_size = config.get_protocol_options()["chunk_size"].get<std::string>();
+            m_params.buffer_size = config.get_protocol_options()["buffer_size"].get<std::string>();
+            m_params.use_mmap = config.get_protocol_options()["use_mmap"].get<bool>();
+            m_params.checksum = config.get_protocol_options()["checksum"].get<bool>();
+            m_params.root_folder = std::filesystem::absolute(config.get_protocol_options()["root_folder"].get<std::string>());
 
             char *input_request = new char[100];
             sprintf(input_request, "{"
@@ -63,7 +66,7 @@ namespace dunedaq::snbmodules
                     m_params.bwlimit.c_str());
 
             requestRPC("core/bwlimit", input_request);
-            free(input_request);
+            delete[] input_request;
 
             requestRPC("options/set", "{"
                                       "\"vfs\": "
@@ -76,20 +79,21 @@ namespace dunedaq::snbmodules
             // all global options
             requestRPC("options/get", "{}");
         }
+
         virtual ~TransferInterfaceRClone()
         {
             m_thread.stop_working_thread();
             RcloneFinalize();
-        };
+        }
 
-        bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : RClone : Uploading file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Uploading file " << f_meta.get_file_name();
 
             // char exec[300];
             // sprintf(exec,
             //         "rclone serve http / --addr %s:%d --buffer-size '%s' --no-modtime --transfers %d -vv --vfs-cache-mode 'off' --vfs-cache-max-size 'off'",
-            //         f_meta->get_src().get_ip().c_str(),
+            //         f_meta.get_src().get_ip().c_str(),
             //         m_params.port,
             //         m_params.buffer_size,
             //         m_params.simult_transfers);
@@ -107,22 +111,22 @@ namespace dunedaq::snbmodules
 
             return true;
         }
-        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override
         {
-            TLOG() << "debug : RClone : Downloading file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Downloading file " << f_meta.get_file_name();
 
             char *input_request = new char[1000];
 
             if (m_params.protocol == "http")
             {
-                std::string file_relative_path = std::filesystem::relative(f_meta->get_file_path(), m_params.root_folder).generic_string();
+                std::string file_relative_path = std::filesystem::relative(f_meta.get_file_path(), m_params.root_folder).generic_string();
 
                 // check if file path is relative to root folder
                 if (file_relative_path.find("..") != std::string::npos)
                 {
                     TLOG() << "debug : RClone : File path is not relative to root folder";
-                    f_meta->set_status(e_status::ERROR);
-                    f_meta->set_error_code("File path is not relative to root folder !");
+                    f_meta.set_status(e_status::ERROR);
+                    f_meta.set_error_code("File path is not relative to root folder !");
                     return false;
                 }
 
@@ -159,12 +163,12 @@ namespace dunedaq::snbmodules
                                        "}",
 
                         // source
-                        f_meta->get_src().get_ip().c_str(),
+                        f_meta.get_src().get_ip().c_str(),
                         m_params.port,
                         file_relative_path.c_str(),
 
                         // destination
-                        dest.append(f_meta->get_file_name()).string().c_str(),
+                        dest.append(f_meta.get_file_name()).string().c_str(),
 
                         // config
                         m_params.simult_transfers,
@@ -243,16 +247,16 @@ namespace dunedaq::snbmodules
 
                         // source
                         // m_params.type.c_str(),
-                        f_meta->get_src().get_ip().c_str(),
+                        f_meta.get_src().get_ip().c_str(),
                         m_params.user.c_str(),
                         m_params.port,
                         m_params.simult_transfers,
 
-                        // f_meta->get_file_path().remove_filename().string().c_str(),
-                        f_meta->get_file_path().string().c_str(),
+                        // f_meta.get_file_path().remove_filename().string().c_str(),
+                        f_meta.get_file_path().string().c_str(),
                         // destination
                         // dest.string().c_str(),
-                        dest.append(f_meta->get_file_name()).string().c_str(),
+                        dest.append(f_meta.get_file_name()).string().c_str(),
 
                         // config
                         m_params.simult_transfers,
@@ -294,8 +298,8 @@ namespace dunedaq::snbmodules
             //                        "}",
 
             //         // source
-            //         f_meta->get_src().get_ip().c_str(),
-            //         f_meta->get_file_path().string().c_str(),
+            //         f_meta.get_src().get_ip().c_str(),
+            //         f_meta.get_file_path().string().c_str(),
 
             //         // destination
             //         dest.string().c_str());
@@ -304,10 +308,10 @@ namespace dunedaq::snbmodules
 
             TLOG() << input_request;
 
-            free(input_request);
+            delete[] input_request;
             if (res.has_value())
             {
-                m_jobs_id[f_meta] = res.value()["jobid"];
+                m_jobs_id[&f_meta] = res.value()["jobid"];
             }
             else
             {
@@ -320,9 +324,9 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : RClone : Pausing file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Pausing file " << f_meta.get_file_name();
             ers::warning(RCloneNotSupportError(ERS_HERE, "pausing a single file. Pausing everything."));
 
             requestRPC("core/bwlimit", "{\"bytesPerSecond\": 0}");
@@ -330,9 +334,9 @@ namespace dunedaq::snbmodules
             return true;
         }
 
-        bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : RClone : Resuming file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Resuming file " << f_meta.get_file_name();
             ers::warning(RCloneNotSupportError(ERS_HERE, "resuming a single file. Resuming everything."));
 
             char *input_request = new char[100];
@@ -342,27 +346,27 @@ namespace dunedaq::snbmodules
                     m_params.bwlimit.c_str());
 
             requestRPC("core/bwlimit", input_request);
-            free(input_request);
+            delete[] input_request;
 
             return true;
         }
 
-        bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : RClone : Hashing file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Hashing file " << f_meta.get_file_name();
 
             return true;
         }
 
-        bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : RClone : Cancelling file " << f_meta->get_file_name();
+            TLOG() << "debug : RClone : Cancelling file " << f_meta.get_file_name();
 
             // find job id
-            int job_id;
-            if (m_jobs_id.find(f_meta) != m_jobs_id.end())
+            int job_id = 0;
+            if (m_jobs_id.find(&f_meta) != m_jobs_id.end())
             {
-                job_id = m_jobs_id[f_meta];
+                job_id = m_jobs_id[&f_meta];
             }
             else
             {
@@ -377,7 +381,7 @@ namespace dunedaq::snbmodules
                     job_id);
 
             requestRPC("job/stop", input_request);
-            free(input_request);
+            delete[] input_request;
 
             return true;
         }
@@ -408,16 +412,16 @@ namespace dunedaq::snbmodules
         std::map<TransferMetadata *, int> m_jobs_id;
         std::filesystem::path m_work_dir;
 
-        std::optional<nlohmann::json> requestRPC(std::string const method, std::string const input)
+        std::optional<nlohmann::json> requestRPC(const std::string &method, const std::string &input)
         {
-            char *m = const_cast<char *>(method.c_str());
-            char *in = const_cast<char *>(input.c_str());
+            char *m = strdup(method.c_str());
+            char *in = strdup(input.c_str());
 
             struct RcloneRPCResult out = RcloneRPC(m, in);
             printf("debug : RClone : result status: %d\n", out.Status);
             printf("debug : RClone : result output: %s\n", out.Output);
             nlohmann::json j = nlohmann::json::parse(out.Output);
-            free(out.Output);
+            free(out.Output); // NOLINT
 
             if (out.Status != 200)
             {
@@ -430,6 +434,8 @@ namespace dunedaq::snbmodules
         dunedaq::utilities::WorkerThread m_thread;
         void do_work(std::atomic<bool> &running)
         {
+            TLOG() << "debug : running thread ";
+
             while (running.load())
             {
                 // requestRPC("cache/stats", "{}");
@@ -442,17 +448,17 @@ namespace dunedaq::snbmodules
                     {
                         auto current_transfers = stats.value()["transferring"].get<std::vector<nlohmann::json>>();
 
-                        for (auto t : current_transfers)
+                        for (const auto &t : current_transfers)
                         {
-                            std::string grp = t["group"].get<std::string>();
+                            auto grp = t["group"].get<std::string>();
                             int job_id = std::stoi(grp.substr(grp.find("/") + 1));
 
-                            for (auto [meta, id] : m_jobs_id)
+                            for (auto &[meta, id] : m_jobs_id)
                             {
                                 if (id == job_id)
                                 {
                                     meta->set_progress(t["percentage"].get<int>());
-                                    meta->set_transmission_speed(t["speedAvg"].get<uint64_t>());
+                                    meta->set_transmission_speed(t["speedAvg"].get<int32_t>());
                                     break;
                                 }
                             }
@@ -461,7 +467,7 @@ namespace dunedaq::snbmodules
                 }
 
                 // Update information about ongoing transfers
-                for (auto [meta, id] : m_jobs_id)
+                for (auto &[meta, id] : m_jobs_id)
                 {
                     // get refreshed infos
                     char *input_request = new char[100];
@@ -471,7 +477,7 @@ namespace dunedaq::snbmodules
                             id);
 
                     auto res = requestRPC("job/status", input_request);
-                    free(input_request);
+                    delete[] input_request;
 
                     if (res.has_value())
                     {
@@ -496,16 +502,16 @@ namespace dunedaq::snbmodules
                 std::this_thread::sleep_for(std::chrono::seconds(m_params.refresh_rate));
             }
 
-            for (auto meta : get_transfer_options()->get_transfers_meta())
+            for (auto &meta : get_transfer_options().get_transfers_meta())
             {
-                if (meta->get_status() == e_status::UPLOADING)
+                if (meta.get_status() == e_status::UPLOADING)
                 {
-                    meta->set_status(e_status::FINISHED);
+                    meta.set_status(e_status::FINISHED);
                 }
-                if (meta->get_status() == e_status::DOWNLOADING)
+                if (meta.get_status() == e_status::DOWNLOADING)
                 {
-                    meta->set_status(e_status::ERROR);
-                    meta->set_error_code("Transfer interrupted");
+                    meta.set_status(e_status::ERROR);
+                    meta.set_error_code("Transfer interrupted");
                 }
             }
         }

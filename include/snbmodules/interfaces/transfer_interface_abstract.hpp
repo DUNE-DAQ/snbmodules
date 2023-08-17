@@ -21,21 +21,21 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        explicit TransferInterfaceAbstract(GroupMetadata *config) : m_config(config) {}
+        explicit TransferInterfaceAbstract(GroupMetadata &config) : m_config(config) {}
         virtual ~TransferInterfaceAbstract() = default;
 
-        GroupMetadata *get_transfer_options() { return m_config; }
+        GroupMetadata &get_transfer_options() { return m_config; }
 
-        virtual bool upload_file(TransferMetadata *f_meta) = 0;
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) = 0;
-        virtual bool pause_file(TransferMetadata *f_meta) = 0;
-        virtual bool resume_file(TransferMetadata *f_meta) = 0;
-        virtual bool hash_file(TransferMetadata *f_meta) = 0;
-        virtual bool cancel_file(TransferMetadata *f_meta) = 0;
+        virtual bool upload_file(TransferMetadata &f_meta) = 0;
+        virtual bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) = 0;
+        virtual bool pause_file(TransferMetadata &f_meta) = 0;
+        virtual bool resume_file(TransferMetadata &f_meta) = 0;
+        virtual bool hash_file(TransferMetadata &f_meta) = 0;
+        virtual bool cancel_file(TransferMetadata &f_meta) = 0;
 
     protected:
         /// @brief MetadataAbstract of the transfer, contain settings and status of the transfer
-        GroupMetadata *m_config;
+        GroupMetadata &m_config;
     };
 
     /// @brief Example of a transfer interface class.
@@ -44,37 +44,37 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        explicit TransferInterfaceDummy(GroupMetadata *config) : TransferInterfaceAbstract(config) {}
+        explicit TransferInterfaceDummy(GroupMetadata &config) : TransferInterfaceAbstract(config) {}
 
-        bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Upload file " << f_meta->get_file_name();
+            TLOG() << "Upload file " << f_meta.get_file_name();
             return true;
         }
-        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override
         {
             (void)dest;
-            TLOG() << "Download file " << f_meta->get_file_name();
+            TLOG() << "Download file " << f_meta.get_file_name();
             return true;
         }
-        bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Pause file " << f_meta->get_file_name();
+            TLOG() << "Pause file " << f_meta.get_file_name();
             return true;
         }
-        bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Resume file " << f_meta->get_file_name();
+            TLOG() << "Resume file " << f_meta.get_file_name();
             return true;
         }
-        bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Cancel file " << f_meta->get_file_name();
+            TLOG() << "Cancel file " << f_meta.get_file_name();
             return true;
         }
-        bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Hash file " << f_meta->get_file_name();
+            TLOG() << "Hash file " << f_meta.get_file_name();
             return true;
         }
     };

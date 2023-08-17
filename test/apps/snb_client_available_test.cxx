@@ -29,28 +29,30 @@ int main()
         // add non existing file to the transfer
         transfer_options.add_expected_file("file1");
         TransferMetadata file("file1", 100, ip1);
-        transfer_options.add_file(&file);
+        TransferMetadata &file_ref = transfer_options.add_file(std::move(file));
 
         // write metadata file in folder
-        file.generate_metadata_file("./client1");
+        file_ref.generate_metadata_file("./client1");
 
         // scan available files and metadata files
         std::set<std::filesystem::path> files = std::set<std::filesystem::path>();
-        client1.scan_available_files(&files); // file metadata alone without transfermetadata expecting them are ignored
+        client1.scan_available_files(files); // file metadata alone without transfermetadata expecting them are ignored
 
         // create a metadata group transfer and scan it
         transfer_options.generate_metadata_file("./client1");
-        client1.scan_available_files(&files);
+        client1.scan_available_files(files);
 
         // print result, expecting 2 files
         TLOG() << "Available files: ";
-        for (auto &file : files)
+        for (const auto &file : files)
         {
             TLOG() << file;
         }
 
         // Clean up
         std::filesystem::remove_all("./client1");
+
+        TLOG() << "Test passed";
 
         return 0;
     }

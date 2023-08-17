@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        std::cout << "Usage: ./client <number>" << std::endl;
+        TLOG() << "Usage: ./client <number>";
         return 1;
     }
 

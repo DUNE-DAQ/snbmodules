@@ -3,18 +3,8 @@
 
 namespace dunedaq::snbmodules
 {
-    IOManagerWrapper *IOManagerWrapper::m_instance_ = nullptr;
 
-    IOManagerWrapper *IOManagerWrapper::GetInstance()
-    {
-        if (m_instance_ == nullptr)
-        {
-            m_instance_ = new IOManagerWrapper();
-        }
-        return m_instance_;
-    }
-
-    void IOManagerWrapper::init_connection_interface(std::string session_name, bool use_connectivity_service, IPFormat ip)
+    void IOManagerWrapper::init_connection_interface(const std::string &session_name, bool use_connectivity_service, const IPFormat &ip)
     {
         dunedaq::logging::Logging::setup();
 
@@ -29,15 +19,14 @@ namespace dunedaq::snbmodules
         iomanager::IOManager::get()->configure(m_queues, m_connections, use_connectivity_service, std::chrono::milliseconds(100));
     }
 
-    void IOManagerWrapper::add_connection(IPFormat ip, std::string id, std::string data_type)
+    void IOManagerWrapper::add_connection(const IPFormat &ip, std::string id, std::string data_type)
     {
         iomanager::Connection conn = iomanager::Connection{iomanager::ConnectionId{id, data_type},
                                                            "tcp://" + ip.get_ip() + ":" + (std::to_string(ip.get_port()) == "0" ? "*" : std::to_string(ip.get_port())),
                                                            iomanager::ConnectionType::kSendRecv};
 
-        m_connections.emplace_back(conn);
-
         TLOG() << "debug : Added connection " << conn.id.uid << " uri: " << conn.uri;
+        m_connections.emplace_back(std::move(conn));
     }
 
     iomanager::ConnectionResponse IOManagerWrapper::lookups_connection(iomanager::ConnectionId const &conn_id, bool restrict_single)

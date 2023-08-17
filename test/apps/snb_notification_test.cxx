@@ -74,38 +74,38 @@ int main()
 
         for (auto pid : pids)
         {
-            std::cout << "Sending SIGINT to " << pid << std::endl;
+            TLOG() << "Sending SIGINT to " << pid;
             kill(pid, SIGINT);
         }
         for (auto pid : pids)
         {
-            std::cout << "Sending SIGKILL to " << pid << std::endl;
+            TLOG() << "Sending SIGKILL to " << pid;
             kill(pid, SIGKILL);
         }
         for (auto pid : pids)
         {
-            std::cout << "Waiting for app " << pid << std::endl;
+            TLOG() << "Waiting for app " << pid;
             siginfo_t status;
             auto sts = waitid(P_PID, pid, &status, WEXITED);
-            std::cout << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
-                      << ")" << std::endl;
+            TLOG() << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
+                   << ")";
             if (status.si_status == 2)
             {
                 success_counter++;
             }
             else
             {
-                std::cout << "App " << pid << " failed" << std::endl;
+                TLOG() << "App " << pid << " failed";
             }
         }
 
         if (success_counter == n_apps)
         {
-            std::cout << "Test passed" << std::endl;
+            TLOG() << "Test passed";
         }
         else
         {
-            std::cout << "Test failed" << std::endl;
+            TLOG() << "Test failed";
         }
     }
     catch (const std::exception &e)

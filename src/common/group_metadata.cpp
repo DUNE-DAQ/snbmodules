@@ -10,43 +10,51 @@ namespace dunedaq::snbmodules
 
     const std::string GroupMetadata::m_file_extension = ".gmetadata";
 
-    TransferMetadata *GroupMetadata::get_transfer_meta_from_file_path(std::string file_path)
+    TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(std::string file_path)
     {
-        for (auto meta : m_transfers_meta)
+        for (TransferMetadata &meta : get_transfers_meta())
         {
-            if (meta->get_file_path() == file_path)
+            if (meta.get_file_path() == file_path)
             {
                 return meta;
             }
         }
-        ers::warning(MetadataNotFoundInGroupError(ERS_HERE, m_group_id, file_path));
-        return nullptr;
+        ers::fatal(MetadataNotFoundInGroupError(ERS_HERE, m_group_id, file_path));
+        return m_transfers_meta[0]; // To avoid warning
     }
 
-    void GroupMetadata::add_file(TransferMetadata *meta)
+    TransferMetadata &GroupMetadata::add_file(TransferMetadata meta)
     {
-        if (m_expected_files.find(meta->get_file_path()) != m_expected_files.end())
+        if (m_expected_files.find(meta.get_file_path()) != m_expected_files.end())
         {
-            m_expected_files.erase(meta->get_file_path());
-            m_transfers_meta.insert(meta);
-            meta->set_group_id(m_group_id);
+            m_expected_files.erase(meta.get_file_path());
+            meta.set_group_id(m_group_id);
+
+            return m_transfers_meta.emplace_back(std::move(meta));
         }
-        else if (meta->get_group_id() == m_group_id)
+        else if (meta.get_group_id() == m_group_id)
         {
-            for (auto m : m_transfers_meta)
+            int pos = -1, i = 0;
+            for (const auto &m : m_transfers_meta)
             {
-                if (*m == *meta)
+                if (m == meta)
                 {
                     // Already inserted, update the transfer
-                    m_transfers_meta.erase(m);
+                    pos = i;
                     break;
                 }
+                i++;
             }
-            m_transfers_meta.insert(meta);
+            if (pos != -1)
+            {
+                m_transfers_meta.erase(m_transfers_meta.begin() + pos);
+            }
+            return m_transfers_meta.emplace_back(std::move(meta));
         }
         else
         {
-            ers::error(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta->get_file_name()));
+            ers::fatal(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta.get_file_name()));
+            return m_transfers_meta[0]; // To avoid warning
         }
     }
 
@@ -60,16 +68,16 @@ namespace dunedaq::snbmodules
         j["protocol_options"] = get_protocol_options().dump();
 
         std::vector<std::string> files;
-        for (auto file : get_transfers_meta())
+        for (const auto &file : get_transfers_meta())
         {
-            files.push_back(file->get_file_path().string());
+            files.push_back(file.get_file_path().string());
         }
         j["files"] = files;
 
         return j.dump();
     }
 
-    void GroupMetadata::from_string(std::string str)
+    void GroupMetadata::from_string(const std::string &str)
     {
         nlohmann::json j = nlohmann::json::parse(str);
 
@@ -137,17 +145,17 @@ namespace dunedaq::snbmodules
         metadata_file.close();
     }
 
-    std::string GroupMetadata::to_string()
+    std::string GroupMetadata::to_string() const
     {
         std::string str;
         str += "transfer_id " + get_group_id() + " ";
         str += "protocol " + static_cast<std::string>(magic_enum::enum_name(get_protocol())) + "\n";
 
-        for (auto file : get_transfers_meta())
+        for (const auto &file : get_transfers_meta())
         {
-            str += "*file " + file->get_file_name() + "\n";
+            str += "*file " + file.get_file_name() + "\n";
         }
-        for (auto file : get_expected_files())
+        for (const auto &file : get_expected_files())
         {
             str += "*expectedfile " + file + "\n";
         }

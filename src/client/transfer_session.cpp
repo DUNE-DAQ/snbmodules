@@ -4,13 +4,13 @@
 namespace dunedaq::snbmodules
 {
 
-    TransferSession::TransferSession(GroupMetadata *transfer_options, e_session_type type, std::string id, IPFormat ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn, std::set<std::string> client_conn)
+    TransferSession::TransferSession(GroupMetadata transfer_options, e_session_type type, std::string id, IPFormat ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn /*= std::vector<std::string>()*/, std::set<std::string> client_conn /*= std::set<std::string>()*/)
         : NotificationInterface(bk_conn, client_conn),
           m_type(type),
           m_session_id(id),
           m_ip(ip),
-          m_transfer_options(*transfer_options),
-          m_threads(std::vector<pid_t>()),
+          m_transfer_options(std::move(transfer_options)),
+          //   m_threads(std::vector<pid_t>()),
           m_work_dir(work_dir)
     {
         std::filesystem::create_directories(m_work_dir);
@@ -19,19 +19,19 @@ namespace dunedaq::snbmodules
         switch (m_transfer_options.get_protocol())
         {
         case BITTORRENT:
-            m_transfer_interface = new TransferInterfaceBittorrent(&m_transfer_options, type == e_session_type::Downloader, get_work_dir(), get_ip());
+            m_transfer_interface = std::make_unique<TransferInterfaceBittorrent>(m_transfer_options, type == e_session_type::Downloader, get_work_dir(), get_ip());
 
             // Generate torrent files and magnet links
             if (type == e_session_type::Uploader)
             {
                 TLOG() << "Generating torrent files...";
-                ((TransferInterfaceBittorrent *)m_transfer_interface)->generate_torrents_files(m_work_dir, "");
+                dynamic_cast<TransferInterfaceBittorrent &>(*m_transfer_interface).generate_torrents_files(m_work_dir, "");
 
-                for (TransferMetadata *f_meta : m_transfer_options.get_transfers_meta())
+                for (TransferMetadata &f_meta : m_transfer_options.get_transfers_meta())
                 {
-                    TLOG() << "Writing magnet link data into transfer Metadata " << get_work_dir().append(f_meta->get_file_name() + ".torrent");
+                    TLOG() << "Writing magnet link data into transfer Metadata " << get_work_dir().append(f_meta.get_file_name() + ".torrent");
                     lt::error_code ec;
-                    lt::torrent_info t(get_work_dir().append(f_meta->get_file_name() + ".torrent").string(), ec);
+                    lt::torrent_info t(get_work_dir().append(f_meta.get_file_name() + ".torrent").string(), ec);
 
                     if (ec)
                     {
@@ -39,18 +39,23 @@ namespace dunedaq::snbmodules
                     }
 
                     TLOG() << "Magnet link: " << lt::make_magnet_uri(t);
-                    f_meta->set_magnet_link(lt::make_magnet_uri(t) + "&x.pe=" + get_ip().get_ip() + ":" + transfer_options->get_protocol_options()["port"].get<std::string>());
+                    f_meta.set_magnet_link(lt::make_magnet_uri(t) + "&x.pe=" + get_ip().get_ip() + ":" + m_transfer_options.get_protocol_options()["port"].get<std::string>());
                 }
             }
             break;
+
         case SCP:
-            m_transfer_interface = new TransferInterfaceSCP(&m_transfer_options, type == e_session_type::Uploader);
+            m_transfer_interface = std::make_unique<TransferInterfaceSCP>(m_transfer_options, type == e_session_type::Uploader);
             break;
+
         case RCLONE:
-            m_transfer_interface = new TransferInterfaceRClone(&m_transfer_options, get_work_dir());
+        {
+            m_transfer_interface = std::make_unique<TransferInterfaceRClone>(m_transfer_options, get_work_dir());
             break;
+        }
+
         case dummy:
-            m_transfer_interface = new TransferInterfaceDummy(&m_transfer_options);
+            m_transfer_interface = std::make_unique<TransferInterfaceDummy>(m_transfer_options);
             break;
 
         default:
@@ -59,30 +64,27 @@ namespace dunedaq::snbmodules
         }
 
         TLOG() << "debug : Transfer session " << get_session_id() << " created";
-        m_is_init = true;
         update_metadatas_to_bookkeeper();
     }
 
     TransferSession::~TransferSession()
     {
-        TLOG() << "Reaping children";
-        for (pid_t pid : m_threads)
-        {
-            TLOG() << "Killing pid " << pid;
-            kill(pid, SIGINT);
-            kill(pid, SIGKILL);
-        }
-        for (pid_t pid : m_threads)
-        {
-            TLOG() << "Waiting for pid " << pid;
-            siginfo_t status;
-            auto sts = waitid(P_PID, pid, &status, WEXITED);
+        // TLOG() << "Reaping children";
+        // for (pid_t pid : m_threads)
+        // {
+        //     TLOG() << "Killing pid " << pid;
+        //     kill(pid, SIGINT);
+        //     kill(pid, SIGKILL);
+        // }
+        // for (pid_t pid : m_threads)
+        // {
+        //     TLOG() << "Waiting for pid " << pid;
+        //     siginfo_t status;
+        //     auto sts = waitid(P_PID, pid, &status, WEXITED);
 
-            TLOG() << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
-                   << ")";
-        }
-
-        delete m_transfer_interface;
+        //     TLOG() << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
+        //            << ")";
+        // }
 
         TLOG() << "DONE CLOSING SESSION " << get_session_id();
     }
@@ -94,7 +96,7 @@ namespace dunedaq::snbmodules
         return true;
     }
 
-    std::string TransferSession::to_string()
+    std::string TransferSession::to_string() const
     {
         std::string str;
         str += "Session " + get_session_id() + " ";
@@ -108,18 +110,13 @@ namespace dunedaq::snbmodules
 
     bool TransferSession::update_metadatas_to_bookkeeper()
     {
-        if (!m_is_init)
-        {
-            return false;
-        }
-
         bool result = true;
-        for (auto bk : get_bookkeepers_conn())
+        for (const std::string &bk : get_bookkeepers_conn())
         {
             result = result && send_notification(e_notification_type::GROUP_METADATA, get_session_id(), bk, bk, get_transfer_options().export_to_string());
         }
 
-        for (TransferMetadata *f_meta : m_transfer_options.get_transfers_meta())
+        for (TransferMetadata &f_meta : m_transfer_options.get_transfers_meta())
         {
             result = result && update_metadata_to_bookkeeper(f_meta);
         }
@@ -127,17 +124,12 @@ namespace dunedaq::snbmodules
         return result;
     }
 
-    bool TransferSession::update_metadata_to_bookkeeper(TransferMetadata *f_meta)
+    bool TransferSession::update_metadata_to_bookkeeper(TransferMetadata &f_meta)
     {
-        if (!m_is_init)
-        {
-            return false;
-        }
-
         bool result = true;
-        for (auto bk : get_bookkeepers_conn())
+        for (const std::string &bk : get_bookkeepers_conn())
         {
-            result = result && send_notification(e_notification_type::TRANSFER_METADATA, get_session_id(), bk, bk, f_meta->export_to_string_partial());
+            result = result && send_notification(e_notification_type::TRANSFER_METADATA, get_session_id(), bk, bk, f_meta.export_to_string_partial(false));
         }
         return result;
     }
@@ -145,7 +137,7 @@ namespace dunedaq::snbmodules
     bool TransferSession::send_notification_to_targets(e_notification_type type, std::string data)
     {
         bool result = true;
-        for (std::string client : get_target_clients())
+        for (const std::string &client : get_target_clients())
         {
             std::string session_name = client + "_ses" + m_transfer_options.get_group_id();
             result &= send_notification(type, get_session_id(), session_name, client, data);
@@ -153,7 +145,7 @@ namespace dunedaq::snbmodules
         return result;
     }
 
-    bool TransferSession::start_file(TransferMetadata *f_meta)
+    bool TransferSession::start_file(TransferMetadata &f_meta)
     {
         bool res = false;
         if (is_downloader())
@@ -172,38 +164,38 @@ namespace dunedaq::snbmodules
         return res;
     }
 
-    bool TransferSession::pause_file(TransferMetadata *f_meta, bool is_multiple)
+    bool TransferSession::pause_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta->get_status() != e_status::DOWNLOADING && f_meta->get_status() != e_status::UPLOADING)
+        if (f_meta.get_status() != e_status::DOWNLOADING && f_meta.get_status() != e_status::UPLOADING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::PAUSED))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::PAUSED))));
             return false;
         }
 
         bool res = m_transfer_interface->pause_file(f_meta);
         if (res)
         {
-            f_meta->set_status(e_status::PAUSED);
+            f_meta.set_status(e_status::PAUSED);
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::PAUSE_TRANSFER, f_meta->get_file_path());
+            send_notification_to_targets(e_notification_type::PAUSE_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
 
         return res;
     }
 
-    bool TransferSession::resume_file(TransferMetadata *f_meta, bool is_multiple)
+    bool TransferSession::resume_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta->get_status() != e_status::PAUSED)
+        if (f_meta.get_status() != e_status::PAUSED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), "RESUMING"));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), "RESUMING"));
             return false;
         }
 
@@ -212,120 +204,120 @@ namespace dunedaq::snbmodules
         {
             if (is_downloader())
             {
-                f_meta->set_status(e_status::DOWNLOADING);
+                f_meta.set_status(e_status::DOWNLOADING);
             }
             else if (is_uploader())
             {
-                f_meta->set_status(e_status::UPLOADING);
+                f_meta.set_status(e_status::UPLOADING);
             }
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::RESUME_TRANSFER, f_meta->get_file_path());
+            send_notification_to_targets(e_notification_type::RESUME_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
 
         return res;
     }
 
-    bool TransferSession::hash_file(TransferMetadata *f_meta, bool is_multiple)
+    bool TransferSession::hash_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta->get_status() != e_status::FINISHED)
+        if (f_meta.get_status() != e_status::FINISHED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::HASHING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::HASHING))));
             return false;
         }
 
         bool res = m_transfer_interface->hash_file(f_meta);
         if (res)
         {
-            f_meta->set_status(e_status::HASHING);
+            f_meta.set_status(e_status::HASHING);
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            // send_notification_to_targets(e_notification_type::HASH_TRANSFER, f_meta->get_file_path());
+            // send_notification_to_targets(e_notification_type::HASH_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
     }
 
-    bool TransferSession::cancel_file(TransferMetadata *f_meta, bool is_multiple)
+    bool TransferSession::cancel_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta->get_status() == e_status::FINISHED || f_meta->get_status() == e_status::CANCELLED)
+        if (f_meta.get_status() == e_status::FINISHED || f_meta.get_status() == e_status::CANCELLED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::CANCELLED))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::CANCELLED))));
             return false;
         }
 
         bool res = m_transfer_interface->cancel_file(f_meta);
         if (res)
         {
-            f_meta->set_status(e_status::CANCELLED);
+            f_meta.set_status(e_status::CANCELLED);
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::CANCEL_TRANSFER, f_meta->get_file_path());
+            send_notification_to_targets(e_notification_type::CANCEL_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
     }
 
-    bool TransferSession::upload_file(TransferMetadata *f_meta, bool is_multiple)
+    bool TransferSession::upload_file(TransferMetadata &f_meta, bool is_multiple)
     {
         if (m_type != e_session_type::Uploader)
         {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "upload_file"));
         }
 
-        if (f_meta->get_status() != e_status::WAITING)
+        if (f_meta.get_status() != e_status::WAITING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::UPLOADING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::UPLOADING))));
             return false;
         }
 
         bool res = m_transfer_interface->upload_file(f_meta);
         if (res)
         {
-            f_meta->set_status(e_status::UPLOADING);
+            f_meta.set_status(e_status::UPLOADING);
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::START_TRANSFER, f_meta->get_file_path());
+            send_notification_to_targets(e_notification_type::START_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
     }
 
-    bool TransferSession::download_file(TransferMetadata *f_meta, std::filesystem::path dest, bool is_multiple)
+    bool TransferSession::download_file(TransferMetadata &f_meta, std::filesystem::path dest, bool is_multiple)
     {
         if (m_type != e_session_type::Downloader)
         {
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "download_file"));
         }
 
-        if (f_meta->get_status() != e_status::WAITING)
+        if (f_meta.get_status() != e_status::WAITING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta->get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta->get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::DOWNLOADING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::DOWNLOADING))));
             return false;
         }
 
@@ -335,11 +327,11 @@ namespace dunedaq::snbmodules
         bool res = m_transfer_interface->download_file(f_meta, dest);
         if (res)
         {
-            f_meta->set_status(e_status::DOWNLOADING);
+            f_meta.set_status(e_status::DOWNLOADING);
         }
         else
         {
-            f_meta->set_status(e_status::ERROR);
+            f_meta.set_status(e_status::ERROR);
         }
         if (!is_multiple)
         {
@@ -421,7 +413,7 @@ namespace dunedaq::snbmodules
         }
 
         bool result = true;
-        for (auto file : m_transfer_options.get_transfers_meta())
+        for (auto &file : m_transfer_options.get_transfers_meta())
         {
             result = result && download_file(file, dest, true);
         }
@@ -438,7 +430,7 @@ namespace dunedaq::snbmodules
         }
 
         bool result = true;
-        for (auto file : m_transfer_options.get_transfers_meta())
+        for (auto &file : m_transfer_options.get_transfers_meta())
         {
             result = result && upload_file(file, true);
         }

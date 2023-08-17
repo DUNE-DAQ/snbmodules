@@ -37,6 +37,8 @@ int main()
         dunedaq::utilities::WorkerThread thread(std::bind(&TransferClient::do_work, &c0, std::placeholders::_1));
         thread.start_working_thread();
 
+        std::cout << "-1" << std::endl;
+
         // Create file to transfer
         std::string file_name = "./client1/test.txt";
         std::ofstream file(file_name);
@@ -57,16 +59,23 @@ int main()
                 "chunk_size": "8GiB",
                 "buffer_size": "0",
                 "use_mmap": false,
-                "checksum": true
+                "checksum": true,
+                "root_folder": "/"
             }
         )"_json;
+
+        std::cout << "0" << std::endl;
 
         // Create transfer with client1 as uploader and client0 as downloader
         c1.create_new_transfer("transfer0", "RCLONE", {c0.get_client_id()}, {file_name}, transfer_options);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
+        std::cout << "1" << std::endl;
+
         c1.get_session("transfer0")->start_all();
         std::this_thread::sleep_for(std::chrono::seconds(10));
+
+        std::cout << "2" << std::endl;
 
         // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed
         // c0.get_session("transfer0")->pause_all();

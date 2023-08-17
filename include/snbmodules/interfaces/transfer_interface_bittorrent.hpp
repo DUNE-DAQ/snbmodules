@@ -85,18 +85,18 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        TransferInterfaceBittorrent(GroupMetadata *config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip);
+        TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip);
         ~TransferInterfaceBittorrent();
 
-        void generate_torrents_files(std::filesystem::path dest, std::string tracker);
+        void generate_torrents_files(const std::filesystem::path &dest, const std::string &tracker);
         std::filesystem::path get_work_dir() { return m_work_dir; }
 
-        bool upload_file(TransferMetadata *f_meta) override;
-        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override;
-        bool pause_file(TransferMetadata *f_meta) override;
-        bool resume_file(TransferMetadata *f_meta) override;
-        bool hash_file(TransferMetadata *f_meta) override;
-        bool cancel_file(TransferMetadata *f_meta) override;
+        bool upload_file(TransferMetadata &f_meta) override;
+        bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override;
+        bool pause_file(TransferMetadata &f_meta) override;
+        bool resume_file(TransferMetadata &f_meta) override;
+        bool hash_file(TransferMetadata &f_meta) override;
+        bool cancel_file(TransferMetadata &f_meta) override;
 
     private:
         lt::session ses;
@@ -111,17 +111,17 @@ namespace dunedaq::snbmodules
         std::map<std::string, TransferMetadata *> m_filename_to_metadata;
         int m_rate_limit = -1;
 
-        bool print_ip = true;
-        bool print_peaks = true;
-        bool print_local_ip = true;
-        bool print_timers = false;
-        bool print_block = false;
-        bool print_fails = false;
-        bool print_send_bufs = true;
-        bool print_connecting_peers = true;
+        // bool print_ip = true;
+        // bool print_peaks = true;
+        // bool print_local_ip = true;
+        // bool print_timers = false;
+        // bool print_block = false;
+        // bool print_fails = false;
+        // bool print_send_bufs = true;
+        // bool print_connecting_peers = true;
 
-        bool print_peers = true;
-        bool print_peers_legend = true;
+        // bool print_peers = true;
+        // bool print_peers_legend = true;
 
         // return the name of a torrent status enum
         char const *state(lt::torrent_status::state_t s);

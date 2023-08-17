@@ -60,7 +60,7 @@ namespace dunedaq::snbmodules
         return j.dump();
     }
 
-    void TransferMetadata::from_string(std::string str)
+    void TransferMetadata::from_string(const std::string &str)
     {
         nlohmann::json j = nlohmann::json::parse(str);
 

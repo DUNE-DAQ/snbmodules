@@ -17,6 +17,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <utility>
 
 namespace dunedaq::snbmodules
 {
@@ -25,14 +26,31 @@ namespace dunedaq::snbmodules
 
     public:
         /// @brief Constructor with params
-        Bookkeeper(IPFormat listening_ip, std::string bookkeeper_id, std::string file_log_path = "", int refresh_rate = 5, std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
-            : NotificationInterface(connection_prefix, timeout_send, timeout_receive)
+        Bookkeeper(const IPFormat &listening_ip, std::string bookkeeper_id, std::string file_log_path = "", int refresh_rate = 5, std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
+            : NotificationInterface(std::move(connection_prefix), timeout_send, timeout_receive)
         {
-            set_bookkeeper_id(bookkeeper_id);
+            set_bookkeeper_id(std::move(bookkeeper_id));
             set_ip(listening_ip);
-            m_file_log_path = file_log_path;
+            m_file_log_path = std::move(file_log_path);
             m_refresh_rate = refresh_rate;
             display_information();
+        }
+
+        /// @brief Destructor
+        ~Bookkeeper()
+        {
+            for (auto &grp_transfer : m_grp_transfers)
+            {
+                delete grp_transfer.second;
+            }
+
+            for (auto &transfer : m_transfers)
+            {
+                for (auto &file : transfer.second)
+                {
+                    delete file;
+                }
+            }
         }
 
         /// @brief Start the bookkeeper, Only used for stand alone application
@@ -60,16 +78,16 @@ namespace dunedaq::snbmodules
         void request_update_metadata(bool force = false);
 
         // Setters
-        inline void set_bookkeeper_id(std::string bookkeeper_id) { m_bookkeeper_id = bookkeeper_id; }
-        inline void set_ip(IPFormat ip) { m_ip = ip; }
+        inline void set_bookkeeper_id(std::string bookkeeper_id) { m_bookkeeper_id = std::move(bookkeeper_id); }
+        inline void set_ip(const IPFormat &ip) { m_ip = ip; }
         void add_update_transfer(std::string client_id, std::string data);
         void add_update_grp_transfer(GroupMetadata *grp_transfers);
 
         // Getters
         inline std::string get_bookkeeper_id() const { return m_bookkeeper_id; }
         inline IPFormat get_ip() const { return m_ip; }
-        inline std::map<std::string, GroupMetadata *> get_grp_transfers() const { return m_grp_transfers; }
-        inline std::map<std::string, std::vector<TransferMetadata *>> get_transfers() const { return m_transfers; }
+        inline std::map<std::string, GroupMetadata *> &get_grp_transfers() { return m_grp_transfers; }
+        inline std::map<std::string, std::vector<TransferMetadata *>> &get_transfers() { return m_transfers; }
 
     private:
         /// @brief Unique identifier for the bookkeeper
@@ -103,7 +121,7 @@ namespace dunedaq::snbmodules
         /// @brief Usefull convertion from session id to client id
         /// @param session_name session id
         /// @return client id
-        std::string get_client_name_from_session_name(std::string session_name) const
+        std::string get_client_name_from_session_name(const std::string &session_name) const
         {
             return session_name.substr(0, session_name.find("_"));
         }

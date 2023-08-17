@@ -3,7 +3,7 @@
 
 namespace dunedaq::snbmodules
 {
-    // TODO : Obsolete
+    // TODO Aug-14-2022 Leo Joly leo.vincent.andre.joly@cern.ch : Obsolete, is this needed anymore ?
     void Bookkeeper::create_new_transfer(std::string protocol, std::string src, std::set<std::string> dests, std::set<std::filesystem::path> files, const nlohmann::json &protocol_options)
     {
         // suppress warnings
@@ -68,7 +68,7 @@ namespace dunedaq::snbmodules
         // }
     }
 
-    // TODO : Obsolete, only for stand alone application
+    // Only for stand alone application
     void Bookkeeper::input_action(char input)
     {
         switch (input)
@@ -135,7 +135,7 @@ namespace dunedaq::snbmodules
             std::set<TransferMetadata *> choosen_files;
             while (true)
             {
-                long unsigned int initial_size = choosen_files.size();
+                uint64_t initial_size = choosen_files.size();
                 std::string file;
                 std::cin >> file;
                 if (file == "q")
@@ -146,9 +146,9 @@ namespace dunedaq::snbmodules
                 for (std::string client : choosen_clients)
                 {
                     // Check input
-                    auto list = get_transfers().at(client);
+                    auto &list = get_transfers().at(client);
                     bool found = false;
-                    for (auto filemeta : list)
+                    for (TransferMetadata *filemeta : list)
                     {
                         if (filemeta->get_file_name() == file)
                         {
@@ -204,7 +204,7 @@ namespace dunedaq::snbmodules
                 break;
             }
 
-            for (auto transfer : choosen_transfers)
+            for (const auto &transfer : choosen_transfers)
             {
                 start_transfers(transfer);
             }
@@ -333,7 +333,7 @@ namespace dunedaq::snbmodules
 
     void Bookkeeper::request_update_metadata(bool force)
     {
-        for (auto const &[id, g] : get_grp_transfers())
+        for (const auto &[id, g] : get_grp_transfers())
         {
             // Only request for dynamic status
             if (g->get_group_status() == e_status::DOWNLOADING ||
@@ -449,7 +449,7 @@ namespace dunedaq::snbmodules
             output = &std::cout;
         }
 
-        *output << "***** Bookkeeper " << this->get_bookkeeper_id() << " " + this->get_ip().get_ip_port() << " informations display *****" << std::endl;
+        *output << "***** Bookkeeper " << get_bookkeeper_id() << " " + get_ip().get_ip_port() << " informations display *****" << std::endl;
         // *output << "q: quit, d : display info, n : new transfer, s : start transfer" << std::endl;
         *output << "Connected clients :" << std::endl;
 
@@ -468,7 +468,7 @@ namespace dunedaq::snbmodules
             }
 
             // print for each file the status
-            for (auto file : client.second)
+            for (const auto &file : client.second)
             {
                 if (m_file_log_path != "")
                 {
@@ -533,7 +533,7 @@ namespace dunedaq::snbmodules
                 << "Status\t"
                 << std::endl;
 
-        for (auto [id, g] : get_grp_transfers())
+        for (const auto &[id, g] : get_grp_transfers())
         {
             *output << g->get_group_id() << "\t"
                     << magic_enum::enum_name(g->get_protocol()) << "\t"
@@ -542,17 +542,17 @@ namespace dunedaq::snbmodules
                     << magic_enum::enum_name(g->get_group_status()) << "\t"
                     << std::endl;
 
-            for (TransferMetadata *fmeta : g->get_transfers_meta())
+            for (const TransferMetadata &fmeta : g->get_transfers_meta())
             {
                 *output << "\t- "
-                        << fmeta->get_file_name() << "\t"
-                        << fmeta->get_src().get_ip_port() << " to "
-                        << fmeta->get_dest().get_ip_port() << "\t"
-                        << magic_enum::enum_name(fmeta->get_status()) << "\t"
+                        << fmeta.get_file_name() << "\t"
+                        << fmeta.get_src().get_ip_port() << " to "
+                        << fmeta.get_dest().get_ip_port() << "\t"
+                        << magic_enum::enum_name(fmeta.get_status()) << "\t"
                         << std::endl;
             }
 
-            for (std::string f : g->get_expected_files())
+            for (const std::string &f : g->get_expected_files())
             {
                 *output << "\t- "
                         << f << "\t"
@@ -575,28 +575,27 @@ namespace dunedaq::snbmodules
     void Bookkeeper::add_update_transfer(std::string client_id, std::string data)
     {
         // Loading the data and convert to a proper transfer metadata object
-        TransferMetadata *file = new TransferMetadata(data, false);
+        TransferMetadata file = TransferMetadata(data, false);
 
-        auto tr_vector = m_transfers[client_id];
+        std::vector<TransferMetadata *> &tr_vector = m_transfers[client_id];
         for (TransferMetadata *tr : tr_vector)
         {
-            if (*tr == *file)
+            if (*tr == file)
             {
-                // Already inserted, update the transfer
+                // Already inserted, simply update the one already present
                 tr->from_string(data);
-                delete file;
                 return;
             }
         }
 
-        // not found, add the transfer
-        m_transfers[client_id].push_back(file);
-
         // Check if transfer already exist in a group transfer and if is not uploader ( destination is not null )
-        if (m_grp_transfers.find(file->get_group_id()) != m_grp_transfers.end() && !file->get_dest().is_default())
+        if (m_grp_transfers.find(file.get_group_id()) != m_grp_transfers.end() && !file.get_dest().is_default())
         {
-            m_grp_transfers[file->get_group_id()]->add_file(file);
+            m_grp_transfers[file.get_group_id()]->add_file(std::move(file));
         }
+
+        // not found, add the transfer
+        m_transfers[client_id].push_back(&m_grp_transfers[file.get_group_id()]->get_transfers_meta().back());
     }
     void Bookkeeper::add_update_grp_transfer(GroupMetadata *grp_transfers)
     {

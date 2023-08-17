@@ -393,7 +393,7 @@ namespace dunedaq::snbmodules
                     // lt::error_code ec;
                     // h.connect_peer(lt::tcp::endpoint(boost::asio::ip::make_address(config->get_source_ip().get_ip(), ec), std::uint16_t(config->get_source_ip().get_port())));
                     ers::warning(BittorrentPeerDisconnectedError(ERS_HERE, e->message()));
-                    // f_meta->set_error_code("peer error: " + a->message());
+                    // f_meta.set_error_code("peer error: " + a->message());
 
                     if (m_peer_num == 0 && m_paused == 0 && !m_is_client)
                     {
@@ -464,7 +464,7 @@ namespace dunedaq::snbmodules
 
                             // if (s.num_peers == 0)
                             // {
-                            //     m_filename_to_metadata[s.name]->set_status(e_status::WAITING);
+                            //     m_filename_to_metadata[s.name].set_status(e_status::WAITING);
                             // }
                         }
 
@@ -594,16 +594,13 @@ namespace dunedaq::snbmodules
         }
     done:
 
-        for (auto [k, s] : m_filename_to_metadata)
+        for (auto &[k, s] : m_filename_to_metadata)
         {
             if (!m_is_client)
             {
                 s->set_status(e_status::FINISHED);
                 // deleting torrents files
-                for (auto [n, m] : m_filename_to_metadata)
-                {
-                    std::filesystem::remove(get_work_dir().append(n + ".torrent"));
-                }
+                std::filesystem::remove(get_work_dir().append(k + ".torrent"));
             }
             else if (s->get_status() != e_status::FINISHED)
             {
@@ -1103,7 +1100,9 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            std::cout.write(torrent.data(), int(torrent.size()));
+            // TODO Aug-14-2022 Leo Joly leo.vincent.andre.joly@cern.ch : Add error code
+            // std::cout.write(torrent.data(), int(torrent.size()));
+            return false;
         }
 
         return true;
@@ -1114,16 +1113,17 @@ namespace dunedaq::snbmodules
         return false;
     }
 
-    TransferInterfaceBittorrent::TransferInterfaceBittorrent(GroupMetadata *config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip)
+    TransferInterfaceBittorrent::TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip)
         : TransferInterfaceAbstract(config),
-          ses(std::move(set_settings(listening_ip, config->get_protocol_options()["port"].get<std::string>()))),
+          ses(std::move(set_settings(listening_ip, config.get_protocol_options()["port"].get<std::string>()))),
           m_is_client(is_client),
           m_listening_ip(listening_ip),
-          m_thread(std::bind(&TransferInterfaceBittorrent::do_work, this, std::placeholders::_1))
+          m_thread([&](std::atomic<bool> &running)
+                   { this->do_work(running); })
     {
         m_work_dir = work_dir;
         m_thread.start_working_thread();
-        m_rate_limit = config->get_protocol_options()["rate_limit"].get<int>();
+        m_rate_limit = config.get_protocol_options()["rate_limit"].get<int>();
     }
 
     TransferInterfaceBittorrent::~TransferInterfaceBittorrent()
@@ -1131,62 +1131,62 @@ namespace dunedaq::snbmodules
         m_thread.stop_working_thread();
     }
 
-    void TransferInterfaceBittorrent::generate_torrents_files(std::filesystem::path dest, std::string tracker)
+    void TransferInterfaceBittorrent::generate_torrents_files(const std::filesystem::path &dest, const std::string &tracker)
     {
-        for (auto f_meta : get_transfer_options()->get_transfers_meta())
+        for (const auto &f_meta : get_transfer_options().get_transfers_meta())
         {
             std::filesystem::path tmp = dest;
-            make_torrent(f_meta->get_file_path(), pow(2, 23), tracker, tmp.append(f_meta->get_file_name() + ".torrent").string());
+            make_torrent(f_meta.get_file_path(), pow(2, 23), tracker, tmp.append(f_meta.get_file_name() + ".torrent").string());
         }
     }
 
-    bool TransferInterfaceBittorrent::upload_file(TransferMetadata *f_meta)
+    bool TransferInterfaceBittorrent::upload_file(TransferMetadata &f_meta)
     {
-        TLOG() << "debug : uploading " << f_meta->get_file_name();
+        TLOG() << "debug : uploading " << f_meta.get_file_name();
 
-        if (add_torrent(get_work_dir().append(f_meta->get_file_name() + ".torrent"), f_meta->get_file_path().remove_filename()) == "")
+        if (add_torrent(get_work_dir().append(f_meta.get_file_name() + ".torrent"), f_meta.get_file_path().remove_filename()) == "")
         {
-            f_meta->set_error_code("failed to add torrent to session");
+            f_meta.set_error_code("failed to add torrent to session");
             return false;
         }
 
-        m_filename_to_metadata[f_meta->get_file_name()] = f_meta;
+        m_filename_to_metadata[f_meta.get_file_name()] = &f_meta;
         return true;
     }
 
-    bool TransferInterfaceBittorrent::download_file(TransferMetadata *f_meta, std::filesystem::path dest)
+    bool TransferInterfaceBittorrent::download_file(TransferMetadata &f_meta, std::filesystem::path dest)
     {
-        TLOG() << "debug : starting download " << f_meta->get_file_name();
+        TLOG() << "debug : starting download " << f_meta.get_file_name();
 
         // need to add before adding magnet because can instant access after adding magnet
-        m_filename_to_metadata[f_meta->get_file_name()] = f_meta;
+        m_filename_to_metadata[f_meta.get_file_name()] = &f_meta;
 
-        if (add_magnet(f_meta->get_magnet_link(), dest))
+        if (add_magnet(f_meta.get_magnet_link(), dest))
         {
             TLOG() << "debug : added magnet passed ";
         }
         else
         {
             // erasing from map because we failed to add magnet
-            m_filename_to_metadata.erase(f_meta->get_file_name());
-            f_meta->set_error_code("failed to add magnet link to session");
+            m_filename_to_metadata.erase(f_meta.get_file_name());
+            f_meta.set_error_code("failed to add magnet link to session");
             return false;
         }
 
-        // add_torrent(get_work_dir().append(f_meta->get_file_name() + ".torrent"), get_work_dir().append(".."));
+        // add_torrent(get_work_dir().append(f_meta.get_file_name() + ".torrent"), get_work_dir().append(".."));
         return true;
     }
 
-    bool TransferInterfaceBittorrent::pause_file(TransferMetadata *f_meta)
+    bool TransferInterfaceBittorrent::pause_file(TransferMetadata &f_meta)
     {
         auto handles = ses.get_torrents();
         for (auto h : handles)
         {
-            if (h.torrent_file()->name() == f_meta->get_file_name())
+            if (h.torrent_file()->name() == f_meta.get_file_name())
             {
                 m_paused++;
                 h.pause(lt::torrent_handle::graceful_pause);
-                TLOG() << "debug : pausing " << f_meta->get_file_name() << " and saving pause data in " << get_work_dir().string() << "/.resume_file_" << f_meta->get_file_name();
+                TLOG() << "debug : pausing " << f_meta.get_file_name() << " and saving pause data in " << get_work_dir().string() << "/.resume_file_" << f_meta.get_file_name();
                 break;
             }
         }
@@ -1194,14 +1194,14 @@ namespace dunedaq::snbmodules
         return true;
     }
 
-    bool TransferInterfaceBittorrent::resume_file(TransferMetadata *f_meta)
+    bool TransferInterfaceBittorrent::resume_file(TransferMetadata &f_meta)
     {
 
         bool found = false;
         auto const handles = ses.get_torrents();
         for (auto h : handles)
         {
-            if (h.torrent_file()->name() == f_meta->get_file_name())
+            if (h.torrent_file()->name() == f_meta.get_file_name())
             {
                 m_paused--;
                 h.resume();
@@ -1231,7 +1231,7 @@ namespace dunedaq::snbmodules
         if (!found)
         {
             // load resume data from disk and pass it in as we add the magnet link
-            auto buf = load_file(get_work_dir().append(".resume_file" + f_meta->get_file_name()));
+            auto buf = load_file(get_work_dir().append(".resume_file" + f_meta.get_file_name()));
             lt::add_torrent_params atp;
 
             if (buf.size())
@@ -1240,24 +1240,24 @@ namespace dunedaq::snbmodules
             }
             else
             {
-                ers::error(BittorrentLoadResumeFileError(ERS_HERE, f_meta->get_file_name()));
-                f_meta->set_error_code("failed to load resume data");
+                ers::error(BittorrentLoadResumeFileError(ERS_HERE, f_meta.get_file_name()));
+                f_meta.set_error_code("failed to load resume data");
                 return false;
             }
 
-            m_filename_to_metadata[f_meta->get_file_name()] = f_meta;
+            m_filename_to_metadata[f_meta.get_file_name()] = &f_meta;
             ses.async_add_torrent(std::move(atp));
         }
 
         return true;
     }
 
-    bool TransferInterfaceBittorrent::cancel_file(TransferMetadata *f_meta)
+    bool TransferInterfaceBittorrent::cancel_file(TransferMetadata &f_meta)
     {
         auto const handles = ses.get_torrents();
         for (auto h : handles)
         {
-            if (h.torrent_file()->name() == f_meta->get_file_name())
+            if (h.torrent_file()->name() == f_meta.get_file_name())
             {
                 // Remove torrent from session
                 ses.remove_torrent(h);
@@ -1267,26 +1267,26 @@ namespace dunedaq::snbmodules
 
         // wait for the session to remove the torrent
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        m_filename_to_metadata.erase(f_meta->get_file_name());
+        m_filename_to_metadata.erase(f_meta.get_file_name());
 
         // remove resume data
-        std::filesystem::remove(get_work_dir().append(".resume_file" + f_meta->get_file_name()));
+        std::filesystem::remove(get_work_dir().append(".resume_file" + f_meta.get_file_name()));
 
         // remove torrent file if uploader or file if downloader
         if (!m_is_client)
         {
-            std::filesystem::remove(get_work_dir().append(f_meta->get_file_name() + ".torrent"));
+            std::filesystem::remove(get_work_dir().append(f_meta.get_file_name() + ".torrent"));
         }
         else
         {
-            std::filesystem::remove(get_work_dir().append(f_meta->get_file_name()));
+            std::filesystem::remove(get_work_dir().append(f_meta.get_file_name()));
         }
 
         return true;
     }
 
     // TODO necessary ?
-    bool TransferInterfaceBittorrent::hash_file(TransferMetadata *f_meta)
+    bool TransferInterfaceBittorrent::hash_file(TransferMetadata &f_meta)
     {
         (void)f_meta;
         return true;

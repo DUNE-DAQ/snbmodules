@@ -8,7 +8,7 @@
 
 #include <chrono>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <fstream>
 
 #include <string>
@@ -21,72 +21,73 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        TransferInterfaceSCP(GroupMetadata *config, bool is_uploader) : TransferInterfaceAbstract(config)
+        TransferInterfaceSCP(GroupMetadata &config, bool is_uploader) : TransferInterfaceAbstract(config)
         {
-            m_params.user = get_transfer_options()->get_protocol_options()["user"].get<std::string>();
-            m_params.use_password = get_transfer_options()->get_protocol_options()["use_password"].get<bool>();
+            m_params.user = get_transfer_options().get_protocol_options()["user"].get<std::string>();
+            m_params.use_password = get_transfer_options().get_protocol_options()["use_password"].get<bool>();
             m_is_uploader = is_uploader;
         }
         virtual ~TransferInterfaceSCP() = default;
 
-        bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : SCP : Uploading file " << f_meta->get_file_name();
-            f_meta->set_status(e_status::UPLOADING);
+            TLOG() << "debug : SCP : Uploading file " << f_meta.get_file_name();
+            f_meta.set_status(e_status::UPLOADING);
 
             // nothing to do
             TLOG() << "debug : SCP : Sucess Upload";
-            f_meta->set_status(e_status::FINISHED);
-            f_meta->set_bytes_transferred(f_meta->get_size());
+            f_meta.set_status(e_status::FINISHED);
+            f_meta.set_bytes_transferred(f_meta.get_size());
             return true;
         }
-        bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override
         {
-            TLOG() << "debug : SCP : Downloading file " << f_meta->get_file_name();
-            f_meta->set_status(e_status::DOWNLOADING);
+            TLOG() << "debug : SCP : Downloading file " << f_meta.get_file_name();
+            f_meta.set_status(e_status::DOWNLOADING);
 
-            m_files_being_transferred[f_meta->get_file_name()] = dest;
+            m_files_being_transferred[f_meta.get_file_name()] = dest;
 
-            char exec[180];
+            std::string exec = "";
             if (m_params.use_password)
             {
-                sprintf(exec, "scp %s@%s:%s %s", m_params.user.c_str(), f_meta->get_src().get_ip().c_str(), f_meta->get_file_path().string().c_str(), dest.c_str());
+                exec = "scp " + m_params.user + "@" + f_meta.get_src().get_ip() + ":" + f_meta.get_file_path().string() + " " + dest.string();
             }
             else
             {
-                sprintf(exec, "scp -o PasswordAuthentication='no' %s@%s:%s %s", m_params.user.c_str(), f_meta->get_src().get_ip().c_str(), f_meta->get_file_path().string().c_str(), dest.c_str());
+
+                exec = "scp -o PasswordAuthentication='no' " + m_params.user + "@" + f_meta.get_src().get_ip() + ":" + f_meta.get_file_path().string() + " " + dest.string();
             }
 
             TLOG() << "debug : executing " << exec;
-            if (system(exec) == 0)
+            if (system(exec.c_str()) == 0)
             {
                 TLOG() << "debug : SCP : Sucess Download";
-                f_meta->set_status(e_status::FINISHED);
-                f_meta->set_bytes_transferred(f_meta->get_size());
+                f_meta.set_status(e_status::FINISHED);
+                f_meta.set_bytes_transferred(f_meta.get_size());
             }
             else
             {
                 ers::error(ErrorSCPDownloadError(ERS_HERE, "Please check the logs for more information."));
-                f_meta->set_status(e_status::ERROR);
-                f_meta->set_error_code("Something went wrong during the download");
-                f_meta->set_bytes_transferred(0);
+                f_meta.set_status(e_status::ERROR);
+                f_meta.set_error_code("Something went wrong during the download");
+                f_meta.set_bytes_transferred(0);
                 return false;
             }
 
             return true;
         }
 
-        bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : SCP : Pausing file " << f_meta->get_file_name();
-            f_meta->set_status(e_status::PAUSED);
-            f_meta->set_bytes_transferred(0);
+            TLOG() << "debug : SCP : Pausing file " << f_meta.get_file_name();
+            f_meta.set_status(e_status::PAUSED);
+            f_meta.set_bytes_transferred(0);
             return true;
         }
 
-        bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : SCP : Resuming file " << f_meta->get_file_name();
+            TLOG() << "debug : SCP : Resuming file " << f_meta.get_file_name();
 
             if (m_is_uploader)
             {
@@ -94,21 +95,21 @@ namespace dunedaq::snbmodules
             }
             else
             {
-                return download_file(f_meta, m_files_being_transferred[f_meta->get_file_name()]);
+                return download_file(f_meta, m_files_being_transferred[f_meta.get_file_name()]);
             }
         }
 
-        bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : SCP : Hashing file " << f_meta->get_file_name();
-            f_meta->set_status(e_status::HASHING);
+            TLOG() << "debug : SCP : Hashing file " << f_meta.get_file_name();
+            f_meta.set_status(e_status::HASHING);
             return true;
         }
 
-        bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "debug : SCP : Cancelling file " << f_meta->get_file_name();
-            f_meta->set_status(e_status::CANCELLED);
+            TLOG() << "debug : SCP : Cancelling file " << f_meta.get_file_name();
+            f_meta.set_status(e_status::CANCELLED);
             return true;
         }
 

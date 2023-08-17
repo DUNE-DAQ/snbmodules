@@ -6,8 +6,8 @@
  * received with this code.
  */
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
+#ifndef SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_
+#define SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_
 
 #include "snbmodules/transfer_client.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -20,45 +20,43 @@
 #include <string>
 #include <vector>
 
-namespace dunedaq
+namespace dunedaq::snbmodules
 {
-    namespace snbmodules
+
+    /// @brief SNBFileTransfer is a DAQModule that transfers files between clients and send transfer status to a bookkeeper
+    class SNBFileTransfer : public dunedaq::appfwk::DAQModule
     {
-        /// @brief SNBFileTransfer is a DAQModule that transfers files between clients and send transfer status to a bookkeeper
-        class SNBFileTransfer : public dunedaq::appfwk::DAQModule
-        {
-        public:
-            explicit SNBFileTransfer(const std::string &name);
+    public:
+        explicit SNBFileTransfer(const std::string &name);
 
-            SNBFileTransfer(const SNBFileTransfer &) = delete;
-            SNBFileTransfer &operator=(const SNBFileTransfer &) = delete;
-            SNBFileTransfer(SNBFileTransfer &&) = delete;
-            SNBFileTransfer &operator=(SNBFileTransfer &&) = delete;
+        SNBFileTransfer(const SNBFileTransfer &) = delete;
+        SNBFileTransfer &operator=(const SNBFileTransfer &) = delete;
+        SNBFileTransfer(SNBFileTransfer &&) = delete;
+        SNBFileTransfer &operator=(SNBFileTransfer &&) = delete;
 
-            void init(const nlohmann::json &obj) override;
-            // void get_info(opmonlib::InfoCollector &ci, int level) override;
+        void init(const nlohmann::json &obj) override;
+        // void get_info(opmonlib::InfoCollector &ci, int level) override;
 
-        private:
-            // Commands
-            void do_conf(const nlohmann::json &obj);
-            void do_start(const nlohmann::json &obj);
-            void do_stop(const nlohmann::json &obj);
-            void do_scrap(const nlohmann::json &obj);
+    private:
+        // Commands
+        void do_conf(const nlohmann::json &obj);
+        void do_start(const nlohmann::json &obj);
+        void do_stop(const nlohmann::json &obj);
+        void do_scrap(const nlohmann::json &obj);
 
-            void do_tr_new(const nlohmann::json &args);
-            void do_tr_start(const nlohmann::json &args);
-            void do_tr_pause(const nlohmann::json &args);
-            void do_tr_resume(const nlohmann::json &args);
-            void do_tr_cancel(const nlohmann::json &args);
+        void do_tr_new(const nlohmann::json &args);
+        void do_tr_start(const nlohmann::json &args);
+        void do_tr_pause(const nlohmann::json &args);
+        void do_tr_resume(const nlohmann::json &args);
+        void do_tr_cancel(const nlohmann::json &args);
 
-            // Configuration
-            TransferClient *m_client;
-            std::string m_name;
+        // Configuration
+        std::shared_ptr<TransferClient> m_client;
+        std::string m_name;
 
-            // Threading
-            dunedaq::utilities::WorkerThread *m_thread;
-        };
-    } // namespace readoutmodules
-} // namespace dunedaq
+        // Threading
+        std::unique_ptr<dunedaq::utilities::WorkerThread> m_thread;
+    };
+} // namespace dunedaq::snbmodules
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_SNBFILETRANSFERHPP_HPP_
+#endif // SNBMODULES_PLUGINS_SNBFILETRANSFER_HPP_
