@@ -1,3 +1,10 @@
+/**
+ * @file SNBTransferBookkeeper.hpp SNBTransferBookkeeper Bookkeeper module retriving transfers informations from SNBFileTransfer clients.
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_PLUGINS_SNBTRANSFERBOOKKEEPER_HPP_
 #define SNBMODULES_PLUGINS_SNBTRANSFERBOOKKEEPER_HPP_

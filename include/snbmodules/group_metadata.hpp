@@ -1,3 +1,11 @@
+/**
+ * @file group_metadata.hpp GroupMetadata class header, used to store the metadata of a group of transfers metadata (one uploader to multiple downloaders)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_GROUP_METADATA_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_GROUP_METADATA_HPP_
 
@@ -46,8 +54,8 @@ namespace dunedaq::snbmodules
         /// @param protocol
         /// @param transfers_meta
         /// @param transfer_id
-        GroupMetadata(std::string group_id, std::string source, IPFormat source_ip, e_protocol_type protocol, const nlohmann::json &protocol_options = nlohmann::json(), const std::vector<TransferMetadata> &transfers_meta = std::vector<TransferMetadata>())
-            : m_group_id(group_id),
+        GroupMetadata(std::string group_id, std::string source, const IPFormat &source_ip, e_protocol_type protocol, const nlohmann::json &protocol_options = nlohmann::json(), const std::vector<TransferMetadata> &transfers_meta = std::vector<TransferMetadata>())
+            : m_group_id(std::move(group_id)),
               m_protocol(protocol),
               m_transfers_meta(transfers_meta),
               m_expected_files(std::set<std::string>()),
@@ -124,7 +132,7 @@ namespace dunedaq::snbmodules
         inline e_protocol_type get_protocol() const { return m_protocol; }
         inline std::vector<TransferMetadata> &get_transfers_meta() { return m_transfers_meta; }
         inline const std::vector<TransferMetadata> &get_transfers_meta() const { return m_transfers_meta; }
-        TransferMetadata &get_transfer_meta_from_file_path(std::string file_path);
+        TransferMetadata &get_transfer_meta_from_file_path(const std::string &file_path);
         inline const std::set<std::string> &get_expected_files() const { return m_expected_files; }
         inline nlohmann::json get_protocol_options() const { return m_protocol_options; }
         inline std::string get_source_id() const { return m_source_id; }

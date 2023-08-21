@@ -1,5 +1,14 @@
+/**
+ * @file snb_notfication_test.cxx Test app of notification transfers
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
+#include "snbmodules/transfer_session.hpp"
+#include "snbmodules/bookkeeper.hpp"
 
 #include <iostream>
 #include <string>
@@ -9,9 +18,6 @@
 #include <vector>
 #include <unistd.h>
 #include <sys/types.h>
-
-#include "snbmodules/transfer_session.hpp"
-#include "snbmodules/bookkeeper.hpp"
 
 using namespace dunedaq::snbmodules;
 
@@ -110,9 +116,9 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 
     return 0;
-}
+} // NOLINT

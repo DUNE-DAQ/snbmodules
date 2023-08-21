@@ -1,5 +1,5 @@
 /**
- * @file DataRecorder.cpp DataRecorder implementation
+ * @file SNBFileTransfer.cpp Module to transfer files between SNBFileTransfer modules.
  *
  * This is part of the DUNE DAQ , copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have

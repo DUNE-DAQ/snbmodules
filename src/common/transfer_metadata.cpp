@@ -1,5 +1,15 @@
+/**
+ * @file transfer_metadata.cpp TransferMetadata class, used to store metadata of a transfer (one uploader to one downloader)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #include "snbmodules/transfer_metadata.hpp"
 #include "snbmodules/tools/magic_enum.hpp"
+
+#include <string>
 
 namespace dunedaq::snbmodules
 {
@@ -76,15 +86,15 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("size"))
         {
-            set_size(j["size"].get<unsigned long>());
+            set_size(j["size"].get<uint64_t>());
         }
         if (j.contains("transfered"))
         {
-            set_bytes_transferred(j["transfered"].get<unsigned long>());
+            set_bytes_transferred(j["transfered"].get<uint64_t>());
         }
         if (j.contains("speed"))
         {
-            set_transmission_speed(j["speed"].get<unsigned long>());
+            set_transmission_speed(j["speed"].get<int32_t>());
         }
         if (j.contains("source"))
         {
@@ -120,15 +130,15 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("start_t"))
         {
-            set_start_time(j["start_t"].get<uint64_t>());
+            set_start_time(j["start_t"].get<int64_t>());
         }
         if (j.contains("end_t"))
         {
-            set_end_time(j["end_t"].get<uint64_t>());
+            set_end_time(j["end_t"].get<int64_t>());
         }
         if (j.contains("duration"))
         {
-            set_duration(j["duration"].get<uint64_t>());
+            set_duration(j["duration"].get<int64_t>());
         }
     }
 

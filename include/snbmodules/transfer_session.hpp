@@ -1,3 +1,10 @@
+/**
+ * @file transfer_session.hpp e_session_type enum downloader or uploader, TransferSession class, wrapper to get access to the transfer interface and control states of transfers
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_SESSION_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_SESSION_HPP_
@@ -72,7 +79,7 @@ namespace dunedaq::snbmodules
         /// @param type type of session
         /// @param id unique identifier of the session
         /// @param ip ip of the client (TODO : useless ?)
-        TransferSession(GroupMetadata transfer_options, e_session_type type, std::string id, IPFormat ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn = std::vector<std::string>(), std::set<std::string> client_conn = std::set<std::string>());
+        TransferSession(const GroupMetadata &transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn = std::vector<std::string>(), std::set<std::string> client_conn = std::set<std::string>());
 
         /// @brief Destructor
         /// Kill all threads created by the session (TODO : useless ?)
@@ -111,7 +118,7 @@ namespace dunedaq::snbmodules
         bool start_all();
 
         // Downloaders only
-        bool download_all(std::filesystem::path dest);
+        bool download_all(const std::filesystem::path &dest);
         bool download_file(TransferMetadata &f_meta, std::filesystem::path dest, bool is_multiple = false);
 
         // Uploaders only
@@ -158,7 +165,7 @@ namespace dunedaq::snbmodules
         /// @param type type of notification to send
         /// @param data data to send, default empty
         /// @return true if success
-        bool send_notification_to_targets(e_notification_type type, std::string data = "");
+        bool send_notification_to_targets(e_notification_type type, const std::string &data = "");
     };
 
 } // namespace dunedaq::snbmodules

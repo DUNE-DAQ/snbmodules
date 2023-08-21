@@ -1,3 +1,11 @@
+/**
+ * @file ip_format.hpp IPFormat very simple class to represent an IP address and a port
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_IP_FORMAT_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_IP_FORMAT_HPP_
 
@@ -81,7 +89,7 @@ namespace dunedaq::snbmodules
 #endif // !_MSC_VER
 
         /// @brief  Set the IP address, must be called after set_port() if the port is specified in the IP address ex 0.0.0.0:1234
-        void set_ip(std::string ip)
+        void set_ip(const std::string &ip)
         {
             if (ip.empty())
             {

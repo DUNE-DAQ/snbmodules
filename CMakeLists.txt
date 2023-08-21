@@ -70,7 +70,7 @@ endif()
 set(tests
     snb_bookkeeper_app
     snb_transfer_client_app
-    snb_bittorent_full_test
+    snb_bittorrent_full_test
     snb_rclone_full_test
     snb_transfer_metadata_save_load
     snb_group_metadata_save_load

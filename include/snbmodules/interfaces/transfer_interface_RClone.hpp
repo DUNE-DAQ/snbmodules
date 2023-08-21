@@ -1,4 +1,10 @@
-
+/**
+ * @file transfer_interface_RClone.hpp TransferInterfaceRClone protocol class for a RClone transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_RCLONE_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_RCLONE_HPP_

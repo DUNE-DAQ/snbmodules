@@ -1,3 +1,10 @@
+/**
+ * @file snb_rclone_full_test.cxx Test app to test rclone protocol functionalities
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -37,8 +44,6 @@ int main()
         dunedaq::utilities::WorkerThread thread(std::bind(&TransferClient::do_work, &c0, std::placeholders::_1));
         thread.start_working_thread();
 
-        std::cout << "-1" << std::endl;
-
         // Create file to transfer
         std::string file_name = "./client1/test.txt";
         std::ofstream file(file_name);
@@ -64,18 +69,12 @@ int main()
             }
         )"_json;
 
-        std::cout << "0" << std::endl;
-
         // Create transfer with client1 as uploader and client0 as downloader
         c1.create_new_transfer("transfer0", "RCLONE", {c0.get_client_id()}, {file_name}, transfer_options);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        std::cout << "1" << std::endl;
-
         c1.get_session("transfer0")->start_all();
         std::this_thread::sleep_for(std::chrono::seconds(10));
-
-        std::cout << "2" << std::endl;
 
         // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed
         // c0.get_session("transfer0")->pause_all();
@@ -90,13 +89,13 @@ int main()
         io::mapped_file_source f1(file_name);
         io::mapped_file_source f2("./client0/transfer0/test.txt");
 
-        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data()))
+        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data())) // NOLINT
         {
-            TLOG() << "The files are equal";
+            TLOG() << "Files are equals";
         }
         else
         {
-            TLOG() << "The files are not equal";
+            TLOG() << "Files are not equals";
         }
 
         // Clean files
@@ -105,8 +104,8 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
     return 0;
-}
+} // NOLINT

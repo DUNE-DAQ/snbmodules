@@ -1,3 +1,11 @@
+/**
+ * @file metadata_abstract.hpp MetadataAbstract class, abstract class to declare metadata objects
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_METADATA_ABSTRACT_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_METADATA_ABSTRACT_HPP_
 

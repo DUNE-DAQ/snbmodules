@@ -1,6 +1,16 @@
-
+/**
+ * @file transfer_interface_bittorrent.cpp TransferInterfaceRClone protocol class for a Bittorrent transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/interfaces/transfer_interface_bittorrent.hpp"
+
+#include <vector>
+#include <utility>
+#include <string>
 
 namespace dunedaq::snbmodules
 {
@@ -275,7 +285,7 @@ namespace dunedaq::snbmodules
             if (save_on_exit && !running_flag.load())
             {
                 auto const handles = ses.get_torrents();
-                for (auto h : handles)
+                for (const auto &h : handles)
                 {
                     h.save_resume_data(lt::torrent_handle::only_if_modified | lt::torrent_handle::save_info_dict);
                 }
@@ -292,7 +302,7 @@ namespace dunedaq::snbmodules
 
                 if (log_file)
                 {
-                    std::fprintf(log_file, "[%ld] %s\n", std::int64_t(duration_cast<std::chrono::milliseconds>(a->timestamp() - first_ts).count()), a->message().c_str());
+                    std::fprintf(log_file, "[%ld] %s\n", static_cast<std::int64_t>(duration_cast<std::chrono::milliseconds>(a->timestamp() - first_ts).count()), a->message().c_str());
                 }
 
                 if (auto at = lt::alert_cast<lt::add_torrent_alert>(a))
@@ -358,12 +368,12 @@ namespace dunedaq::snbmodules
                 }
 
                 // when resume data is ready, save it
-                if (const lt::save_resume_data_alert *rd = lt::alert_cast<lt::save_resume_data_alert>(a))
+                if (const auto *rd = lt::alert_cast<lt::save_resume_data_alert>(a))
                 {
                     std::ofstream of(get_work_dir().append(".resume_file_" + rd->params.name), std::ios_base::binary);
                     of.unsetf(std::ios_base::skipws);
                     auto const b = write_resume_data_buf(rd->params);
-                    of.write(b.data(), int(b.size()));
+                    of.write(b.data(), static_cast<int>(b.size()));
                     if (m_done)
                     {
                         goto done;
@@ -424,7 +434,7 @@ namespace dunedaq::snbmodules
                         continue;
                     }
 
-                    for (long unsigned int i = 0; i < st->status.size(); i++)
+                    for (uint64_t i = 0; i < st->status.size(); i++)
                     {
                         lt::torrent_status const &s = st->status[i];
 
@@ -475,7 +485,7 @@ namespace dunedaq::snbmodules
                                << (s.download_payload_rate / 1000) << " kB/s "
                                << (s.total_done / 1000) << " kB ("
                                << (s.progress_ppm / 10000) << "%) "
-                               << s.current_tracker << " " << std::int64_t(duration_cast<seconds>(s.next_announce).count()) << "s ("
+                               << s.current_tracker << " " << static_cast<std::int64_t>(duration_cast<seconds>(s.next_announce).count()) << "s ("
                                << s.num_peers << " peers) "
                                << "\n";
 
@@ -618,6 +628,7 @@ namespace dunedaq::snbmodules
     }
     catch (std::exception &e)
     {
+        // TODO: handle error
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
@@ -644,7 +655,7 @@ namespace dunedaq::snbmodules
         //     }
         // }
 
-        set_torrent_params(p, dest);
+        set_torrent_params(p, std::move(dest));
 
         TLOG() << "debug : adding torrent";
         ses.async_add_torrent(std::move(p));
@@ -657,14 +668,14 @@ namespace dunedaq::snbmodules
     }
 
     // return magnet url
-    std::string TransferInterfaceBittorrent::add_torrent(std::string torrent, std::filesystem::path dest)
+    std::string TransferInterfaceBittorrent::add_torrent(const std::string &torrent, const std::filesystem::path &dest)
     try
     {
         using lt::storage_mode_t;
 
         TLOG() << "debug : [" << m_torrent_num << "] " << torrent;
 
-        lt::error_code ec;
+        // lt::error_code ec;
         lt::add_torrent_params p = lt::load_torrent_file(torrent);
 
         // std::vector<char> resume_data;
@@ -694,7 +705,7 @@ namespace dunedaq::snbmodules
         return "";
     }
 
-    void TransferInterfaceBittorrent::set_torrent_params(lt::add_torrent_params &p, std::filesystem::path dest)
+    void TransferInterfaceBittorrent::set_torrent_params(lt::add_torrent_params &p, const std::filesystem::path &dest)
     {
         TLOG() << "debug : setting torrent parameters";
 
@@ -759,7 +770,7 @@ namespace dunedaq::snbmodules
         p.storage_mode = lt::storage_mode_allocate;
     }
 
-    lt::session_params TransferInterfaceBittorrent::set_settings(IPFormat listen_interface, std::string listen_port)
+    lt::session_params TransferInterfaceBittorrent::set_settings(const IPFormat &listen_interface, const std::string &listen_port)
     {
         lt::session_params sp;
         auto &p = sp.settings;
@@ -951,10 +962,10 @@ namespace dunedaq::snbmodules
         in.exceptions(std::ifstream::failbit);
         in.open(filename.c_str(), std::ios_base::in | std::ios_base::binary);
         in.seekg(0, std::ios_base::end);
-        size_t const size = size_t(in.tellg());
+        size_t const size = static_cast<size_t>(in.tellg());
         in.seekg(0, std::ios_base::beg);
         std::vector<char> ret(size);
-        in.read(ret.data(), int(ret.size()));
+        in.read(ret.data(), static_cast<int>(ret.size()));
         return ret;
     }
 
@@ -1026,7 +1037,7 @@ namespace dunedaq::snbmodules
         return true;
     }
 
-    bool TransferInterfaceBittorrent::make_torrent(std::filesystem::path full_path, int piece_size, std::string tracker, std::string outfile)
+    bool TransferInterfaceBittorrent::make_torrent(std::filesystem::path full_path, int piece_size, const std::string &tracker, const std::string &outfile)
     try
     {
         std::string creator_str = "libtorrent";
@@ -1052,7 +1063,7 @@ namespace dunedaq::snbmodules
         if (fs.num_files() == 0)
         {
             std::cerr << "no files specified.\n";
-            return 1;
+            return true;
         }
 
         lt::create_torrent t(fs, piece_size, flags);
@@ -1096,7 +1107,7 @@ namespace dunedaq::snbmodules
             std::fstream out;
             out.exceptions(std::ifstream::failbit);
             out.open(outfile.c_str(), std::ios_base::out | std::ios_base::binary);
-            out.write(torrent.data(), int(torrent.size()));
+            out.write(torrent.data(), static_cast<int>(torrent.size()));
         }
         else
         {
@@ -1113,15 +1124,15 @@ namespace dunedaq::snbmodules
         return false;
     }
 
-    TransferInterfaceBittorrent::TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip)
+    TransferInterfaceBittorrent::TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, const IPFormat &listening_ip)
         : TransferInterfaceAbstract(config),
-          ses(std::move(set_settings(listening_ip, config.get_protocol_options()["port"].get<std::string>()))),
+          ses(set_settings(listening_ip, config.get_protocol_options()["port"].get<std::string>())),
           m_is_client(is_client),
           m_listening_ip(listening_ip),
           m_thread([&](std::atomic<bool> &running)
                    { this->do_work(running); })
     {
-        m_work_dir = work_dir;
+        m_work_dir = std::move(work_dir);
         m_thread.start_working_thread();
         m_rate_limit = config.get_protocol_options()["rate_limit"].get<int>();
     }
@@ -1136,7 +1147,7 @@ namespace dunedaq::snbmodules
         for (const auto &f_meta : get_transfer_options().get_transfers_meta())
         {
             std::filesystem::path tmp = dest;
-            make_torrent(f_meta.get_file_path(), pow(2, 23), tracker, tmp.append(f_meta.get_file_name() + ".torrent").string());
+            make_torrent(f_meta.get_file_path(), static_cast<int>(pow(2, 23)), tracker, tmp.append(f_meta.get_file_name() + ".torrent").string());
         }
     }
 
@@ -1180,7 +1191,7 @@ namespace dunedaq::snbmodules
     bool TransferInterfaceBittorrent::pause_file(TransferMetadata &f_meta)
     {
         auto handles = ses.get_torrents();
-        for (auto h : handles)
+        for (const auto &h : handles)
         {
             if (h.torrent_file()->name() == f_meta.get_file_name())
             {
@@ -1199,7 +1210,7 @@ namespace dunedaq::snbmodules
 
         bool found = false;
         auto const handles = ses.get_torrents();
-        for (auto h : handles)
+        for (const auto &h : handles)
         {
             if (h.torrent_file()->name() == f_meta.get_file_name())
             {
@@ -1255,7 +1266,7 @@ namespace dunedaq::snbmodules
     bool TransferInterfaceBittorrent::cancel_file(TransferMetadata &f_meta)
     {
         auto const handles = ses.get_torrents();
-        for (auto h : handles)
+        for (const auto &h : handles)
         {
             if (h.torrent_file()->name() == f_meta.get_file_name())
             {

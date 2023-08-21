@@ -1,3 +1,10 @@
+/**
+ * @file snb_ip_format_test.cxx Test app of IP format class
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/ip_format.hpp"
 #include "logging/Logging.hpp"
@@ -41,7 +48,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 }

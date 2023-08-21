@@ -1,5 +1,18 @@
+/**
+ * @file transfer_client.hpp TransferClient class, everything a client can do containing one session for each transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
+
+#include <string>
+#include <set>
+#include <vector>
+#include <utility>
+#include <memory>
 
 namespace dunedaq::snbmodules
 {
@@ -13,7 +26,7 @@ namespace dunedaq::snbmodules
         std::string x = "./";
 
         size_t pos = 0;
-        while (1)
+        while (true)
         {
             pos = file_path_str.find(x, pos);
             if (pos == std::string::npos)
@@ -38,7 +51,7 @@ namespace dunedaq::snbmodules
     bool TransferClient::start(int timeout)
     {
 
-        while (1)
+        while (true)
         {
             // When starting, client wait for notification from bookkeeper.
             std::optional<NotificationData> msg = listen_for_notification(get_my_conn(), "", timeout);
@@ -137,7 +150,7 @@ namespace dunedaq::snbmodules
         }
 
         // Create local session, can take time depending on protocol
-        TransferSession *s = create_session(std::move(group_transfer), e_session_type::Uploader, session_name, get_listening_dir().append(transfer_id), m_listening_ip, dest_clients);
+        TransferSession *s = create_session(group_transfer, e_session_type::Uploader, session_name, get_listening_dir().append(transfer_id), m_listening_ip, dest_clients);
 
         // Notify clients and sending group metadata
         for (const auto &client : dest_clients)
@@ -223,14 +236,14 @@ namespace dunedaq::snbmodules
     }
 
     // TODO ip useless ?
-    TransferSession *TransferClient::create_session(GroupMetadata transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip /*= IPFormat()*/, const std::set<std::string> &dest_clients /*= std::set<std::string>()*/)
+    TransferSession *TransferClient::create_session(const GroupMetadata &transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip /*= IPFormat()*/, const std::set<std::string> &dest_clients /*= std::set<std::string>()*/)
     {
         if (ip.is_default())
         {
             ip = get_ip();
         }
 
-        TransferSession *new_session = new TransferSession(std::move(transfer_options), type, std::move(id), std::move(ip), work_dir, get_bookkeepers_conn(), get_clients_conn());
+        auto *new_session = new TransferSession(transfer_options, type, std::move(id), std::move(ip), work_dir, get_bookkeepers_conn(), get_clients_conn());
         new_session->set_target_clients(dest_clients);
 
         TLOG() << "debug : session created " << magic_enum::enum_name(type);
@@ -297,7 +310,7 @@ namespace dunedaq::snbmodules
 
             TLOG() << "debug : creating session " << notif.m_target_id << " type " << magic_enum::enum_name(type);
             std::string group_id_tmp = metadata.get_group_id();
-            create_session(std::move(metadata), type, notif.m_target_id, get_listening_dir().append(group_id_tmp));
+            create_session(metadata, type, notif.m_target_id, get_listening_dir().append(group_id_tmp));
             break;
         }
 
@@ -500,7 +513,7 @@ namespace dunedaq::snbmodules
                     if (!already_active)
                     {
                         std::string group_id_tmp = metadata.get_group_id();
-                        create_session(std::move(metadata), Uploader, generate_session_id(group_id_tmp), get_listening_dir().append("ses" + m_sessions.size()));
+                        create_session(metadata, Uploader, generate_session_id(group_id_tmp), get_listening_dir().append("ses" + m_sessions.size()));
                     }
                 }
             }
@@ -557,7 +570,7 @@ namespace dunedaq::snbmodules
     {
         if (m_my_conn.empty())
         {
-            for (std::string c : get_clients_conn())
+            for (const std::string &c : get_clients_conn())
             {
                 if (c.find(get_client_id()) != std::string::npos)
                 {

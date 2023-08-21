@@ -1,3 +1,10 @@
+/**
+ * @file snb_transfer_metadata_save_load.cxx Test app to save and load transfer metadatas
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_metadata.hpp"
 
@@ -40,7 +47,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 }

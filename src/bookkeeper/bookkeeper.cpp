@@ -1,10 +1,22 @@
+/**
+ * @file bookkeeper.cpp Bookkeeper class retriving informations from clients
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/bookkeeper.hpp"
+
+#include <string>
+#include <set>
+#include <vector>
+#include <utility>
 
 namespace dunedaq::snbmodules
 {
     // TODO Aug-14-2022 Leo Joly leo.vincent.andre.joly@cern.ch : Obsolete, is this needed anymore ?
-    void Bookkeeper::create_new_transfer(std::string protocol, std::string src, std::set<std::string> dests, std::set<std::filesystem::path> files, const nlohmann::json &protocol_options)
+    void Bookkeeper::create_new_transfer(const std::string &protocol, const std::string &src, const std::set<std::string> &dests, const std::set<std::filesystem::path> &files, const nlohmann::json &protocol_options)
     {
         // suppress warnings
         (void)protocol;
@@ -92,10 +104,10 @@ namespace dunedaq::snbmodules
             {
                 TLOG() << magic_enum::enum_integer(value) << " - " << magic_enum::enum_name(value);
             }
-            int protocol;
+            int protocol = -1;
             std::cin >> protocol;
             // Check input
-            if (protocol < 0 || protocol >= (int)magic_enum::enum_count<e_protocol_type>())
+            if (protocol < 0 || protocol >= static_cast<int>(magic_enum::enum_count<e_protocol_type>()))
             {
                 TLOG() << "Invalid protocol";
                 break;
@@ -143,7 +155,7 @@ namespace dunedaq::snbmodules
                     break;
                 }
 
-                for (std::string client : choosen_clients)
+                for (const std::string &client : choosen_clients)
                 {
                     // Check input
                     auto &list = get_transfers().at(client);
@@ -217,13 +229,13 @@ namespace dunedaq::snbmodules
         }
     }
 
-    void Bookkeeper::start_transfers(std::string transfer_id)
+    void Bookkeeper::start_transfers(const std::string &transfer_id)
     {
         TLOG() << "Starting transfer " << transfer_id;
 
         if (m_clients_per_grp_transfer.find(transfer_id) != m_clients_per_grp_transfer.end())
         {
-            for (std::string client : m_clients_per_grp_transfer[transfer_id])
+            for (const std::string &client : m_clients_per_grp_transfer[transfer_id])
             {
                 std::string session_name = client + "_ses" + transfer_id;
                 send_notification(e_notification_type::START_TRANSFER, get_bookkeeper_id(), session_name, client);
@@ -238,7 +250,7 @@ namespace dunedaq::snbmodules
     void Bookkeeper::do_work(std::atomic<bool> &running_flag)
     {
         // Just one request on startup, after that the clients will have to send by themself
-        for (std::string client : get_clients_conn())
+        for (const std::string &client : get_clients_conn())
         {
             request_connection_and_available_files(client);
         }
@@ -272,7 +284,7 @@ namespace dunedaq::snbmodules
         auto time_point = std::chrono::high_resolution_clock::now();
 
         // Just one request on startup, after that the clients will have to send by themself
-        for (std::string client : get_clients_conn())
+        for (const std::string &client : get_clients_conn())
         {
             request_connection_and_available_files(client);
         }
@@ -293,7 +305,7 @@ namespace dunedaq::snbmodules
             }
 
             // check alives clients and available files
-            for (std::string client : get_clients_conn())
+            for (const std::string &client : get_clients_conn())
             {
                 if (m_transfers.find(client) != m_transfers.end())
                 {
@@ -316,7 +328,7 @@ namespace dunedaq::snbmodules
         }
     }
 
-    void Bookkeeper::request_connection_and_available_files(std::string client)
+    void Bookkeeper::request_connection_and_available_files(const std::string &client)
     {
         // send connection request to client
         send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 1);
@@ -343,7 +355,7 @@ namespace dunedaq::snbmodules
                 force)
             {
 
-                for (std::string session : m_clients_per_grp_transfer[g->get_group_id()])
+                for (const std::string &session : m_clients_per_grp_transfer[g->get_group_id()])
                 {
                     send_notification(e_notification_type::UPDATE_REQUEST, get_bookkeeper_id(), session, get_client_name_from_session_name(session));
                 }
@@ -389,7 +401,7 @@ namespace dunedaq::snbmodules
         case e_notification_type::GROUP_METADATA:
         {
             // Loading the data and cnovert to a proper transfer metadata object
-            GroupMetadata *tmeta = new GroupMetadata(notif.m_data, false);
+            auto *tmeta = new GroupMetadata(notif.m_data, false);
 
             // Store it
             m_clients_per_grp_transfer[tmeta->get_group_id()].insert(notif.m_source_id);
@@ -405,7 +417,7 @@ namespace dunedaq::snbmodules
 
     void Bookkeeper::display_information()
     {
-        std::ostream *output;
+        std::ostream *output = nullptr;
         std::ostream *output_line_log = nullptr;
         std::string sep = ";";
 
@@ -414,16 +426,16 @@ namespace dunedaq::snbmodules
             // open file
             output = new std::ofstream();
             output_line_log = new std::ofstream();
-            ((std::ofstream *)output)->open(m_file_log_path + get_bookkeeper_id() + ".log", std::fstream::out);
-            ((std::ofstream *)output_line_log)->open(m_file_log_path + get_bookkeeper_id() + "_line.csv", std::fstream::app | std::fstream::out);
+            dynamic_cast<std::ofstream *>(output)->open(m_file_log_path + get_bookkeeper_id() + ".log", std::fstream::out);
+            dynamic_cast<std::ofstream *>(output_line_log)->open(m_file_log_path + get_bookkeeper_id() + "_line.csv", std::fstream::app | std::fstream::out);
             // clear file
-            ((std::ofstream *)output)->clear();
+            dynamic_cast<std::ofstream *>(output)->clear();
             TLOG() << "debug : output log wroten "
                    << m_file_log_path << get_bookkeeper_id() << ".log\t"
                    << m_file_log_path << get_bookkeeper_id() << "_line.csv";
 
             // if csv file empty, write header
-            if (((std::ofstream *)output_line_log)->tellp() == 0)
+            if (dynamic_cast<std::ofstream *>(output_line_log)->tellp() == 0)
             {
                 *output_line_log << "time" << sep
                                  << "file_name" << sep
@@ -453,7 +465,7 @@ namespace dunedaq::snbmodules
         // *output << "q: quit, d : display info, n : new transfer, s : start transfer" << std::endl;
         *output << "Connected clients :" << std::endl;
 
-        for (auto client : get_transfers())
+        for (const auto &client : get_transfers())
         {
             bool is_session = false;
             // If it's a session
@@ -563,8 +575,8 @@ namespace dunedaq::snbmodules
 
         if (m_file_log_path != "")
         {
-            ((std::ofstream *)output)->close();
-            ((std::ofstream *)output_line_log)->close();
+            dynamic_cast<std::ofstream *>(output)->close();
+            dynamic_cast<std::ofstream *>(output_line_log)->close();
         }
         else
         {
@@ -572,7 +584,7 @@ namespace dunedaq::snbmodules
         }
     }
 
-    void Bookkeeper::add_update_transfer(std::string client_id, std::string data)
+    void Bookkeeper::add_update_transfer(const std::string &client_id, const std::string &data)
     {
         // Loading the data and convert to a proper transfer metadata object
         TransferMetadata file = TransferMetadata(data, false);
@@ -588,14 +600,16 @@ namespace dunedaq::snbmodules
             }
         }
 
+        std::string group_id_tmp = file.get_group_id();
+
         // Check if transfer already exist in a group transfer and if is not uploader ( destination is not null )
-        if (m_grp_transfers.find(file.get_group_id()) != m_grp_transfers.end() && !file.get_dest().is_default())
+        if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end() && !file.get_dest().is_default())
         {
-            m_grp_transfers[file.get_group_id()]->add_file(std::move(file));
+            m_grp_transfers[group_id_tmp]->add_file(std::move(file));
         }
 
         // not found, add the transfer
-        m_transfers[client_id].push_back(&m_grp_transfers[file.get_group_id()]->get_transfers_meta().back());
+        m_transfers[client_id].push_back(&m_grp_transfers[group_id_tmp]->get_transfers_meta().back());
     }
     void Bookkeeper::add_update_grp_transfer(GroupMetadata *grp_transfers)
     {

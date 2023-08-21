@@ -1,3 +1,11 @@
+/**
+ * @file bookkeeper.hpp Bookkeeper class retriving informations from clients
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_BOOKKEEPER_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_BOOKKEEPER_HPP_
 
@@ -67,7 +75,7 @@ namespace dunedaq::snbmodules
         /// @param input Input from the user
         void input_action(char input);
 
-        [[deprecated("Now only the uploader can create a new transfer")]] void create_new_transfer(std::string protocol, std::string src, std::set<std::string> dests, std::set<std::filesystem::path> files, const nlohmann::json &protocol_options = nlohmann::json());
+        [[deprecated("Now only the uploader can create a new transfer")]] void create_new_transfer(const std::string &protocol, const std::string &src, const std::set<std::string> &dests, const std::set<std::filesystem::path> &files, const nlohmann::json &protocol_options = nlohmann::json());
 
         /// @brief Display the information of the bookkeeper either on the normal log or on a specific file depending on the value of m_file_log_path
         void display_information();
@@ -80,7 +88,7 @@ namespace dunedaq::snbmodules
         // Setters
         inline void set_bookkeeper_id(std::string bookkeeper_id) { m_bookkeeper_id = std::move(bookkeeper_id); }
         inline void set_ip(const IPFormat &ip) { m_ip = ip; }
-        void add_update_transfer(std::string client_id, std::string data);
+        void add_update_transfer(const std::string &client_id, const std::string &data);
         void add_update_grp_transfer(GroupMetadata *grp_transfers);
 
         // Getters
@@ -113,10 +121,10 @@ namespace dunedaq::snbmodules
 
         /// @brief Send a notification to a clients id or connection to get available files
         /// @param client client id or connection name
-        void request_connection_and_available_files(std::string client);
+        void request_connection_and_available_files(const std::string &client);
 
         /// @brief Start a new transfer
-        [[deprecated("Now only the uploader can start a transfer")]] void start_transfers(std::string transfer_id);
+        [[deprecated("Now only the uploader can start a transfer")]] void start_transfers(const std::string &transfer_id);
 
         /// @brief Usefull convertion from session id to client id
         /// @param session_name session id

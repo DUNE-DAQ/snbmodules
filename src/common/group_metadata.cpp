@@ -1,3 +1,10 @@
+/**
+ * @file group_metadata.cpp GroupMetadata class header, used to store the metadata of a group of transfers metadata (one uploader to multiple downloaders)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/group_metadata.hpp"
 #include "snbmodules/tools/magic_enum.hpp"
@@ -5,12 +12,16 @@
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace dunedaq::snbmodules
 {
 
     const std::string GroupMetadata::m_file_extension = ".gmetadata";
 
-    TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(std::string file_path)
+    TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(const std::string &file_path)
     {
         for (TransferMetadata &meta : get_transfers_meta())
         {
@@ -34,7 +45,8 @@ namespace dunedaq::snbmodules
         }
         else if (meta.get_group_id() == m_group_id)
         {
-            int pos = -1, i = 0;
+            int pos = -1;
+            int i = 0;
             for (const auto &m : m_transfers_meta)
             {
                 if (m == meta)
@@ -107,7 +119,7 @@ namespace dunedaq::snbmodules
         {
             auto files = j["files"].get<std::vector<std::filesystem::path>>();
 
-            for (auto file : files)
+            for (const auto &file : files)
             {
                 add_expected_file(file);
             }

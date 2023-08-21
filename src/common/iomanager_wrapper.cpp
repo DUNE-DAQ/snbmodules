@@ -1,5 +1,15 @@
+/**
+ * @file iomanager_wrapper.cpp IOManagerWrapper class definition : wrapper of the IOManager to adapt it to the snbmodules
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/iomanager_wrapper.hpp"
+
+#include <string>
+#include <utility>
 
 namespace dunedaq::snbmodules
 {
@@ -21,7 +31,7 @@ namespace dunedaq::snbmodules
 
     void IOManagerWrapper::add_connection(const IPFormat &ip, std::string id, std::string data_type)
     {
-        iomanager::Connection conn = iomanager::Connection{iomanager::ConnectionId{id, data_type},
+        iomanager::Connection conn = iomanager::Connection{iomanager::ConnectionId{std::move(id), std::move(data_type)},
                                                            "tcp://" + ip.get_ip() + ":" + (std::to_string(ip.get_port()) == "0" ? "*" : std::to_string(ip.get_port())),
                                                            iomanager::ConnectionType::kSendRecv};
 

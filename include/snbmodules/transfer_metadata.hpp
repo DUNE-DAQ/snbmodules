@@ -1,3 +1,11 @@
+/**
+ * @file transfer_metadata.hpp TransferMetadata class, used to store metadata of a transfer (one uploader to one downloader)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_METADATA_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_METADATA_HPP_
 

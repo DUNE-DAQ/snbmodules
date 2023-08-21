@@ -1,17 +1,25 @@
 
+/**
+ * @file transfer_session.cpp TransferSession class, wrapper to get access to the transfer interface and control states of transfers
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #include "snbmodules/transfer_session.hpp"
 
 namespace dunedaq::snbmodules
 {
 
-    TransferSession::TransferSession(GroupMetadata transfer_options, e_session_type type, std::string id, IPFormat ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn /*= std::vector<std::string>()*/, std::set<std::string> client_conn /*= std::set<std::string>()*/)
-        : NotificationInterface(bk_conn, client_conn),
+    TransferSession::TransferSession(const GroupMetadata &transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn /*= std::vector<std::string>()*/, std::set<std::string> client_conn /*= std::set<std::string>()*/)
+        : NotificationInterface(std::move(bk_conn), std::move(client_conn)),
           m_type(type),
-          m_session_id(id),
+          m_session_id(std::move(id)),
           m_ip(ip),
-          m_transfer_options(std::move(transfer_options)),
+          m_transfer_options(transfer_options),
           //   m_threads(std::vector<pid_t>()),
-          m_work_dir(work_dir)
+          m_work_dir(std::move(work_dir))
     {
         std::filesystem::create_directories(m_work_dir);
 
@@ -134,7 +142,7 @@ namespace dunedaq::snbmodules
         return result;
     }
 
-    bool TransferSession::send_notification_to_targets(e_notification_type type, std::string data)
+    bool TransferSession::send_notification_to_targets(e_notification_type type, const std::string &data /*= ""*/)
     {
         bool result = true;
         for (const std::string &client : get_target_clients())
@@ -324,7 +332,7 @@ namespace dunedaq::snbmodules
         // wait for the uploader to be ready
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        bool res = m_transfer_interface->download_file(f_meta, dest);
+        bool res = m_transfer_interface->download_file(f_meta, std::move(dest));
         if (res)
         {
             f_meta.set_status(e_status::DOWNLOADING);
@@ -405,7 +413,7 @@ namespace dunedaq::snbmodules
     }
 
     // Downloaders only
-    bool TransferSession::download_all(std::filesystem::path dest)
+    bool TransferSession::download_all(const std::filesystem::path &dest)
     {
         if (m_type != e_session_type::Downloader)
         {

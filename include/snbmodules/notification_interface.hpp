@@ -1,3 +1,10 @@
+/**
+ * @file notification_interface.hpp NotificationData class, NotificationInterface class, interface used by clients or bookkeepers to send/receive notifications
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
@@ -148,9 +155,9 @@ namespace dunedaq
             /// @param session_name Name of the session
             /// @param use_connectivity_service Use the connectivity service
             /// @param ip IP of the connectivity service
-            void init_connection_interface(std::string session_name = "SNBMODULES", bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000))
+            void init_connection_interface(const std::string &session_name = "SNBMODULES", bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000))
             {
-                IOManagerWrapper::get().init_connection_interface(std::move(session_name), use_connectivity_service, ip);
+                IOManagerWrapper::get().init_connection_interface(session_name, use_connectivity_service, ip);
             }
 
             // Getters

@@ -1,4 +1,10 @@
-
+/**
+ * @file transfer_interface_bittorrent.hpp TransferInterfaceBittorrent protocol class for a Bittorrent transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_BITTORRENT_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_BITTORRENT_HPP_
@@ -85,7 +91,7 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, IPFormat listening_ip);
+        TransferInterfaceBittorrent(GroupMetadata &config, bool is_client, std::filesystem::path work_dir, const IPFormat &listening_ip);
         ~TransferInterfaceBittorrent();
 
         void generate_torrents_files(const std::filesystem::path &dest, const std::string &tracker);
@@ -128,10 +134,10 @@ namespace dunedaq::snbmodules
 
         bool add_magnet(lt::string_view uri, std::filesystem::path dest);
         // return magnet url
-        std::string add_torrent(std::string torrent, std::filesystem::path dest);
+        std::string add_torrent(const std::string &torrent, const std::filesystem::path &dest);
 
-        void set_torrent_params(lt::add_torrent_params &p, std::filesystem::path dest);
-        lt::session_params set_settings(IPFormat listen_interface, std::string listen_port);
+        void set_torrent_params(lt::add_torrent_params &p, const std::filesystem::path &dest);
+        lt::session_params set_settings(const IPFormat &listen_interface, const std::string &listen_port);
 
         static std::vector<char> load_file(std::string const &filename);
         static std::string branch_path(std::string const &f);
@@ -143,7 +149,7 @@ namespace dunedaq::snbmodules
         // name starts with a .
         static bool file_filter(std::string const &f);
 
-        bool make_torrent(std::filesystem::path full_path, int piece_size, std::string tracker, std::string outfile);
+        bool make_torrent(std::filesystem::path full_path, int piece_size, const std::string &tracker, const std::string &outfile);
 
         // Threading
         dunedaq::utilities::WorkerThread m_thread;

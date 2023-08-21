@@ -1,3 +1,10 @@
+/**
+ * @file notification_interface.cpp NotificationData class, NotificationInterface class, interface used by clients or bookkeepers to send/receive notifications
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/notification_interface.hpp"
 
@@ -6,6 +13,7 @@
 
 #include <iostream>
 #include <string>
+#include <utility>
 
 namespace dunedaq::snbmodules
 {
@@ -39,7 +47,8 @@ namespace dunedaq::snbmodules
                 {
                     return std::nullopt;
                 }
-                return listen_for_notification(id, expected_from, timeout, --tries);
+                tries--;
+                return listen_for_notification(id, expected_from, timeout, tries);
             }
         }
         return msg;
@@ -55,7 +64,7 @@ namespace dunedaq::snbmodules
 
         // find connection with dst in it
         std::string real_conn_id = id_conn;
-        for (auto conn : m_bookkeepers_conn)
+        for (const auto &conn : m_bookkeepers_conn)
         {
             if (conn.find(id_conn) != std::string::npos)
             {
@@ -63,7 +72,7 @@ namespace dunedaq::snbmodules
                 break;
             }
         }
-        for (auto conn : m_clients_conn)
+        for (const auto &conn : m_clients_conn)
         {
             if (conn.find(id_conn) != std::string::npos)
             {
@@ -91,7 +100,8 @@ namespace dunedaq::snbmodules
             // wait
             std::this_thread::sleep_for(std::chrono::milliseconds(m_timeout_send));
             TLOG() << "debug : Retrying send notification";
-            return send_notification(notif, src, dst, real_conn_id, data, --tries);
+            tries--;
+            return send_notification(notif, src, dst, real_conn_id, data, tries);
         }
 
         return result;

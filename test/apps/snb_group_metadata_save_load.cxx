@@ -1,3 +1,10 @@
+/**
+ * @file snb_group_metadata_save_load.cxx Test app to save and load group metadatas
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/group_metadata.hpp"
 

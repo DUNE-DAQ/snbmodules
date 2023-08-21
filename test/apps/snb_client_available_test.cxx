@@ -1,3 +1,10 @@
+/**
+ * @file snb_client_available_test.cxx Test app try the files search and available functions
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -9,6 +16,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <set>
+#include <utility>
 
 using namespace dunedaq::snbmodules;
 
@@ -58,7 +66,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 }

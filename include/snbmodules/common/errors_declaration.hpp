@@ -1,3 +1,11 @@
+/**
+ * @file errors_declaration.hpp Error declaration of snbmodules.
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_COMMON_ERRORS_DECLARATION_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_COMMON_ERRORS_DECLARATION_HPP_
 

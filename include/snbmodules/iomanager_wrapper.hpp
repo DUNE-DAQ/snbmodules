@@ -1,3 +1,10 @@
+/**
+ * @file iomanager_wrapper.hpp IOManagerWrapper class definition : wrapper of the IOManager to adapt it to the snbmodules
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_IOMANAGER_WRAPPER_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_IOMANAGER_WRAPPER_HPP_

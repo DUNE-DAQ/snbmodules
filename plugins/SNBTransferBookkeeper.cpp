@@ -1,5 +1,5 @@
 /**
- * @file DataRecorder.cpp DataRecorder implementation
+ * @file SNBTransferBookkeeper.cpp SNBTransferBookkeeper Bookkeeper module retriving transfers informations from SNBFileTransfer clients.
  *
  * This is part of the DUNE DAQ , copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
@@ -12,6 +12,7 @@
 
 #include <string>
 #include <set>
+#include <memory>
 
 namespace dunedaq::snbmodules
 {

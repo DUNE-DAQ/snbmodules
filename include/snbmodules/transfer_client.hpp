@@ -1,4 +1,10 @@
-
+/**
+ * @file transfer_client.hpp TransferClient class, everything a client can do containing one session for each transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_
@@ -71,7 +77,7 @@ namespace dunedaq::snbmodules
         /// @param id ID of the session
         /// @param listening_ip Listening IP\:PORT address of the session
         /// @return Pointer to the new session
-        TransferSession *create_session(GroupMetadata transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip = IPFormat(), const std::set<std::string> &dest_clients = std::set<std::string>());
+        TransferSession *create_session(const GroupMetadata &transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip = IPFormat(), const std::set<std::string> &dest_clients = std::set<std::string>());
 
         /// @brief Scan available files in the listening directory
         /// @param previous_scan Set of files already scanned
