@@ -170,55 +170,55 @@ namespace dunedaq::snbmodules
     void TransferClient::start_transfer(const std::string &transfer_id)
     {
 
-        TransferSession *session = get_session(transfer_id);
+        std::optional<TransferSession *> session = get_session(transfer_id);
 
-        if (session == nullptr)
+        if (session.has_value() == false)
         {
             return;
         }
 
-        session->start_all();
+        session.value()->start_all();
     }
 
     void TransferClient::pause_transfer(const std::string &transfer_id)
     {
 
-        TransferSession *session = get_session(transfer_id);
+        std::optional<TransferSession *> session = get_session(transfer_id);
 
-        if (session == nullptr)
+        if (session.has_value() == false)
         {
             return;
         }
 
-        session->pause_all();
+        session.value()->pause_all();
     }
     void TransferClient::resume_transfer(const std::string &transfer_id)
     {
 
-        TransferSession *session = get_session(transfer_id);
+        std::optional<TransferSession *> session = get_session(transfer_id);
 
-        if (session == nullptr)
+        if (session.has_value() == false)
         {
             return;
         }
 
-        session->resume_all();
+        session.value()->resume_all();
     }
 
     void TransferClient::cancel_transfer(const std::string &transfer_id)
     {
 
-        TransferSession *session = get_session(transfer_id);
+        std::optional<TransferSession *> session = get_session(transfer_id);
 
-        if (session == nullptr)
+        if (session.has_value() == false)
         {
             return;
         }
 
-        session->cancel_all();
+        session.value()->cancel_all();
     }
 
-    TransferSession *TransferClient::get_session(std::string transfer_id)
+    std::optional<TransferSession *> TransferClient::get_session(std::string transfer_id)
     {
         if (transfer_id.find("ses") == std::string::npos)
         {
@@ -229,7 +229,7 @@ namespace dunedaq::snbmodules
         if (sessions_ref.find(transfer_id) == sessions_ref.end())
         {
             ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
-            return nullptr;
+            return std::nullopt;
         }
 
         return get_sessions().at(transfer_id);
@@ -340,113 +340,120 @@ namespace dunedaq::snbmodules
         case e_notification_type::START_TRANSFER:
         {
             TLOG() << "debug : starting transfer " << notif.m_target_id;
-            auto sessions_ref = get_sessions();
-            if (sessions_ref.find(notif.m_target_id) != sessions_ref.end())
+            std::optional<TransferSession *> ses = get_session(notif.m_target_id);
+            if (ses.has_value())
             {
+                TransferSession *s = ses.value();
                 if (notif.m_data == "")
                 {
-                    get_session(notif.m_target_id)->start_all();
+                    s->start_all();
                 }
                 else
                 {
-                    get_session(notif.m_target_id)->start_file(get_session(notif.m_target_id)->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                    s->start_file(s->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
                 }
             }
             else
             {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
             }
+
             break;
         }
 
         case e_notification_type::PAUSE_TRANSFER:
         {
             TLOG() << "debug : pausing transfer " << notif.m_target_id;
-            auto sessions_ref = get_sessions();
-            if (sessions_ref.find(notif.m_target_id) != sessions_ref.end())
+            std::optional<TransferSession *> ses = get_session(notif.m_target_id);
+            if (ses.has_value())
             {
+                TransferSession *s = ses.value();
                 if (notif.m_data == "")
                 {
-                    get_session(notif.m_target_id)->pause_all();
+                    s->pause_all();
                 }
                 else
                 {
-                    get_session(notif.m_target_id)->pause_file(get_session(notif.m_target_id)->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                    s->pause_file(s->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
                 }
             }
             else
             {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
             }
-            break;
+
             break;
         }
 
         case e_notification_type::RESUME_TRANSFER:
         {
             TLOG() << "debug : resuming transfer " << notif.m_target_id;
-            auto sessions_ref = get_sessions();
-            if (sessions_ref.find(notif.m_target_id) != sessions_ref.end())
+            std::optional<TransferSession *> ses = get_session(notif.m_target_id);
+            if (ses.has_value())
             {
+                TransferSession *s = ses.value();
                 if (notif.m_data == "")
                 {
-                    get_session(notif.m_target_id)->resume_all();
+                    s->resume_all();
                 }
                 else
                 {
-                    get_session(notif.m_target_id)->resume_file(get_session(notif.m_target_id)->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                    s->resume_file(s->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
                 }
             }
             else
             {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
             }
+
             break;
         }
 
         case e_notification_type::CANCEL_TRANSFER:
         {
             TLOG() << "debug : cancelling transfer " << notif.m_target_id;
-            auto sessions_ref = get_sessions();
-            if (sessions_ref.find(notif.m_target_id) != sessions_ref.end())
+            std::optional<TransferSession *> ses = get_session(notif.m_target_id);
+            if (ses.has_value())
             {
+                TransferSession *s = ses.value();
                 if (notif.m_data == "")
                 {
-                    get_session(notif.m_target_id)->cancel_all();
+                    s->cancel_all();
                 }
                 else
                 {
-                    get_session(notif.m_target_id)->cancel_file(get_session(notif.m_target_id)->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                    s->cancel_file(s->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
                 }
             }
             else
             {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
             }
-            break;
+
             break;
         }
 
         case e_notification_type::UPDATE_REQUEST:
         {
             TLOG() << "debug : updating grp transfer for " << notif.m_target_id;
-            auto sessions_ref = get_sessions();
-            if (sessions_ref.find(notif.m_target_id) != sessions_ref.end())
+            std::optional<TransferSession *> ses = get_session(notif.m_target_id);
+            if (ses.has_value())
             {
+                TransferSession *s = ses.value();
                 if (notif.m_data == "")
                 {
-                    get_session(notif.m_target_id)->update_metadatas_to_bookkeeper();
+                    s->update_metadatas_to_bookkeeper();
                 }
                 else
                 {
-                    get_session(notif.m_target_id)->update_metadata_to_bookkeeper(get_session(notif.m_target_id)->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                    s->update_metadata_to_bookkeeper(s->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
                 }
             }
             else
             {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
             }
-            break;
+
             break;
         }
 
@@ -464,9 +471,12 @@ namespace dunedaq::snbmodules
 
     void TransferClient::remove_session(const std::string &session_id)
     {
-        TransferSession *ses = get_session(session_id);
-        m_sessions.erase(session_id);
-        delete ses;
+        auto ses = get_session(session_id);
+        if (ses.has_value() == true)
+        {
+            m_sessions.erase(session_id);
+            delete ses.value();
+        }
     }
 
     std::string TransferClient::generate_session_id(const std::string &transferid, const std::string &dest_id /*= ""*/)

@@ -89,7 +89,7 @@ namespace dunedaq::snbmodules
         inline IPFormat get_ip() const { return m_listening_ip; }
         inline std::string get_client_id() const { return m_client_id; }
         inline std::filesystem::path get_listening_dir() const { return m_listening_dir; }
-        TransferSession *get_session(std::string transfer_id);
+        std::optional<TransferSession *> get_session(std::string transfer_id);
         inline std::map<std::string, TransferSession *> &get_sessions() { return m_sessions; }
         inline const std::map<std::string, TransferSession *> &get_sessions() const { return m_sessions; }
         std::string get_my_conn();

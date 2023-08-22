@@ -47,8 +47,8 @@ namespace dunedaq::snbmodules
 
         bool operator==(MetadataAbstract const &other) const override
         {
-            auto o = dynamic_cast<const TransferMetadata *>(&other);
-            return m_file_path == o->m_file_path && m_src == o->m_src && m_dest == o->m_dest && m_group_id == o->m_group_id;
+            auto o = dynamic_cast<const TransferMetadata &>(other);
+            return m_file_path == o.m_file_path && m_src == o.m_src && m_dest == o.m_dest && m_group_id == o.m_group_id;
         }
 
         /// @brief Operator < overload
@@ -56,8 +56,8 @@ namespace dunedaq::snbmodules
         /// @return
         bool operator<(MetadataAbstract const &other) const override
         {
-            auto o = dynamic_cast<const TransferMetadata *>(&other);
-            return SI::natural::compare<std::string>(m_file_path.string(), o->m_file_path.string());
+            auto o = dynamic_cast<const TransferMetadata &>(other);
+            return SI::natural::compare<std::string>(m_file_path.string(), o.m_file_path.string());
         }
 
         /// @brief Constructor

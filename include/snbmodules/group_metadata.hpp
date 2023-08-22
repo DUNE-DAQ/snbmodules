@@ -85,8 +85,8 @@ namespace dunedaq::snbmodules
         /// @return  True if the transfer_id are equal, false otherwise
         bool operator==(MetadataAbstract const &other) const override
         {
-            auto o = dynamic_cast<const GroupMetadata *>(&other);
-            return m_group_id == o->m_group_id;
+            auto o = dynamic_cast<const GroupMetadata &>(other);
+            return m_group_id == o.m_group_id;
         }
 
         /// @brief  Operator <
@@ -94,8 +94,8 @@ namespace dunedaq::snbmodules
         /// @return  True if the transfer_id is less than the other transfer_id, false otherwise
         bool operator<(MetadataAbstract const &other) const override
         {
-            auto o = dynamic_cast<const GroupMetadata *>(&other);
-            return SI::natural::compare<std::string>(m_group_id, o->m_group_id);
+            auto o = dynamic_cast<const GroupMetadata &>(other);
+            return SI::natural::compare<std::string>(m_group_id, o.m_group_id);
         }
 
         // Setters

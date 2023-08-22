@@ -41,7 +41,8 @@ int main()
         c0.init_connection_interface();
 
         // Start client0 in a thread ( listening to notifications, Dowloader )
-        dunedaq::utilities::WorkerThread thread(std::bind(&TransferClient::do_work, &c0, std::placeholders::_1));
+        dunedaq::utilities::WorkerThread thread([&](std::atomic<bool> &running)
+                                                { c0.do_work(running); });
         thread.start_working_thread();
 
         // Create file to transfer
@@ -73,7 +74,7 @@ int main()
         c1.create_new_transfer("transfer0", "RCLONE", {c0.get_client_id()}, {file_name}, transfer_options);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        c1.get_session("transfer0")->start_all();
+        c1.get_session("transfer0").value()->start_all();
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed

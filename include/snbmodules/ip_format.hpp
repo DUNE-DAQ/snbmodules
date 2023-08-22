@@ -109,6 +109,9 @@ namespace dunedaq::snbmodules
                 ip_port_pair.emplace_back(std::string(token));
                 token = strtok_s(nullptr, ":", &next_token);
             }
+
+            delete[] ip_char;
+
             if (ip_port_pair.size() != 1 && ip_port_pair.size() != 2)
             {
                 throw std::invalid_argument("Invalid IP address format (IP:PORT or IP)");

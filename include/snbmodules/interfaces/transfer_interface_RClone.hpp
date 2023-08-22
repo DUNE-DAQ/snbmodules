@@ -37,7 +37,8 @@ namespace dunedaq::snbmodules
         TransferInterfaceRClone(GroupMetadata &config, const std::filesystem::path &work_dir)
             : TransferInterfaceAbstract(config),
               m_work_dir(work_dir),
-              m_thread(std::bind(&TransferInterfaceRClone::do_work, this, std::placeholders::_1))
+              m_thread([&](std::atomic<bool> &running)
+                       { this->do_work(running); })
         {
             RcloneInitialize();
             m_thread.start_working_thread();
