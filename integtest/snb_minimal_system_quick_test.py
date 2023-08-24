@@ -78,8 +78,8 @@ conf_dict["snbmodules"]["client_name"] = "client"
 confgen_arguments={"MinimalSystem": conf_dict}
 # The commands to run in nanorc, as a list
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
-"expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
-"expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
+"expert_command /json0/json0/ /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
+"expert_command /json0/json0/ /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
 "wait 10 stop_run wait 2 scrap terminate".split()
 # The tests themselves
 
@@ -88,6 +88,11 @@ def test_nanorc_success(run_nanorc):
     print(run_nanorc.log_files)
     # Check that nanorc completed correctly
     assert run_nanorc.completed_process.returncode==0
+    
+    nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
+    "expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
+    "expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
+    "wait 10 stop_run wait 2 scrap terminate".split()
 
 def test_log_files(run_nanorc):
     if check_for_logfile_errors:

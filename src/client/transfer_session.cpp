@@ -9,6 +9,12 @@
 
 #include "snbmodules/transfer_session.hpp"
 
+#include <string>
+#include <set>
+#include <vector>
+#include <utility>
+#include <memory>
+
 namespace dunedaq::snbmodules
 {
 
@@ -27,6 +33,14 @@ namespace dunedaq::snbmodules
         switch (m_transfer_options.get_protocol())
         {
         case BITTORRENT:
+
+            // check if port is set
+            if (!m_transfer_options.get_protocol_options().contains("port"))
+            {
+                ers::fatal(BittorrentConfigError(ERS_HERE, "port is mandatory in Bittorrent protocol options"));
+                return;
+            }
+
             m_transfer_interface = std::make_unique<TransferInterfaceBittorrent>(m_transfer_options, type == e_session_type::Downloader, get_work_dir(), get_ip());
 
             // Generate torrent files and magnet links

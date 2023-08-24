@@ -19,7 +19,7 @@
 namespace dunedaq::snbmodules
 {
 
-    const std::string GroupMetadata::m_file_extension = ".gmetadata";
+    const std::string GroupMetadata::m_file_extension = ".gmetadata"; // NOLINT
 
     TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(const std::string &file_path)
     {

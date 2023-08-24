@@ -43,28 +43,68 @@ namespace dunedaq::snbmodules
             RcloneInitialize();
             m_thread.start_working_thread();
 
-            m_params.protocol = config.get_protocol_options()["protocol"].get<std::string>();
+            // protocol parameters
 
-            std::cout << "Protocol: " << m_params.protocol << std::endl;
+            if (config.get_protocol_options().contains("protocol"))
+            {
+                m_params.protocol = config.get_protocol_options()["protocol"].get<std::string>();
+            }
 
             if (m_params.protocol == "sftp")
             {
-                m_params.user = config.get_protocol_options()["user"].get<std::string>();
+                if (config.get_protocol_options().contains("user"))
+                {
+                    m_params.user = config.get_protocol_options()["user"].get<std::string>();
+                }
             }
 
-            m_params.bwlimit = config.get_protocol_options()["rate_limit"].get<std::string>();
-            m_params.refresh_rate = config.get_protocol_options()["refresh_rate"].get<int>();
-            m_params.port = config.get_protocol_options()["port"].get<int>();
-            // config parameters
-            m_params.simult_transfers = config.get_protocol_options()["simult_transfers"].get<int>();
-            m_params.transfer_threads = config.get_protocol_options()["transfer_threads"].get<int>();
-            m_params.checkers_threads = config.get_protocol_options()["checkers_threads"].get<int>();
+            if (config.get_protocol_options().contains("rate_limit"))
+            {
+                m_params.bwlimit = config.get_protocol_options()["rate_limit"].get<std::string>();
+            }
+            if (config.get_protocol_options().contains("refresh_rate"))
+            {
+                m_params.refresh_rate = config.get_protocol_options()["refresh_rate"].get<int>();
+            }
+            if (config.get_protocol_options().contains("port"))
+            {
+                m_params.port = config.get_protocol_options()["port"].get<int>();
+            }
 
-            m_params.chunk_size = config.get_protocol_options()["chunk_size"].get<std::string>();
-            m_params.buffer_size = config.get_protocol_options()["buffer_size"].get<std::string>();
-            m_params.use_mmap = config.get_protocol_options()["use_mmap"].get<bool>();
-            m_params.checksum = config.get_protocol_options()["checksum"].get<bool>();
-            m_params.root_folder = std::filesystem::absolute(config.get_protocol_options()["root_folder"].get<std::string>());
+            // config parameters
+            if (config.get_protocol_options().contains("simult_transfers"))
+            {
+                m_params.simult_transfers = config.get_protocol_options()["simult_transfers"].get<int>();
+            }
+            if (config.get_protocol_options().contains("transfer_threads"))
+            {
+                m_params.transfer_threads = config.get_protocol_options()["transfer_threads"].get<int>();
+            }
+            if (config.get_protocol_options().contains("checkers_threads"))
+            {
+                m_params.checkers_threads = config.get_protocol_options()["checkers_threads"].get<int>();
+            }
+
+            if (config.get_protocol_options().contains("chunk_size"))
+            {
+                m_params.chunk_size = config.get_protocol_options()["chunk_size"].get<std::string>();
+            }
+            if (config.get_protocol_options().contains("buffer_size"))
+            {
+                m_params.buffer_size = config.get_protocol_options()["buffer_size"].get<std::string>();
+            }
+            if (config.get_protocol_options().contains("use_mmap"))
+            {
+                m_params.use_mmap = config.get_protocol_options()["use_mmap"].get<bool>();
+            }
+            if (config.get_protocol_options().contains("checksum"))
+            {
+                m_params.checksum = config.get_protocol_options()["checksum"].get<bool>();
+            }
+            if (config.get_protocol_options().contains("root_folder"))
+            {
+                m_params.root_folder = std::filesystem::absolute(config.get_protocol_options()["root_folder"].get<std::string>());
+            }
 
             char *input_request = new char[100];
             sprintf(input_request, "{"
@@ -397,16 +437,16 @@ namespace dunedaq::snbmodules
         struct parameters
         {
             std::string protocol = "http";
-            std::string user;
+            std::string user = "anonymous";
             int port = 8080;
             std::string bwlimit = "off";
             int refresh_rate = 10;
             std::filesystem::path root_folder = "/";
 
             // config
-            int simult_transfers = 16;
-            int transfer_threads = 16;
-            int checkers_threads = 16;
+            int simult_transfers = 200;
+            int transfer_threads = 4;
+            int checkers_threads = 1;
 
             std::string chunk_size = "10G";
             std::string buffer_size = "100G";

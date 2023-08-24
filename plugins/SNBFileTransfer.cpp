@@ -39,12 +39,33 @@ namespace dunedaq::snbmodules
     SNBFileTransfer::do_tr_new(const nlohmann::json &args)
     {
         TLOG() << "debug : New transfer request !";
-        auto src = args["src"].get<std::string>();
+
+        std::string src = "";
+        if (args.contains("src"))
+        {
+            src = args["src"].get<std::string>();
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "src is mandatory to create a new transfer");
+            return;
+        }
 
         if (src == m_name)
         {
-            auto dests = args["dests"].get<std::set<std::string>>();
-            auto files = args["files"].get<std::set<std::filesystem::path>>();
+            std::string dests = "";
+            std::filesystem::path files = "";
+
+            if (args.contains("dests") && args.contains("files"))
+            {
+                dests = args["dests"].get<std::set<std::string>>();
+                files = args["files"].get<std::set<std::filesystem::path>>();
+            }
+            else
+            {
+                ers::error(ErrorConfigError(ERS_HERE, "dests and files are mandatory to create a new transfer"));
+                return;
+            }
 
             m_client->create_new_transfer(args["transfer_id"].get<std::string>(), args["protocol"].get<std::string>(), dests, files, args["protocol_args"]);
         }
@@ -56,22 +77,50 @@ namespace dunedaq::snbmodules
     void
     SNBFileTransfer::do_tr_start(const nlohmann::json &args)
     {
-        m_client->start_transfer(args["transfer_id"].get<std::string>());
+        if (args.contains("transfer_id"))
+        {
+            m_client->start_transfer(args["transfer_id"].get<std::string>());
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to start a transfer"));
+        }
     }
     void
     SNBFileTransfer::do_tr_pause(const nlohmann::json &args)
     {
-        m_client->pause_transfer(args["transfer_id"].get<std::string>());
+        if (args.contains("transfer_id"))
+        {
+            m_client->pause_transfer(args["transfer_id"].get<std::string>());
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to pause a transfer"));
+        }
     }
     void
     SNBFileTransfer::do_tr_resume(const nlohmann::json &args)
     {
-        m_client->resume_transfer(args["transfer_id"].get<std::string>());
+        if (args.contains("transfer_id"))
+        {
+            m_client->resume_transfer(args["transfer_id"].get<std::string>());
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to resume a transfer"));
+        }
     }
     void
     SNBFileTransfer::do_tr_cancel(const nlohmann::json &args)
     {
-        m_client->cancel_transfer(args["transfer_id"].get<std::string>());
+        if (args.contains("transfer_id"))
+        {
+            m_client->cancel_transfer(args["transfer_id"].get<std::string>());
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to cancel a transfer"));
+        }
     }
 
     void
@@ -83,12 +132,17 @@ namespace dunedaq::snbmodules
     void
     SNBFileTransfer::do_conf(const nlohmann::json &args)
     {
-        m_client = std::make_shared<TransferClient>(IPFormat(args["client_ip"].get<std::string>()), m_name, args["work_dir"].get<std::filesystem::path>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
-
-        m_client->lookups_connections();
-
-        m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
-                                                                      { m_client->do_work(running); });
+        if (args.contains("client_ip") && args.contains("work_dir") && args.contains("connection_prefix") && args.contains("timeout_send") && args.contains("timeout_receive"))
+        {
+            m_client = std::make_shared<TransferClient>(IPFormat(args["client_ip"].get<std::string>()), m_name, args["work_dir"].get<std::filesystem::path>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
+            m_client->lookups_connections();
+            m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
+                                                                          { m_client->do_work(running); });
+        }
+        else
+        {
+            ers::error(ErrorConfigError(ERS_HERE, "client_ip, work_dir, connection_prefix, timeout_send and timeout_receive are mandatory to configure a TransferClient"));
+        }
     }
 
     void

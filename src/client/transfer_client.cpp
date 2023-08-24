@@ -133,7 +133,7 @@ namespace dunedaq::snbmodules
             else
             {
                 group_transfer.add_expected_file(file);
-                group_transfer.add_file(std::move(create_metadata_from_file(file)));
+                group_transfer.add_file(create_metadata_from_file(file));
             }
         }
 
@@ -327,7 +327,7 @@ namespace dunedaq::snbmodules
                 {
                     TLOG() << "debug : session found";
                     fmeta.set_dest(s.second->get_ip());
-                    s.second->add_file(std::move(fmeta));
+                    s.second->add_file(fmeta);
                     return true;
                 }
             }
@@ -490,7 +490,7 @@ namespace dunedaq::snbmodules
         return id;
     }
 
-    void TransferClient::scan_available_files(std::set<std::filesystem::path> &previous_scan, bool nested, std::filesystem::path folder)
+    void TransferClient::scan_available_files(std::set<std::filesystem::path> &previous_scan, bool nested, std::filesystem::path folder) // NOLINT
     {
         if (folder.empty())
         {
@@ -523,7 +523,7 @@ namespace dunedaq::snbmodules
                     if (!already_active)
                     {
                         std::string group_id_tmp = metadata.get_group_id();
-                        create_session(metadata, Uploader, generate_session_id(group_id_tmp), get_listening_dir().append("ses" + m_sessions.size()));
+                        create_session(metadata, Uploader, generate_session_id(group_id_tmp), get_listening_dir().append("ses" + std::to_string(m_sessions.size())));
                     }
                 }
             }
@@ -546,7 +546,7 @@ namespace dunedaq::snbmodules
                             auto expect_ref = s.second->get_transfer_options().get_expected_files();
                             if (expect_ref.find(metadata.get_file_name()) != expect_ref.end())
                             {
-                                s.second->add_file(std::move(metadata));
+                                s.second->add_file(metadata);
                                 wanted = true;
                                 break;
                             }
@@ -565,7 +565,7 @@ namespace dunedaq::snbmodules
                 TLOG() << "debug : found directory " << entry.path();
                 if (nested)
                 {
-                    scan_available_files(previous_scan, nested, entry.path());
+                    scan_available_files(previous_scan, nested, entry.path()); // NOLINT
                 }
             }
         }

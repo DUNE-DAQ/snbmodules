@@ -36,7 +36,7 @@ int main()
         GroupMetadata transfer_options("group1", "client1", ip1, e_protocol_type::dummy);
         transfer_options.add_expected_file("test.txt");
         transfer_options.add_expected_file("test2.txt");
-        transfer_options.add_file(std::move(TransferMetadata("test.txt", 100, ip1)));
+        transfer_options.add_file(TransferMetadata("test.txt", 100, ip1));
 
         // Create sessions in each client
         TransferSession *ses1 = client1.create_session(transfer_options, e_session_type::Uploader, "session1", "./listen/s1");
@@ -48,7 +48,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::seconds(3));
 
         // Add the second file
-        ses1->add_file(std::move(TransferMetadata("test2.txt", 50, ip1)));
+        ses1->add_file(TransferMetadata("test2.txt", 50, ip1));
 
         // Upload the second file
         ses1->upload_all();

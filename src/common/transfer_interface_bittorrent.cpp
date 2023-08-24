@@ -632,7 +632,7 @@ namespace dunedaq::snbmodules
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
-    bool TransferInterfaceBittorrent::add_magnet(lt::string_view uri, std::filesystem::path dest)
+    bool TransferInterfaceBittorrent::add_magnet(lt::string_view uri, const std::filesystem::path &dest)
     try
     {
         TLOG() << "debug : loading parameters from magnet " << uri.to_string();
@@ -655,7 +655,7 @@ namespace dunedaq::snbmodules
         //     }
         // }
 
-        set_torrent_params(p, std::move(dest));
+        set_torrent_params(p, dest);
 
         TLOG() << "debug : adding torrent";
         ses.async_add_torrent(std::move(p));
@@ -1024,16 +1024,15 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ++sep;
+            ++sep; // NOLINT
         }
 
         // return false if the first character of the filename is a .
-        if (sep[0] == '.')
+        if (sep[0] == '.') // NOLINT
         {
             return false;
         }
 
-        std::cerr << f << "\n";
         return true;
     }
 
@@ -1134,7 +1133,11 @@ namespace dunedaq::snbmodules
     {
         m_work_dir = std::move(work_dir);
         m_thread.start_working_thread();
-        m_rate_limit = config.get_protocol_options()["rate_limit"].get<int>();
+
+        if (config.get_protocol_options().contains("rate_limit"))
+        {
+            m_rate_limit = config.get_protocol_options()["rate_limit"].get<int>();
+        }
     }
 
     TransferInterfaceBittorrent::~TransferInterfaceBittorrent()

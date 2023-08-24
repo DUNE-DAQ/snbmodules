@@ -98,9 +98,9 @@ namespace dunedaq::snbmodules
         void set_target_clients(std::set<std::string> clients) { m_target_clients = std::move(clients); }
 
         // Interface for the transfer, TODO: add notifications : DO WE REALLY WANT THAT ?
-        void add_file(TransferMetadata fmeta)
+        void add_file(const TransferMetadata &fmeta)
         {
-            TransferMetadata &moved_meta = m_transfer_options.add_file(std::move(fmeta));
+            TransferMetadata &moved_meta = m_transfer_options.add_file(fmeta);
             update_metadata_to_bookkeeper(moved_meta);
         }
 

@@ -95,7 +95,7 @@ namespace dunedaq::snbmodules
         std::string get_my_conn();
 
         // Setters
-        inline void set_ip(std::string ip) { m_listening_ip.set_ip(std::move(ip)); }
+        inline void set_ip(const std::string &ip) { m_listening_ip.set_ip(ip); }
         inline void set_port(int port) { m_listening_ip.set_port(port); }
         inline void set_client_id(std::string client_id) { m_client_id = std::move(client_id); }
         inline void set_listening_dir(const std::filesystem::path &listening_dir)

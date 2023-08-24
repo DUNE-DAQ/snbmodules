@@ -128,6 +128,11 @@ namespace dunedaq
                       "BittorrentLoadResumeFileError: Cannot load resume metadata from file " << file,
                       ((std::string)file)) // NOLINT
 
+    ERS_DECLARE_ISSUE(snbmodules,
+                      ErrorConfigError,
+                      "ErrorConfigError: Please check the configuration file for more information, " << param,
+                      ((std::string)param)) // NOLINT
+
     // metadata errors
     ERS_DECLARE_ISSUE(snbmodules,
                       MetadataFileNotFoundError,

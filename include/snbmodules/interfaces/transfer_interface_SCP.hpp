@@ -29,8 +29,21 @@ namespace dunedaq::snbmodules
     public:
         TransferInterfaceSCP(GroupMetadata &config, bool is_uploader) : TransferInterfaceAbstract(config)
         {
-            m_params.user = get_transfer_options().get_protocol_options()["user"].get<std::string>();
-            m_params.use_password = get_transfer_options().get_protocol_options()["use_password"].get<bool>();
+            if (config.get_protocol_options().contains("user"))
+            {
+                m_params.user = config.get_protocol_options()["user"].get<std::string>();
+            }
+            else
+            {
+                ers::fatal(ErrorSCPConfigError(ERS_HERE, "user is mandatory in SCP protocol options");
+                return;
+            }
+
+            if (config.get_protocol_options().contains("use_password"))
+            {
+                m_params.use_password = config.get_protocol_options()["use_password"].get<bool>();
+            }
+
             m_is_uploader = is_uploader;
         }
         virtual ~TransferInterfaceSCP() = default;
@@ -65,7 +78,7 @@ namespace dunedaq::snbmodules
             }
 
             TLOG() << "debug : executing " << exec;
-            if (system(exec.c_str()) == 0)
+            if (system(exec.c_str()) == 0) // NOLINT
             {
                 TLOG() << "debug : SCP : Sucess Download";
                 f_meta.set_status(e_status::FINISHED);

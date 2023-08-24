@@ -19,7 +19,7 @@ namespace dunedaq::snbmodules
 {
 
     std::optional<NotificationData> NotificationInterface::listen_for_notification(const std::string &id, const std::string &expected_from /*= ""*/, int timeout /*= -1*/, int tries /*= -1*/)
-    {
+    { // NOLINT
         // Default value for tries
         if (tries == -1)
         {

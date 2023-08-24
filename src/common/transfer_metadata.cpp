@@ -13,7 +13,7 @@
 
 namespace dunedaq::snbmodules
 {
-    const std::string TransferMetadata::m_file_extension = ".tmetadata";
+    const std::string TransferMetadata::m_file_extension = ".tmetadata"; // NOLINT
 
     std::string TransferMetadata::export_to_string_partial(bool force_all)
     {
@@ -86,11 +86,11 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("size"))
         {
-            set_size(j["size"].get<uint64_t>());
+            set_size(j["size"].get<uint64_t>()); // NOLINT
         }
         if (j.contains("transfered"))
         {
-            set_bytes_transferred(j["transfered"].get<uint64_t>());
+            set_bytes_transferred(j["transfered"].get<uint64_t>()); // NOLINT
         }
         if (j.contains("speed"))
         {
