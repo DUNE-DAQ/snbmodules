@@ -132,7 +132,7 @@ namespace dunedaq::snbmodules
         // return the name of a torrent status enum
         char const *state(lt::torrent_status::state_t s);
 
-        bool add_magnet(lt::string_view uri, std::filesystem::path dest);
+        bool add_magnet(lt::string_view uri, const std::filesystem::path &dest);
         // return magnet url
         std::string add_torrent(const std::string &torrent, const std::filesystem::path &dest);
 

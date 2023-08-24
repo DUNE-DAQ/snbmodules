@@ -48,7 +48,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "dests, files, src and protocol are mandatory to create a new transfer"));
+            ers::error(ConfigError(ERS_HERE, "dests, files, src and protocol are mandatory to create a new transfer"));
         }
     }
 
@@ -101,7 +101,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "bookkeeper_ip, bookkeeper_log_path, refresh_rate, connection_prefix, timeout_send and timeout_receive are mandatory to configure the bookkeeper"));
+            ers::error(ConfigError(ERS_HERE, "bookkeeper_ip, bookkeeper_log_path, refresh_rate, connection_prefix, timeout_send and timeout_receive are mandatory to configure the bookkeeper"));
         }
     }
 

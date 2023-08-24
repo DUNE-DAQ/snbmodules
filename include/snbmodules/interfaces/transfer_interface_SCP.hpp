@@ -35,7 +35,7 @@ namespace dunedaq::snbmodules
             }
             else
             {
-                ers::fatal(ErrorSCPConfigError(ERS_HERE, "user is mandatory in SCP protocol options");
+                ers::fatal(ConfigError(ERS_HERE, "user is mandatory in SCP protocol options"));
                 return;
             }
 

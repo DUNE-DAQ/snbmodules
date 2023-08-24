@@ -37,7 +37,7 @@ namespace dunedaq::snbmodules
             // check if port is set
             if (!m_transfer_options.get_protocol_options().contains("port"))
             {
-                ers::fatal(BittorrentConfigError(ERS_HERE, "port is mandatory in Bittorrent protocol options"));
+                ers::fatal(ConfigError(ERS_HERE, "port is mandatory in Bittorrent protocol options"));
                 return;
             }
 

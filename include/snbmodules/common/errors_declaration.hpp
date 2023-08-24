@@ -129,8 +129,8 @@ namespace dunedaq
                       ((std::string)file)) // NOLINT
 
     ERS_DECLARE_ISSUE(snbmodules,
-                      ErrorConfigError,
-                      "ErrorConfigError: Please check the configuration file for more information, " << param,
+                      ConfigError,
+                      "ConfigError: Please check the configuration file for more information, " << param,
                       ((std::string)param)) // NOLINT
 
     // metadata errors

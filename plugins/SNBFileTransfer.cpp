@@ -47,14 +47,14 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "src is mandatory to create a new transfer");
+            ers::error(ConfigError(ERS_HERE, "src is mandatory to create a new transfer"));
             return;
         }
 
         if (src == m_name)
         {
-            std::string dests = "";
-            std::filesystem::path files = "";
+            std::set<std::string> dests = {};
+            std::set<std::filesystem::path> files = {};
 
             if (args.contains("dests") && args.contains("files"))
             {
@@ -63,7 +63,7 @@ namespace dunedaq::snbmodules
             }
             else
             {
-                ers::error(ErrorConfigError(ERS_HERE, "dests and files are mandatory to create a new transfer"));
+                ers::error(ConfigError(ERS_HERE, "dests and files are mandatory to create a new transfer"));
                 return;
             }
 
@@ -83,7 +83,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to start a transfer"));
+            ers::error(ConfigError(ERS_HERE, "transfer_id is mandatory to start a transfer"));
         }
     }
     void
@@ -95,7 +95,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to pause a transfer"));
+            ers::error(ConfigError(ERS_HERE, "transfer_id is mandatory to pause a transfer"));
         }
     }
     void
@@ -107,7 +107,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to resume a transfer"));
+            ers::error(ConfigError(ERS_HERE, "transfer_id is mandatory to resume a transfer"));
         }
     }
     void
@@ -119,7 +119,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "transfer_id is mandatory to cancel a transfer"));
+            ers::error(ConfigError(ERS_HERE, "transfer_id is mandatory to cancel a transfer"));
         }
     }
 
@@ -141,7 +141,7 @@ namespace dunedaq::snbmodules
         }
         else
         {
-            ers::error(ErrorConfigError(ERS_HERE, "client_ip, work_dir, connection_prefix, timeout_send and timeout_receive are mandatory to configure a TransferClient"));
+            ers::error(ConfigError(ERS_HERE, "client_ip, work_dir, connection_prefix, timeout_send and timeout_receive are mandatory to configure a TransferClient"));
         }
     }
 
