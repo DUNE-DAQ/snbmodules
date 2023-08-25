@@ -237,7 +237,9 @@ namespace dunedaq::snbmodules
         {
             for (const std::string &client : m_clients_per_grp_transfer[transfer_id])
             {
-                std::string session_name = client + "_ses" + transfer_id;
+                std::string session_name = client;
+                session_name += "_ses";
+                session_name += transfer_id;
                 send_notification(e_notification_type::START_TRANSFER, get_bookkeeper_id(), session_name, client);
             }
         }
@@ -605,12 +607,11 @@ namespace dunedaq::snbmodules
         // Check if transfer already exist in a group transfer and if is not uploader ( destination is not null )
         if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end() && !file.get_dest().is_default())
         {
-            m_grp_transfers[group_id_tmp]->add_file(std::move(file));
+            m_grp_transfers[group_id_tmp]->add_file(file);
+            m_transfers[client_id].push_back(&m_grp_transfers[group_id_tmp]->get_transfers_meta().back());
         }
-
-        // not found, add the transfer
-        m_transfers[client_id].push_back(&m_grp_transfers[group_id_tmp]->get_transfers_meta().back());
     }
+
     void Bookkeeper::add_update_grp_transfer(GroupMetadata *grp_transfers)
     {
         if (m_grp_transfers.find(grp_transfers->get_group_id()) != m_grp_transfers.end())

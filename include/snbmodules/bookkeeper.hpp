@@ -95,7 +95,9 @@ namespace dunedaq::snbmodules
         inline std::string get_bookkeeper_id() const { return m_bookkeeper_id; }
         inline IPFormat get_ip() const { return m_ip; }
         inline std::map<std::string, GroupMetadata *> &get_grp_transfers() { return m_grp_transfers; }
+        inline const std::map<std::string, GroupMetadata *> &get_grp_transfers() const { return m_grp_transfers; }
         inline std::map<std::string, std::vector<TransferMetadata *>> &get_transfers() { return m_transfers; }
+        inline const std::map<std::string, std::vector<TransferMetadata *>> &get_transfers() const { return m_transfers; }
 
     private:
         /// @brief Unique identifier for the bookkeeper

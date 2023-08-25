@@ -243,7 +243,7 @@ namespace dunedaq::snbmodules
             ip = get_ip();
         }
 
-        auto *new_session = new TransferSession(transfer_options, type, std::move(id), std::move(ip), work_dir, get_bookkeepers_conn(), get_clients_conn());
+        auto *new_session = new TransferSession(transfer_options, type, std::move(id), ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
         new_session->set_target_clients(dest_clients);
 
         TLOG() << "debug : session created " << magic_enum::enum_name(type);

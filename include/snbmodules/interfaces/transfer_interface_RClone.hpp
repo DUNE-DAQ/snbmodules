@@ -465,8 +465,8 @@ namespace dunedaq::snbmodules
             char *in = strdup(input.c_str());
 
             struct RcloneRPCResult out = RcloneRPC(m, in);
-            printf("debug : RClone : result status: %d\n", out.Status);
-            printf("debug : RClone : result output: %s\n", out.Output);
+            TLOG_DEBUG(2) << "debug : RClone : result status: " << out.Status;
+            TLOG_DEBUG(2) << "debug : RClone : result output: " << out.Output;
             nlohmann::json j = nlohmann::json::parse(out.Output);
             free(out.Output); // NOLINT
 
