@@ -13,26 +13,18 @@
                     ],
                     "protocol": "RCLONE",
                     "protocol_args": {
-                        "protocol": "http",
+                        "protocol": "sftp",
                         "rate_limit": "off",
-                        "port": 8080,
+                        "port": 22,
                         "refresh_rate": 5,
-                        "user": "ljoly",
-                        "simult_transfers": 200,
-                        "transfer_threads": 1,
-                        "checkers_threads": 2,
-                        "chunk_size": "8GiB",
-                        "buffer_size": "0",
-                        "use_mmap": false,
-                        "checksum": true,
-                        "root_folder": "/"
+                        "user": "ljoly"
                     }
                 },
-                "match": "snbmodules/client0"
+                "match": "client0"
             }
         ]
     },
     "id": "new_transfer",
-    "entry_state": "READY",
-    "exit_state": "READY"
+    "entry_state": "ANY",
+    "exit_state": "ANY"
 }

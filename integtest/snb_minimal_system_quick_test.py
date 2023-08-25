@@ -1,22 +1,24 @@
 import pytest
 import urllib.request
+from os.path import exists
 
-import dfmodules.data_file_checks as data_file_checks
-import dfmodules.integtest_file_gen as integtest_file_gen
+import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
 import integrationtest.config_file_gen as config_file_gen
+import integrationtest.dro_map_gen as dro_map_gen
 
 # Values that help determine the running conditions
-number_of_data_producers=2
+number_of_data_producers=1
 data_rate_slowdown_factor=1 # 10 for ProtoWIB/DuneWIB
-run_duration=20  # seconds
+run_duration=5  # seconds
+send_max_duration=5 # seconds
 readout_window_time_before=1000
 readout_window_time_after=1001
 
 # Default values for validation parameters
 expected_number_of_data_files=1
 check_for_logfile_errors=True
-expected_event_count=run_duration
+expected_event_count=run_duration+send_max_duration
 expected_event_count_tolerance=2
 wib1_frag_hsi_trig_params={"fragment_type_description": "WIB",
                            "fragment_type": "ProtoWIB",
@@ -54,7 +56,7 @@ confgen_name="daqconf_multiru_gen"
 # The arguments to pass to the config generator, excluding the json
 # output directory (the test framework handles that)
 
-dro_map_contents = integtest_file_gen.generate_dromap_contents(number_of_data_producers)
+dro_map_contents = dro_map_gen.generate_dromap_contents(n_streams=number_of_data_producers, det_id = 3) # default HD_TPC
 
 conf_dict = config_file_gen.get_default_config_dict()
 conf_dict["detector"]["op_env"] = "integtest"
@@ -71,28 +73,25 @@ datafile_conf["detector_id"] = 3
 conf_dict["readout"]["data_files"].append(datafile_conf)
 
 conf_dict["snbmodules"] = {}
-conf_dict["snbmodules"]["port"] = 12345
-conf_dict["snbmodules"]["host"] = "localhost"
+conf_dict["snbmodules"]["port"] = 5009
+conf_dict["snbmodules"]["host"] = "epdtdi105"
 conf_dict["snbmodules"]["client_name"] = "client"
 
 confgen_arguments={"MinimalSystem": conf_dict}
+
 # The commands to run in nanorc, as a list
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
-"expert_command /json0/json0/ /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
-"expert_command /json0/json0/ /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
-"wait 10 stop_run wait 2 scrap terminate".split()
-# The tests themselves
+"expert_command /json0/json0/snbmodules /home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
+"expert_command /json0/json0/snbmodules /home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
+["wait"] + [str(send_max_duration)] + "stop_run wait 2 scrap terminate".split()
+    
 
+# The tests themselves
 def test_nanorc_success(run_nanorc):
     print(run_nanorc.json_dir)
     print(run_nanorc.log_files)
     # Check that nanorc completed correctly
     assert run_nanorc.completed_process.returncode==0
-    
-    nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
-    "expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
-    "expert_command /json0/json0/snbmodules /home/ljoly/N23-07-15/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
-    "wait 10 stop_run wait 2 scrap terminate".split()
 
 def test_log_files(run_nanorc):
     if check_for_logfile_errors:
@@ -116,3 +115,12 @@ def test_data_files(run_nanorc):
         for jdx in range(len(fragment_check_list)):
             assert data_file_checks.check_fragment_count(data_file, fragment_check_list[jdx])
             assert data_file_checks.check_fragment_sizes(data_file, fragment_check_list[jdx])
+            
+def test_snbmodules(run_nanorc):
+    # Check that the transfer was successful
+    print(run_nanorc.run_dir)
+    assert exists(run_nanorc.run_dir / "client0")
+    assert exists(run_nanorc.run_dir / "client1")
+    
+    assert exists(run_nanorc.run_dir / "client1/transfer0/Makefile")
+    

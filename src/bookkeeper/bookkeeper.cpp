@@ -604,8 +604,8 @@ namespace dunedaq::snbmodules
 
         std::string group_id_tmp = file.get_group_id();
 
-        // Check if transfer already exist in a group transfer and if is not uploader ( destination is not null )
-        if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end() && !file.get_dest().is_default())
+        // Check if transfer already exist in a group transfer
+        if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end())
         {
             m_grp_transfers[group_id_tmp]->add_file(file);
             m_transfers[client_id].push_back(&m_grp_transfers[group_id_tmp]->get_transfers_meta().back());

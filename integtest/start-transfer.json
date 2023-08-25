@@ -10,6 +10,6 @@
         ]
     },
     "id": "start_transfer",
-    "entry_state": "READY",
-    "exit_state": "READY"
+    "entry_state": "ANY",
+    "exit_state": "ANY"
 }
