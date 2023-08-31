@@ -7,7 +7,6 @@
  */
 
 #include "snbmodules/group_metadata.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -76,7 +75,7 @@ namespace dunedaq::snbmodules
         j["transfer_id"] = get_group_id();
         j["source_id"] = get_source_id();
         j["source_ip"] = get_source_ip().get_ip_port();
-        j["protocol"] = static_cast<std::string>(magic_enum::enum_name(get_protocol()));
+        j["protocol"] = protocol_type::protocols_to_string(get_protocol());
         j["protocol_options"] = get_protocol_options().dump();
 
         std::vector<std::string> files;
@@ -109,7 +108,7 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("protocol"))
         {
-            set_protocol(magic_enum::enum_cast<e_protocol_type>(j["protocol"].get<std::string>()).value());
+            set_protocol(protocol_type::string_to_protocols(j["protocol"].get<std::string>()).value());
         }
         if (j.contains("protocol_options"))
         {
@@ -161,7 +160,7 @@ namespace dunedaq::snbmodules
     {
         std::string str;
         str += "transfer_id " + get_group_id() + " ";
-        str += "protocol " + static_cast<std::string>(magic_enum::enum_name(get_protocol())) + "\n";
+        str += "protocol " + protocol_type::protocols_to_string(get_protocol()) + "\n";
 
         for (const auto &file : get_transfers_meta())
         {

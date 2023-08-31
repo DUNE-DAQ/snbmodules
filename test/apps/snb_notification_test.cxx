@@ -63,7 +63,7 @@ int main()
                     TransferClient client(IPFormat("localhost", starting_port + i), "client" + std::to_string(i), "./client");
                     client.add_connection(client.get_ip(), "client" + std::to_string(i), "notification_t", true);
                     client.init_connection_interface();
-                    assert(client.send_notification(e_notification_type::CONNECTION_REQUEST, client.get_client_id(), "bookkeeper", "client" + std::to_string(i)) == true);
+                    assert(client.send_notification(notification_type::e_notification_type::CONNECTION_REQUEST, client.get_client_id(), "bookkeeper", "client" + std::to_string(i)) == true);
                 }
                 return 0;
             }

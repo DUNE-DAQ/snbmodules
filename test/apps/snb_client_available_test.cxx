@@ -32,7 +32,7 @@ int main()
         TransferClient client1(ip1, "client1", "./client1");
 
         // Create transfer with dummy protocol
-        GroupMetadata transfer_options("transfer1", "client1", ip1, e_protocol_type::dummy);
+        GroupMetadata transfer_options("transfer1", "client1", ip1, protocol_type::e_protocol_type::dummy);
 
         // add non existing file to the transfer
         transfer_options.add_expected_file("file1");

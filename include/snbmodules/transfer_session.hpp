@@ -14,8 +14,6 @@
 #include "snbmodules/common/protocols_enum.hpp"
 #include "snbmodules/notification_interface.hpp" // for notification data
 
-#include "snbmodules/tools/natural_sort.hpp" // convert enum to string and reverse
-
 // protocols
 #include "snbmodules/interfaces/transfer_interface_abstract.hpp"
 #include "snbmodules/interfaces/transfer_interface_bittorrent.hpp"
@@ -72,7 +70,7 @@ namespace dunedaq::snbmodules
         /// @brief Operator <, used to compare sessions in a set (client)
         /// @param other other session
         /// @return is less than ?
-        bool operator<(TransferSession const &other) const { return SI::natural::compare<std::string>(m_session_id, other.m_session_id); }
+        bool operator<(TransferSession const &other) const { return m_session_id.compare(other.m_session_id); }
 
         /// @brief Constructor
         /// @param transfer_options group metadata
@@ -93,6 +91,14 @@ namespace dunedaq::snbmodules
         inline IPFormat get_ip() const { return m_ip; }
         std::string get_session_id() const { return m_session_id; }
         std::string to_string() const;
+        static std::string session_type_to_string(e_session_type e)
+        {
+            const std::map<e_session_type, std::string> MyEnumStrings{
+                {Downloader, "Downloader"},
+                {Uploader, "Uploader"}};
+            auto it = MyEnumStrings.find(e);
+            return it == MyEnumStrings.end() ? "Not supported" : it->second;
+        }
 
         // Setters
         void set_target_clients(std::set<std::string> clients) { m_target_clients = std::move(clients); }
@@ -165,7 +171,7 @@ namespace dunedaq::snbmodules
         /// @param type type of notification to send
         /// @param data data to send, default empty
         /// @return true if success
-        bool send_notification_to_targets(e_notification_type type, const std::string &data = "");
+        bool send_notification_to_targets(notification_type::e_notification_type type, const std::string &data = "");
     };
 
 } // namespace dunedaq::snbmodules

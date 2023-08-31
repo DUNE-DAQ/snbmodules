@@ -13,7 +13,6 @@
 #include "snbmodules/common/protocols_enum.hpp"
 #include "snbmodules/ip_format.hpp"
 #include "snbmodules/common/status_enum.hpp"
-#include "snbmodules/tools/natural_sort.hpp"
 
 #include <string>
 #include <filesystem>
@@ -57,7 +56,7 @@ namespace dunedaq::snbmodules
         bool operator<(MetadataAbstract const &other) const override
         {
             auto o = dynamic_cast<const TransferMetadata &>(other);
-            return SI::natural::compare<std::string>(m_file_path.string(), o.m_file_path.string());
+            return m_file_path.string().compare(o.m_file_path.string());
         }
 
         /// @brief Constructor
@@ -75,7 +74,7 @@ namespace dunedaq::snbmodules
                          const IPFormat &dest = IPFormat(),
                          const std::string &group_id = "",
                          uint64_t bytes_transferred = 0,
-                         e_status status = e_status::WAITING)
+                         status_type::e_status status = status_type::e_status::WAITING)
             : m_hash(hash),
               m_bytes_size(bytes_size),
               m_bytes_transferred(bytes_transferred),
@@ -197,19 +196,19 @@ namespace dunedaq::snbmodules
             set_bytes_transferred((purcent * m_bytes_size) / 100);
         }
 
-        void set_status(e_status status)
+        void set_status(status_type::e_status status)
         {
             m_status = status;
-            if (status == e_status::DOWNLOADING || status == e_status::UPLOADING)
+            if (status == status_type::e_status::DOWNLOADING || status == status_type::e_status::UPLOADING)
             {
                 m_start_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             }
-            if (status == e_status::FINISHED || status == e_status::ERROR)
+            if (status == status_type::e_status::FINISHED || status == status_type::e_status::ERROR)
             {
                 m_end_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                 m_duration += m_end_time - m_start_time;
             }
-            if (status == e_status::PAUSED)
+            if (status == status_type::e_status::PAUSED)
             {
                 m_duration += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - m_start_time;
             }
@@ -261,7 +260,7 @@ namespace dunedaq::snbmodules
         inline IPFormat get_dest() const { return m_dest; }
         inline uint64_t get_size() const { return m_bytes_size; }
         inline uint64_t get_bytes_transferred() const { return m_bytes_transferred; }
-        inline e_status get_status() const { return m_status; }
+        inline status_type::e_status get_status() const { return m_status; }
         inline std::string get_magnet_link() const { return m_magnet_link; }
         inline std::string get_group_id() const { return m_group_id; }
         inline int get_progress() const { return m_bytes_size == 0 ? 0 : static_cast<int>(m_bytes_transferred * 100 / m_bytes_size); }
@@ -326,7 +325,7 @@ namespace dunedaq::snbmodules
         int32_t m_transmission_speed = 0;
 
         /// @brief Status of the file transfer
-        e_status m_status = e_status::WAITING;
+        status_type::e_status m_status = status_type::e_status::WAITING;
 
         /// @brief Source of the file transfer
         IPFormat m_src = IPFormat();

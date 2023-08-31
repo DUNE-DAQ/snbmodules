@@ -112,7 +112,7 @@ namespace dunedaq::snbmodules
 
         TLOG() << "debug : creating new transfer with protocol " << protocol;
 
-        std::optional<e_protocol_type> _protocol = magic_enum::enum_cast<e_protocol_type>(protocol);
+        std::optional<protocol_type::e_protocol_type> _protocol = protocol_type::string_to_protocols(protocol);
         if (!_protocol.has_value())
         {
             ers::error(InvalidProtocolError(ERS_HERE, get_client_id(), protocol));
@@ -146,7 +146,7 @@ namespace dunedaq::snbmodules
         // Sending to bookkeepers to update preparing state
         for (auto &bk : get_bookkeepers_conn())
         {
-            send_notification(e_notification_type::GROUP_METADATA, session_name, bk, bk, group_transfer.export_to_string());
+            send_notification(notification_type::e_notification_type::GROUP_METADATA, session_name, bk, bk, group_transfer.export_to_string());
         }
 
         // Create local session, can take time depending on protocol
@@ -157,12 +157,12 @@ namespace dunedaq::snbmodules
         {
             std::string new_session_name = generate_session_id(transfer_id, client);
             TLOG() << "debug : notifying client " << client;
-            send_notification(e_notification_type::NEW_TRANSFER, get_client_id(), new_session_name, client, s->get_transfer_options().export_to_string());
+            send_notification(notification_type::e_notification_type::NEW_TRANSFER, get_client_id(), new_session_name, client, s->get_transfer_options().export_to_string());
 
             // Send transfer metadata
             for (auto &file : s->get_transfer_options().get_transfers_meta())
             {
-                send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), new_session_name, client, file.export_to_string());
+                send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), new_session_name, client, file.export_to_string());
             }
         }
     }
@@ -246,7 +246,7 @@ namespace dunedaq::snbmodules
         auto *new_session = new TransferSession(transfer_options, type, std::move(id), ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
         new_session->set_target_clients(dest_clients);
 
-        TLOG() << "debug : session created " << magic_enum::enum_name(type);
+        TLOG() << "debug : session created " << TransferSession::session_type_to_string(type);
         return add_session(new_session);
     }
 
@@ -258,7 +258,7 @@ namespace dunedaq::snbmodules
             TLOG() << "debug : Sharing " << f.filename();
             TransferMetadata fmeta = create_metadata_from_file(f);
             m_available_files.insert({f.string(), std::move(fmeta)});
-            send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), dest, dest, m_available_files.at(f.string()).export_to_string());
+            send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), dest, dest, m_available_files.at(f.string()).export_to_string());
         }
     }
 
@@ -273,7 +273,7 @@ namespace dunedaq::snbmodules
         }
 
         // Use enum cast for converting string to enum, still working with older clients and user readable
-        auto action = magic_enum::enum_cast<e_notification_type>(notif.m_notification);
+        auto action = notification_type::string_to_notification(notif.m_notification);
 
         if (action.has_value() == false)
         {
@@ -283,17 +283,17 @@ namespace dunedaq::snbmodules
         switch (action.value())
         {
 
-        case e_notification_type::CONNECTION_REQUEST:
+        case notification_type::e_notification_type::CONNECTION_REQUEST:
         {
             TLOG() << "debug : receive connection request, sending available files";
             std::set<std::filesystem::path> to_share;
             scan_available_files(to_share, true);
             share_available_files(to_share, notif.m_source_id);
-            send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
+            send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
             break;
         }
 
-        case e_notification_type::NEW_TRANSFER:
+        case notification_type::e_notification_type::NEW_TRANSFER:
         {
             GroupMetadata metadata(notif.m_data, false);
             e_session_type type = Downloader;
@@ -308,13 +308,13 @@ namespace dunedaq::snbmodules
                 }
             }
 
-            TLOG() << "debug : creating session " << notif.m_target_id << " type " << magic_enum::enum_name(type);
+            TLOG() << "debug : creating session " << notif.m_target_id << " type " << TransferSession::session_type_to_string(type);
             std::string group_id_tmp = metadata.get_group_id();
             create_session(metadata, type, notif.m_target_id, get_listening_dir().append(group_id_tmp));
             break;
         }
 
-        case e_notification_type::TRANSFER_METADATA:
+        case notification_type::e_notification_type::TRANSFER_METADATA:
         {
             TransferMetadata fmeta = TransferMetadata(notif.m_data, false);
             auto &sessions_ref = get_sessions();
@@ -337,7 +337,7 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::START_TRANSFER:
+        case notification_type::e_notification_type::START_TRANSFER:
         {
             TLOG() << "debug : starting transfer " << notif.m_target_id;
             std::optional<TransferSession *> ses = get_session(notif.m_target_id);
@@ -361,7 +361,7 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::PAUSE_TRANSFER:
+        case notification_type::e_notification_type::PAUSE_TRANSFER:
         {
             TLOG() << "debug : pausing transfer " << notif.m_target_id;
             std::optional<TransferSession *> ses = get_session(notif.m_target_id);
@@ -385,7 +385,7 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::RESUME_TRANSFER:
+        case notification_type::e_notification_type::RESUME_TRANSFER:
         {
             TLOG() << "debug : resuming transfer " << notif.m_target_id;
             std::optional<TransferSession *> ses = get_session(notif.m_target_id);
@@ -409,7 +409,7 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::CANCEL_TRANSFER:
+        case notification_type::e_notification_type::CANCEL_TRANSFER:
         {
             TLOG() << "debug : cancelling transfer " << notif.m_target_id;
             std::optional<TransferSession *> ses = get_session(notif.m_target_id);
@@ -433,7 +433,7 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::UPDATE_REQUEST:
+        case notification_type::e_notification_type::UPDATE_REQUEST:
         {
             TLOG() << "debug : updating grp transfer for " << notif.m_target_id;
             std::optional<TransferSession *> ses = get_session(notif.m_target_id);

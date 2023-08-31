@@ -346,7 +346,7 @@ namespace dunedaq::snbmodules
 
                     p->handle.save_resume_data(lt::torrent_handle::only_if_modified | lt::torrent_handle::save_info_dict);
 
-                    m_filename_to_metadata[p->torrent_name()]->set_status(e_status::FINISHED);
+                    m_filename_to_metadata[p->torrent_name()]->set_status(status_type::e_status::FINISHED);
                     m_filename_to_metadata[p->torrent_name()]->set_bytes_transferred(m_filename_to_metadata[p->torrent_name()]->get_size());
 
                     if (finished_torrents == m_torrent_num && m_is_client)
@@ -438,35 +438,35 @@ namespace dunedaq::snbmodules
                     {
                         lt::torrent_status const &s = st->status[i];
 
-                        if (m_filename_to_metadata[s.name]->get_status() != e_status::PAUSED)
+                        if (m_filename_to_metadata[s.name]->get_status() != status_type::e_status::PAUSED)
                         {
 
                             switch (s.state)
                             {
                             case lt::torrent_status::checking_files:
-                                m_filename_to_metadata[s.name]->set_status(e_status::CHECKING);
+                                m_filename_to_metadata[s.name]->set_status(status_type::e_status::CHECKING);
                                 break;
                             case lt::torrent_status::downloading_metadata:
-                                m_filename_to_metadata[s.name]->set_status(e_status::PREPARING);
+                                m_filename_to_metadata[s.name]->set_status(status_type::e_status::PREPARING);
                                 break;
                             case lt::torrent_status::downloading:
-                                m_filename_to_metadata[s.name]->set_status(e_status::DOWNLOADING);
+                                m_filename_to_metadata[s.name]->set_status(status_type::e_status::DOWNLOADING);
                                 break;
                             case lt::torrent_status::finished:
-                                m_filename_to_metadata[s.name]->set_status(e_status::FINISHED);
+                                m_filename_to_metadata[s.name]->set_status(status_type::e_status::FINISHED);
                                 break;
                             case lt::torrent_status::seeding:
                                 if (m_is_client)
                                 {
-                                    m_filename_to_metadata[s.name]->set_status(e_status::FINISHED);
+                                    m_filename_to_metadata[s.name]->set_status(status_type::e_status::FINISHED);
                                 }
                                 else
                                 {
-                                    m_filename_to_metadata[s.name]->set_status(e_status::UPLOADING);
+                                    m_filename_to_metadata[s.name]->set_status(status_type::e_status::UPLOADING);
                                 }
                                 break;
                             case lt::torrent_status::checking_resume_data:
-                                m_filename_to_metadata[s.name]->set_status(e_status::CHECKING);
+                                m_filename_to_metadata[s.name]->set_status(status_type::e_status::CHECKING);
                                 break;
                             default:
                                 break;
@@ -474,7 +474,7 @@ namespace dunedaq::snbmodules
 
                             // if (s.num_peers == 0)
                             // {
-                            //     m_filename_to_metadata[s.name].set_status(e_status::WAITING);
+                            //     m_filename_to_metadata[s.name].set_status(status_type::e_status::WAITING);
                             // }
                         }
 
@@ -608,13 +608,13 @@ namespace dunedaq::snbmodules
         {
             if (!m_is_client)
             {
-                s->set_status(e_status::FINISHED);
+                s->set_status(status_type::e_status::FINISHED);
                 // deleting torrents files
                 std::filesystem::remove(get_work_dir().append(k + ".torrent"));
             }
-            else if (s->get_status() != e_status::FINISHED)
+            else if (s->get_status() != status_type::e_status::FINISHED)
             {
-                s->set_status(e_status::ERROR);
+                s->set_status(status_type::e_status::ERROR);
                 s->set_error_code("Transfer interrupted");
             }
         }

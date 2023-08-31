@@ -8,7 +8,6 @@
 
 #include "snbmodules/notification_interface.hpp"
 
-#include "snbmodules/tools/magic_enum.hpp"
 #include "snbmodules/common/errors_declaration.hpp"
 
 #include <iostream>
@@ -54,7 +53,7 @@ namespace dunedaq::snbmodules
         return msg;
     }
 
-    bool NotificationInterface::send_notification(const e_notification_type &notif, const std::string &src, const std::string &dst, const std::string &id_conn, const std::string &data, int tries)
+    bool NotificationInterface::send_notification(const notification_type::e_notification_type &notif, const std::string &src, const std::string &dst, const std::string &id_conn, const std::string &data, int tries)
     {
         // Default value for tries
         if (tries == -1)
@@ -81,9 +80,9 @@ namespace dunedaq::snbmodules
             }
         }
 
-        TLOG() << "debug : Sending request " << magic_enum::enum_name(notif) << " to " << dst << " via " << real_conn_id;
+        TLOG() << "debug : Sending request " << notification_type::notification_to_string(notif) << " to " << dst << " via " << real_conn_id;
 
-        NotificationData notif_data(src, dst, static_cast<std::string>(magic_enum::enum_name(notif)), data);
+        NotificationData notif_data(src, dst, notification_type::notification_to_string(notif), data);
 
         bool result = iomanager::IOManager::get()
                           ->get_sender<NotificationData>(real_conn_id)

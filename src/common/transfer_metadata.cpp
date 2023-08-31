@@ -7,7 +7,6 @@
  */
 
 #include "snbmodules/transfer_metadata.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
 
 #include <string>
 
@@ -42,7 +41,7 @@ namespace dunedaq::snbmodules
         }
         if (force_all || m_modified_fields["status"] == true)
         {
-            j["status"] = static_cast<std::string>(magic_enum::enum_name(get_status()));
+            j["status"] = status_type::status_to_string(get_status());
         }
         if (force_all || m_modified_fields["magnet_link"] == true)
         {
@@ -106,7 +105,7 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("status"))
         {
-            auto status = magic_enum::enum_cast<e_status>(j["status"].get<std::string>());
+            auto status = status_type::string_to_status(j["status"].get<std::string>());
             if (status.has_value())
             {
                 set_status(status.value());

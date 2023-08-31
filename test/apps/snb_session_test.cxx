@@ -33,7 +33,7 @@ int main()
         TransferClient client2(ip2, "client2", "./client");
 
         // Create new group transfer with 2 files and 1 expected file
-        GroupMetadata transfer_options("group1", "client1", ip1, e_protocol_type::dummy);
+        GroupMetadata transfer_options("group1", "client1", ip1, protocol_type::e_protocol_type::dummy);
         transfer_options.add_expected_file("test.txt");
         transfer_options.add_expected_file("test2.txt");
         transfer_options.add_file(TransferMetadata("test.txt", 100, ip1));

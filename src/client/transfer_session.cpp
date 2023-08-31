@@ -32,7 +32,7 @@ namespace dunedaq::snbmodules
         // Init transfer interface with the right protocol
         switch (m_transfer_options.get_protocol())
         {
-        case BITTORRENT:
+        case protocol_type::BITTORRENT:
 
             // check if port is set
             if (!m_transfer_options.get_protocol_options().contains("port"))
@@ -66,22 +66,22 @@ namespace dunedaq::snbmodules
             }
             break;
 
-        case SCP:
+        case protocol_type::SCP:
             m_transfer_interface = std::make_unique<TransferInterfaceSCP>(m_transfer_options, type == e_session_type::Uploader);
             break;
 
-        case RCLONE:
+        case protocol_type::RCLONE:
         {
             m_transfer_interface = std::make_unique<TransferInterfaceRClone>(m_transfer_options, get_work_dir());
             break;
         }
 
-        case dummy:
+        case protocol_type::dummy:
             m_transfer_interface = std::make_unique<TransferInterfaceDummy>(m_transfer_options);
             break;
 
         default:
-            ers::error(InvalidProtocolError(ERS_HERE, get_session_id(), static_cast<std::string>(magic_enum::enum_name(m_transfer_options.get_protocol()))));
+            ers::error(InvalidProtocolError(ERS_HERE, get_session_id(), protocol_type::protocols_to_string(m_transfer_options.get_protocol())));
             break;
         }
 
@@ -122,7 +122,7 @@ namespace dunedaq::snbmodules
     {
         std::string str;
         str += "Session " + get_session_id() + " ";
-        str += "type " + static_cast<std::string>(magic_enum::enum_name(m_type)) + " ";
+        str += "type " + TransferSession::session_type_to_string(m_type) + " ";
         str += "listening on " + m_ip.get_ip_port() + "\n";
 
         str += m_transfer_options.to_string();
@@ -135,7 +135,7 @@ namespace dunedaq::snbmodules
         bool result = true;
         for (const std::string &bk : get_bookkeepers_conn())
         {
-            result = result && send_notification(e_notification_type::GROUP_METADATA, get_session_id(), bk, bk, get_transfer_options().export_to_string());
+            result = result && send_notification(notification_type::e_notification_type::GROUP_METADATA, get_session_id(), bk, bk, get_transfer_options().export_to_string());
         }
 
         for (TransferMetadata &f_meta : m_transfer_options.get_transfers_meta())
@@ -151,12 +151,12 @@ namespace dunedaq::snbmodules
         bool result = true;
         for (const std::string &bk : get_bookkeepers_conn())
         {
-            result = result && send_notification(e_notification_type::TRANSFER_METADATA, get_session_id(), bk, bk, f_meta.export_to_string_partial(false));
+            result = result && send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_session_id(), bk, bk, f_meta.export_to_string_partial(false));
         }
         return result;
     }
 
-    bool TransferSession::send_notification_to_targets(e_notification_type type, const std::string &data /*= ""*/)
+    bool TransferSession::send_notification_to_targets(notification_type::e_notification_type type, const std::string &data /*= ""*/)
     {
         bool result = true;
         for (const std::string &client : get_target_clients())
@@ -188,25 +188,25 @@ namespace dunedaq::snbmodules
 
     bool TransferSession::pause_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta.get_status() != e_status::DOWNLOADING && f_meta.get_status() != e_status::UPLOADING)
+        if (f_meta.get_status() != status_type::e_status::DOWNLOADING && f_meta.get_status() != status_type::e_status::UPLOADING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::PAUSED))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), status_type::status_to_string(status_type::e_status::PAUSED)));
             return false;
         }
 
         bool res = m_transfer_interface->pause_file(f_meta);
         if (res)
         {
-            f_meta.set_status(e_status::PAUSED);
+            f_meta.set_status(status_type::e_status::PAUSED);
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::PAUSE_TRANSFER, f_meta.get_file_path());
+            send_notification_to_targets(notification_type::e_notification_type::PAUSE_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
 
@@ -215,9 +215,9 @@ namespace dunedaq::snbmodules
 
     bool TransferSession::resume_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta.get_status() != e_status::PAUSED)
+        if (f_meta.get_status() != status_type::e_status::PAUSED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), "RESUMING"));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), "RESUMING"));
             return false;
         }
 
@@ -226,21 +226,21 @@ namespace dunedaq::snbmodules
         {
             if (is_downloader())
             {
-                f_meta.set_status(e_status::DOWNLOADING);
+                f_meta.set_status(status_type::e_status::DOWNLOADING);
             }
             else if (is_uploader())
             {
-                f_meta.set_status(e_status::UPLOADING);
+                f_meta.set_status(status_type::e_status::UPLOADING);
             }
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::RESUME_TRANSFER, f_meta.get_file_path());
+            send_notification_to_targets(notification_type::e_notification_type::RESUME_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
 
@@ -249,25 +249,25 @@ namespace dunedaq::snbmodules
 
     bool TransferSession::hash_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta.get_status() != e_status::FINISHED)
+        if (f_meta.get_status() != status_type::e_status::FINISHED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::HASHING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), status_type::status_to_string(status_type::e_status::HASHING)));
             return false;
         }
 
         bool res = m_transfer_interface->hash_file(f_meta);
         if (res)
         {
-            f_meta.set_status(e_status::HASHING);
+            f_meta.set_status(status_type::e_status::HASHING);
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            // send_notification_to_targets(e_notification_type::HASH_TRANSFER, f_meta.get_file_path());
+            // send_notification_to_targets(notification_type::e_notification_type::HASH_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
@@ -275,25 +275,25 @@ namespace dunedaq::snbmodules
 
     bool TransferSession::cancel_file(TransferMetadata &f_meta, bool is_multiple)
     {
-        if (f_meta.get_status() == e_status::FINISHED || f_meta.get_status() == e_status::CANCELLED)
+        if (f_meta.get_status() == status_type::e_status::FINISHED || f_meta.get_status() == status_type::e_status::CANCELLED)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::CANCELLED))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), status_type::status_to_string(status_type::e_status::CANCELLED)));
             return false;
         }
 
         bool res = m_transfer_interface->cancel_file(f_meta);
         if (res)
         {
-            f_meta.set_status(e_status::CANCELLED);
+            f_meta.set_status(status_type::e_status::CANCELLED);
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::CANCEL_TRANSFER, f_meta.get_file_path());
+            send_notification_to_targets(notification_type::e_notification_type::CANCEL_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
@@ -306,25 +306,25 @@ namespace dunedaq::snbmodules
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "upload_file"));
         }
 
-        if (f_meta.get_status() != e_status::WAITING)
+        if (f_meta.get_status() != status_type::e_status::WAITING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::UPLOADING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), status_type::status_to_string(status_type::e_status::UPLOADING)));
             return false;
         }
 
         bool res = m_transfer_interface->upload_file(f_meta);
         if (res)
         {
-            f_meta.set_status(e_status::UPLOADING);
+            f_meta.set_status(status_type::e_status::UPLOADING);
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
 
         if (!is_multiple)
         {
-            send_notification_to_targets(e_notification_type::START_TRANSFER, f_meta.get_file_path());
+            send_notification_to_targets(notification_type::e_notification_type::START_TRANSFER, f_meta.get_file_path());
             update_metadata_to_bookkeeper(f_meta);
         }
         return res;
@@ -337,9 +337,9 @@ namespace dunedaq::snbmodules
             ers::warning(SessionAccessToIncorrectActionError(ERS_HERE, get_session_id(), "download_file"));
         }
 
-        if (f_meta.get_status() != e_status::WAITING)
+        if (f_meta.get_status() != status_type::e_status::WAITING)
         {
-            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), static_cast<std::string>(magic_enum::enum_name(f_meta.get_status())), static_cast<std::string>(magic_enum::enum_name(e_status::DOWNLOADING))));
+            ers::warning(SessionWrongStateTransitionError(ERS_HERE, get_session_id(), f_meta.get_file_name(), status_type::status_to_string(f_meta.get_status()), status_type::status_to_string(status_type::e_status::DOWNLOADING)));
             return false;
         }
 
@@ -349,11 +349,11 @@ namespace dunedaq::snbmodules
         bool res = m_transfer_interface->download_file(f_meta, std::move(dest));
         if (res)
         {
-            f_meta.set_status(e_status::DOWNLOADING);
+            f_meta.set_status(status_type::e_status::DOWNLOADING);
         }
         else
         {
-            f_meta.set_status(e_status::ERROR);
+            f_meta.set_status(status_type::e_status::ERROR);
         }
         if (!is_multiple)
         {
@@ -382,7 +382,7 @@ namespace dunedaq::snbmodules
     bool TransferSession::pause_all()
     {
 
-        send_notification_to_targets(e_notification_type::PAUSE_TRANSFER);
+        send_notification_to_targets(notification_type::e_notification_type::PAUSE_TRANSFER);
 
         // wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -408,7 +408,7 @@ namespace dunedaq::snbmodules
         // wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        send_notification_to_targets(e_notification_type::RESUME_TRANSFER);
+        send_notification_to_targets(notification_type::e_notification_type::RESUME_TRANSFER);
         update_metadatas_to_bookkeeper();
         return result;
     }
@@ -421,7 +421,7 @@ namespace dunedaq::snbmodules
             result = result && cancel_file(file, true);
         }
 
-        send_notification_to_targets(e_notification_type::CANCEL_TRANSFER);
+        send_notification_to_targets(notification_type::e_notification_type::CANCEL_TRANSFER);
         update_metadatas_to_bookkeeper();
         return result;
     }
@@ -456,7 +456,7 @@ namespace dunedaq::snbmodules
         {
             result = result && upload_file(file, true);
         }
-        send_notification_to_targets(e_notification_type::START_TRANSFER);
+        send_notification_to_targets(notification_type::e_notification_type::START_TRANSFER);
         update_metadatas_to_bookkeeper();
         return result;
     }

@@ -27,7 +27,7 @@ int main()
             }
         )"_json;
 
-        GroupMetadata metadata("group1", "source1", IPFormat("192.168.0.107", 42100), e_protocol_type::dummy, transfer_options);
+        GroupMetadata metadata("group1", "source1", IPFormat("192.168.0.107", 42100), protocol_type::e_protocol_type::dummy, transfer_options);
         metadata.generate_metadata_file(".");
 
         // Test if file exist in current directory

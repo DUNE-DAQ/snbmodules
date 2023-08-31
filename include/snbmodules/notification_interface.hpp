@@ -15,7 +15,6 @@
 
 #include "snbmodules/common/notification_enum.hpp"
 #include "snbmodules/ip_format.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
 #include "snbmodules/iomanager_wrapper.hpp"
 
 #include <string>
@@ -44,8 +43,8 @@ namespace dunedaq
                 : m_source_id(std::move(source_id)), m_target_id(std::move(target_id)), m_notification(std::move(notification)), m_data(std::move(data))
             {
             }
-            NotificationData(std::string source_id, std::string target_id, e_notification_type notification, std::string data = "")
-                : m_source_id(std::move(source_id)), m_target_id(std::move(target_id)), m_notification(magic_enum::enum_name(notification)), m_data(std::move(data))
+            NotificationData(std::string source_id, std::string target_id, notification_type::e_notification_type notification, std::string data = "")
+                : m_source_id(std::move(source_id)), m_target_id(std::move(target_id)), m_notification(notification_type::notification_to_string(notification)), m_data(std::move(data))
             {
             }
             virtual ~NotificationData() = default;
@@ -92,7 +91,7 @@ namespace dunedaq
             /// @param id_conn ID of the connection
             /// @param data Data of the notification (optional)
             /// @return
-            bool send_notification(const e_notification_type &notif, const std::string &src, const std::string &dst, const std::string &id_conn, const std::string &data = "", int tries = -1);
+            bool send_notification(const notification_type::e_notification_type &notif, const std::string &src, const std::string &dst, const std::string &id_conn, const std::string &data = "", int tries = -1);
 
             /// @brief Action to do when receiving a notification
             /// @param notif Notification received

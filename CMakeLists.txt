@@ -126,8 +126,6 @@ set(includes_common
     protocols_enum.hpp
     status_enum.hpp
     ip_format.hpp
-    magic_enum.hpp
-    natural_sort.hpp
     notification_interface.hpp
     iomanager_wrapper.hpp
     errors_declaration.hpp

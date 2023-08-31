@@ -28,7 +28,7 @@ namespace dunedaq::snbmodules
         // TLOG() << "debug : creating new transfer with protocol " << protocol;
 
         // // Check protocol
-        // std::optional<e_protocol_type> _protocol = magic_enum::enum_cast<e_protocol_type>(protocol);
+        // std::optional<protocol_type::e_protocol_type> _protocol = protocol_type::string_to_protocols(protocol);
         // if (!_protocol.has_value())
         // {
         //     TLOG() << "debug : invalid protocol !";
@@ -76,7 +76,7 @@ namespace dunedaq::snbmodules
         //     std::string session_name = client + "_ses" + transfer.get_group_id();
 
         //     TLOG() << "debug : notifying src client " << client;
-        //     send_notification(e_notification_type::NEW_TRANSFER, get_bookkeeper_id(), session_name, client, 1000, transfer.export_to_string());
+        //     send_notification(notification_type::e_notification_type::NEW_TRANSFER, get_bookkeeper_id(), session_name, client, 1000, transfer.export_to_string());
         // }
     }
 
@@ -100,14 +100,14 @@ namespace dunedaq::snbmodules
         {
             TLOG() << "Creating new transfer ...";
             TLOG() << "Choose protocol in the list";
-            for (auto value : magic_enum::enum_values<e_protocol_type>())
+            for (int enum_i = protocol_type::e_protocol_type::BITTORRENT; enum_i != protocol_type::e_protocol_type::dummy; enum_i++)
             {
-                TLOG() << magic_enum::enum_integer(value) << " - " << magic_enum::enum_name(value);
+                TLOG() << enum_i << " - " << protocol_type::protocols_to_string(static_cast<protocol_type::e_protocol_type>(enum_i));
             }
             int protocol = -1;
             std::cin >> protocol;
             // Check input
-            if (protocol < 0 || protocol >= static_cast<int>(magic_enum::enum_count<e_protocol_type>()))
+            if (protocol < 0 || protocol > protocol_type::e_protocol_type::dummy)
             {
                 TLOG() << "Invalid protocol";
                 break;
@@ -186,7 +186,7 @@ namespace dunedaq::snbmodules
                 break;
             }
 
-            // create_new_transfer(static_cast<std::string>(magic_enum::enum_name(magic_enum::enum_cast<e_protocol_type>(protocol).value())), choosen_clients, choosen_files);
+            // create_new_transfer(protocol_type::protocols_to_string(protocol_type::string_to_protocols(protocol).value()), choosen_clients, choosen_files);
             break;
         }
 
@@ -240,7 +240,7 @@ namespace dunedaq::snbmodules
                 std::string session_name = client;
                 session_name += "_ses";
                 session_name += transfer_id;
-                send_notification(e_notification_type::START_TRANSFER, get_bookkeeper_id(), session_name, client);
+                send_notification(notification_type::e_notification_type::START_TRANSFER, get_bookkeeper_id(), session_name, client);
             }
         }
         else
@@ -333,12 +333,12 @@ namespace dunedaq::snbmodules
     void Bookkeeper::request_connection_and_available_files(const std::string &client)
     {
         // send connection request to client
-        send_notification(e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 1);
+        send_notification(notification_type::e_notification_type::CONNECTION_REQUEST, get_bookkeeper_id(), client, client, get_bookkeeper_id(), 1);
 
         // Listen to receive connection response and available files
         // auto msg = listen_for_notification(get_bookkeepers_conn().front(), client);
 
-        // while (msg.has_value() && msg.value().m_notification != magic_enum::enum_name(e_notification_type::CONNECTION_REQUEST))
+        // while (msg.has_value() && msg.value().m_notification != notification_type::notification_to_string(notification_type::e_notification_type::CONNECTION_REQUEST))
         // {
         //     action_on_receive_notification(msg.value());
         //     msg = listen_for_notification(get_bookkeepers_conn().front(), client);
@@ -350,16 +350,16 @@ namespace dunedaq::snbmodules
         for (const auto &[id, g] : get_grp_transfers())
         {
             // Only request for dynamic status
-            if (g->get_group_status() == e_status::DOWNLOADING ||
-                g->get_group_status() == e_status::CHECKING ||
-                g->get_group_status() == e_status::UPLOADING ||
-                g->get_group_status() == e_status::HASHING ||
+            if (g->get_group_status() == status_type::e_status::DOWNLOADING ||
+                g->get_group_status() == status_type::e_status::CHECKING ||
+                g->get_group_status() == status_type::e_status::UPLOADING ||
+                g->get_group_status() == status_type::e_status::HASHING ||
                 force)
             {
 
                 for (const std::string &session : m_clients_per_grp_transfer[g->get_group_id()])
                 {
-                    send_notification(e_notification_type::UPDATE_REQUEST, get_bookkeeper_id(), session, get_client_name_from_session_name(session));
+                    send_notification(notification_type::e_notification_type::UPDATE_REQUEST, get_bookkeeper_id(), session, get_client_name_from_session_name(session));
                 }
             }
         }
@@ -376,7 +376,7 @@ namespace dunedaq::snbmodules
         }
 
         // Use enum cast for converting string to enum, still working with older clients and user readable
-        auto action = magic_enum::enum_cast<e_notification_type>(notif.m_notification);
+        auto action = notification_type::string_to_notification(notif.m_notification);
 
         if (action.has_value() == false)
         {
@@ -385,7 +385,7 @@ namespace dunedaq::snbmodules
 
         switch (action.value())
         {
-        case e_notification_type::TRANSFER_METADATA:
+        case notification_type::e_notification_type::TRANSFER_METADATA:
         {
             if (notif.m_data == "end")
             {
@@ -399,8 +399,8 @@ namespace dunedaq::snbmodules
             break;
         }
 
-        case e_notification_type::TRANSFER_ERROR:
-        case e_notification_type::GROUP_METADATA:
+        case notification_type::e_notification_type::TRANSFER_ERROR:
+        case notification_type::e_notification_type::GROUP_METADATA:
         {
             // Loading the data and cnovert to a proper transfer metadata object
             auto *tmeta = new GroupMetadata(notif.m_data, false);
@@ -498,7 +498,7 @@ namespace dunedaq::snbmodules
                                      << file->get_total_duration_ms() << sep
                                      << file->get_progress() << sep
                                      << file->get_transmission_speed() << sep
-                                     << magic_enum::enum_name(file->get_status()) << sep
+                                     << status_type::status_to_string(file->get_status()) << sep
 
                                      << file->get_end_time_str() << sep
                                      << file->get_error_code() << sep
@@ -520,7 +520,7 @@ namespace dunedaq::snbmodules
                             << file->get_size() << " bytes\tfrom "
                             << file->get_src().get_ip_port() << "\t"
                             // << file->get_dest().get_ip_port() << "\t"
-                            << magic_enum::enum_name(file->get_status()) << "\t"
+                            << status_type::status_to_string(file->get_status()) << "\t"
                             << file->get_progress() << "%\t"
                             << (file->get_transmission_speed() == 0 ? "-" : std::to_string(file->get_transmission_speed())) << "Bi/s\t"
                             << file->get_start_time_str() << "\t"
@@ -550,10 +550,10 @@ namespace dunedaq::snbmodules
         for (const auto &[id, g] : get_grp_transfers())
         {
             *output << g->get_group_id() << "\t"
-                    << magic_enum::enum_name(g->get_protocol()) << "\t"
+                    << protocol_type::protocols_to_string(g->get_protocol()) << "\t"
                     << g->get_source_id() << "\t"
                     << g->get_source_ip().get_ip_port() << "\t"
-                    << magic_enum::enum_name(g->get_group_status()) << "\t"
+                    << status_type::status_to_string(g->get_group_status()) << "\t"
                     << std::endl;
 
             for (const TransferMetadata &fmeta : g->get_transfers_meta())
@@ -562,7 +562,7 @@ namespace dunedaq::snbmodules
                         << fmeta.get_file_name() << "\t"
                         << fmeta.get_src().get_ip_port() << " to "
                         << fmeta.get_dest().get_ip_port() << "\t"
-                        << magic_enum::enum_name(fmeta.get_status()) << "\t"
+                        << status_type::status_to_string(fmeta.get_status()) << "\t"
                         << std::endl;
             }
 

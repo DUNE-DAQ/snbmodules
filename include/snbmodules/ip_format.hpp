@@ -11,8 +11,6 @@
 
 // #define _CRT_SECURE_NO_WARNINGS
 
-#include "snbmodules/tools/natural_sort.hpp"
-
 #include <filesystem>
 #include <string>
 #include <stdexcept>
@@ -58,7 +56,7 @@ namespace dunedaq::snbmodules
         /// @brief  < operator
         bool operator<(IPFormat const &o) const
         {
-            return SI::natural::compare<std::string>(m_ip, o.m_ip) || (m_ip == o.m_ip && m_port < o.m_port);
+            return m_ip.compare(o.m_ip) || (m_ip == o.m_ip && m_port < o.m_port);
         }
 
         /// @brief  Get the IP address and the port in the format "ip:port"

@@ -11,7 +11,7 @@
 
 #include "snbmodules/transfer_session.hpp"
 #include "snbmodules/ip_format.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
+
 #include "snbmodules/common/notification_enum.hpp"
 #include "snbmodules/notification_interface.hpp"
 #include "snbmodules/iomanager_wrapper.hpp"

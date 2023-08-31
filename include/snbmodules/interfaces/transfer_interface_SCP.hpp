@@ -51,18 +51,18 @@ namespace dunedaq::snbmodules
         bool upload_file(TransferMetadata &f_meta) override
         {
             TLOG() << "debug : SCP : Uploading file " << f_meta.get_file_name();
-            f_meta.set_status(e_status::UPLOADING);
+            f_meta.set_status(status_type::e_status::UPLOADING);
 
             // nothing to do
             TLOG() << "debug : SCP : Sucess Upload";
-            f_meta.set_status(e_status::FINISHED);
+            f_meta.set_status(status_type::e_status::FINISHED);
             f_meta.set_bytes_transferred(f_meta.get_size());
             return true;
         }
         bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override
         {
             TLOG() << "debug : SCP : Downloading file " << f_meta.get_file_name();
-            f_meta.set_status(e_status::DOWNLOADING);
+            f_meta.set_status(status_type::e_status::DOWNLOADING);
 
             m_files_being_transferred[f_meta.get_file_name()] = dest;
 
@@ -81,13 +81,13 @@ namespace dunedaq::snbmodules
             if (system(exec.c_str()) == 0) // NOLINT
             {
                 TLOG() << "debug : SCP : Sucess Download";
-                f_meta.set_status(e_status::FINISHED);
+                f_meta.set_status(status_type::e_status::FINISHED);
                 f_meta.set_bytes_transferred(f_meta.get_size());
             }
             else
             {
                 ers::error(ErrorSCPDownloadError(ERS_HERE, "Please check the logs for more information."));
-                f_meta.set_status(e_status::ERROR);
+                f_meta.set_status(status_type::e_status::ERROR);
                 f_meta.set_error_code("Something went wrong during the download");
                 f_meta.set_bytes_transferred(0);
                 return false;
@@ -99,7 +99,7 @@ namespace dunedaq::snbmodules
         bool pause_file(TransferMetadata &f_meta) override
         {
             TLOG() << "debug : SCP : Pausing file " << f_meta.get_file_name();
-            f_meta.set_status(e_status::PAUSED);
+            f_meta.set_status(status_type::e_status::PAUSED);
             f_meta.set_bytes_transferred(0);
             return true;
         }
@@ -121,14 +121,14 @@ namespace dunedaq::snbmodules
         bool hash_file(TransferMetadata &f_meta) override
         {
             TLOG() << "debug : SCP : Hashing file " << f_meta.get_file_name();
-            f_meta.set_status(e_status::HASHING);
+            f_meta.set_status(status_type::e_status::HASHING);
             return true;
         }
 
         bool cancel_file(TransferMetadata &f_meta) override
         {
             TLOG() << "debug : SCP : Cancelling file " << f_meta.get_file_name();
-            f_meta.set_status(e_status::CANCELLED);
+            f_meta.set_status(status_type::e_status::CANCELLED);
             return true;
         }
 

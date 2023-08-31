@@ -172,7 +172,7 @@ namespace dunedaq::snbmodules
                 if (file_relative_path.find("..") != std::string::npos)
                 {
                     TLOG() << "debug : RClone : File path is not relative to root folder";
-                    f_meta.set_status(e_status::ERROR);
+                    f_meta.set_status(status_type::e_status::ERROR);
                     f_meta.set_error_code("File path is not relative to root folder !");
                     return false;
                 }
@@ -532,12 +532,12 @@ namespace dunedaq::snbmodules
                         {
                             if (res.value()["success"].get<bool>())
                             {
-                                meta->set_status(e_status::FINISHED);
+                                meta->set_status(status_type::e_status::FINISHED);
                                 meta->set_progress(100);
                             }
                             else
                             {
-                                meta->set_status(e_status::ERROR);
+                                meta->set_status(status_type::e_status::ERROR);
                                 meta->set_error_code(res.value()["error"].get<std::string>());
                             }
                             meta->set_transmission_speed(0);
@@ -551,13 +551,13 @@ namespace dunedaq::snbmodules
 
             for (auto &meta : get_transfer_options().get_transfers_meta())
             {
-                if (meta.get_status() == e_status::UPLOADING)
+                if (meta.get_status() == status_type::e_status::UPLOADING)
                 {
-                    meta.set_status(e_status::FINISHED);
+                    meta.set_status(status_type::e_status::FINISHED);
                 }
-                if (meta.get_status() == e_status::DOWNLOADING)
+                if (meta.get_status() == status_type::e_status::DOWNLOADING)
                 {
-                    meta.set_status(e_status::ERROR);
+                    meta.set_status(status_type::e_status::ERROR);
                     meta.set_error_code("Transfer interrupted");
                 }
             }
