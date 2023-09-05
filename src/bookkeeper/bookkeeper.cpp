@@ -144,7 +144,7 @@ namespace dunedaq::snbmodules
             }
 
             TLOG() << "Choose file to transmit (q when finished)";
-            std::set<TransferMetadata *> choosen_files;
+            std::set<std::shared_ptr<TransferMetadata>> choosen_files;
             while (true)
             {
                 uint64_t initial_size = choosen_files.size();
@@ -160,7 +160,7 @@ namespace dunedaq::snbmodules
                     // Check input
                     auto &list = get_transfers().at(client);
                     bool found = false;
-                    for (TransferMetadata *filemeta : list)
+                    for (std::shared_ptr<TransferMetadata> filemeta : list)
                     {
                         if (filemeta->get_file_name() == file)
                         {
@@ -350,14 +350,14 @@ namespace dunedaq::snbmodules
         for (const auto &[id, g] : get_grp_transfers())
         {
             // Only request for dynamic status
-            if (g->get_group_status() == status_type::e_status::DOWNLOADING ||
-                g->get_group_status() == status_type::e_status::CHECKING ||
-                g->get_group_status() == status_type::e_status::UPLOADING ||
-                g->get_group_status() == status_type::e_status::HASHING ||
+            if (g.get_group_status() == status_type::e_status::DOWNLOADING ||
+                g.get_group_status() == status_type::e_status::CHECKING ||
+                g.get_group_status() == status_type::e_status::UPLOADING ||
+                g.get_group_status() == status_type::e_status::HASHING ||
                 force)
             {
 
-                for (const std::string &session : m_clients_per_grp_transfer[g->get_group_id()])
+                for (const std::string &session : m_clients_per_grp_transfer[g.get_group_id()])
                 {
                     send_notification(notification_type::e_notification_type::UPDATE_REQUEST, get_bookkeeper_id(), session, get_client_name_from_session_name(session));
                 }
@@ -403,11 +403,11 @@ namespace dunedaq::snbmodules
         case notification_type::e_notification_type::GROUP_METADATA:
         {
             // Loading the data and cnovert to a proper transfer metadata object
-            auto *tmeta = new GroupMetadata(notif.m_data, false);
+            GroupMetadata group_meta(notif.m_data, false);
 
             // Store it
-            m_clients_per_grp_transfer[tmeta->get_group_id()].insert(notif.m_source_id);
-            add_update_grp_transfer(tmeta);
+            m_clients_per_grp_transfer[group_meta.get_group_id()].insert(notif.m_source_id);
+            add_update_grp_transfer(std::move(group_meta));
             break;
         }
 
@@ -549,24 +549,24 @@ namespace dunedaq::snbmodules
 
         for (const auto &[id, g] : get_grp_transfers())
         {
-            *output << g->get_group_id() << "\t"
-                    << protocol_type::protocols_to_string(g->get_protocol()) << "\t"
-                    << g->get_source_id() << "\t"
-                    << g->get_source_ip().get_ip_port() << "\t"
-                    << status_type::status_to_string(g->get_group_status()) << "\t"
+            *output << g.get_group_id() << "\t"
+                    << protocol_type::protocols_to_string(g.get_protocol()) << "\t"
+                    << g.get_source_id() << "\t"
+                    << g.get_source_ip().get_ip_port() << "\t"
+                    << status_type::status_to_string(g.get_group_status()) << "\t"
                     << std::endl;
 
-            for (const TransferMetadata &fmeta : g->get_transfers_meta())
+            for (const std::shared_ptr<TransferMetadata> &fmeta : g.get_transfers_meta())
             {
                 *output << "\t- "
-                        << fmeta.get_file_name() << "\t"
-                        << fmeta.get_src().get_ip_port() << " to "
-                        << fmeta.get_dest().get_ip_port() << "\t"
-                        << status_type::status_to_string(fmeta.get_status()) << "\t"
+                        << fmeta->get_file_name() << "\t"
+                        << fmeta->get_src().get_ip_port() << " to "
+                        << fmeta->get_dest().get_ip_port() << "\t"
+                        << status_type::status_to_string(fmeta->get_status()) << "\t"
                         << std::endl;
             }
 
-            for (const std::string &f : g->get_expected_files())
+            for (const std::string &f : g.get_expected_files())
             {
                 *output << "\t- "
                         << f << "\t"
@@ -589,37 +589,43 @@ namespace dunedaq::snbmodules
     void Bookkeeper::add_update_transfer(const std::string &client_id, const std::string &data)
     {
         // Loading the data and convert to a proper transfer metadata object
-        TransferMetadata file = TransferMetadata(data, false);
+        std::shared_ptr<TransferMetadata> file = std::make_shared<TransferMetadata>(data, false);
+        std::string group_id_tmp = file->get_group_id();
 
-        std::vector<TransferMetadata *> &tr_vector = m_transfers[client_id];
-        for (TransferMetadata *tr : tr_vector)
+        std::vector<std::shared_ptr<TransferMetadata>> &tr_vector = get_transfers()[client_id];
+        for (std::shared_ptr<TransferMetadata> &tr : tr_vector)
         {
-            if (*tr == file)
+            if (*tr == *file)
             {
                 // Already inserted, simply update the one already present
                 tr->from_string(data);
+
+                // Add available file information
+                // file->set_group_id("");
+                // m_transfers[client_id].push_back(file);
+
                 return;
             }
         }
 
-        std::string group_id_tmp = file.get_group_id();
-
         // Check if transfer already exist in a group transfer
-        if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end())
+        if (group_id_tmp != "" && m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end())
         {
-            m_grp_transfers[group_id_tmp]->add_file(file);
-            m_transfers[client_id].push_back(&m_grp_transfers[group_id_tmp]->get_transfers_meta().back());
+            m_grp_transfers.at(group_id_tmp).add_file(file);
         }
+        m_transfers[client_id].push_back(file);
     }
 
-    void Bookkeeper::add_update_grp_transfer(GroupMetadata *grp_transfers)
+    void Bookkeeper::add_update_grp_transfer(GroupMetadata grp_transfers)
     {
-        if (m_grp_transfers.find(grp_transfers->get_group_id()) != m_grp_transfers.end())
+        std::string group_id_tmp = grp_transfers.get_group_id();
+        if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end())
         {
             // Already inserted, copy old values
-            grp_transfers->set_transfers_meta(m_grp_transfers[grp_transfers->get_group_id()]->get_transfers_meta());
-            grp_transfers->set_expected_files(m_grp_transfers[grp_transfers->get_group_id()]->get_expected_files());
+            grp_transfers.set_transfers_meta(std::move(m_grp_transfers.at(grp_transfers.get_group_id()).get_transfers_meta()));
+            grp_transfers.set_expected_files(std::move(m_grp_transfers.at(grp_transfers.get_group_id()).get_expected_files()));
+            m_grp_transfers.erase(group_id_tmp);
         }
-        m_grp_transfers[grp_transfers->get_group_id()] = grp_transfers;
+        m_grp_transfers.insert({group_id_tmp, std::move(grp_transfers)});
     }
 } // namespace dunedaq::snbmodules

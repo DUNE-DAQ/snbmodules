@@ -1150,7 +1150,7 @@ namespace dunedaq::snbmodules
         for (const auto &f_meta : get_transfer_options().get_transfers_meta())
         {
             std::filesystem::path tmp = dest;
-            make_torrent(f_meta.get_file_path(), static_cast<int>(pow(2, 23)), tracker, tmp.append(f_meta.get_file_name() + ".torrent").string());
+            make_torrent(f_meta->get_file_path(), static_cast<int>(pow(2, 23)), tracker, tmp.append(f_meta->get_file_name() + ".torrent").string());
         }
     }
 

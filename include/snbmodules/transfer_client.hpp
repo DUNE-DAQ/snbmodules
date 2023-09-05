@@ -77,7 +77,7 @@ namespace dunedaq::snbmodules
         /// @param id ID of the session
         /// @param listening_ip Listening IP\:PORT address of the session
         /// @return Pointer to the new session
-        TransferSession *create_session(const GroupMetadata &transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip = IPFormat(), const std::set<std::string> &dest_clients = std::set<std::string>());
+        TransferSession &create_session(GroupMetadata transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip = IPFormat(), const std::set<std::string> &dest_clients = std::set<std::string>());
 
         /// @brief Scan available files in the listening directory
         /// @param previous_scan Set of files already scanned
@@ -89,9 +89,9 @@ namespace dunedaq::snbmodules
         inline IPFormat get_ip() const { return m_listening_ip; }
         inline std::string get_client_id() const { return m_client_id; }
         inline std::filesystem::path get_listening_dir() const { return m_listening_dir; }
-        std::optional<TransferSession *> get_session(std::string transfer_id);
-        inline std::map<std::string, TransferSession *> &get_sessions() { return m_sessions; }
-        inline const std::map<std::string, TransferSession *> &get_sessions() const { return m_sessions; }
+        TransferSession *get_session(std::string transfer_id);
+        inline std::vector<TransferSession> &get_sessions() { return m_sessions; }
+        inline const std::vector<TransferSession> &get_sessions() const { return m_sessions; }
         std::string get_my_conn();
 
         // Setters
@@ -130,10 +130,10 @@ namespace dunedaq::snbmodules
         std::filesystem::path m_listening_dir;
 
         /// @brief Map of active sessions (key = session ID, value = session)
-        std::map<std::string, TransferSession *> m_sessions;
+        std::vector<TransferSession> m_sessions;
 
         /// @brief Map of available files (key = file path, value = file metadata)
-        std::map<std::string, TransferMetadata> m_available_files;
+        std::map<std::string, std::shared_ptr<TransferMetadata>> m_available_files;
 
         /// @brief Connection uuid of the client, retrieved using the notification interface and calling get_my_conn()
         std::string m_my_conn = "";
@@ -143,7 +143,7 @@ namespace dunedaq::snbmodules
 
         /// @brief Add a session to the client
         /// @param session  Session to add
-        TransferSession *add_session(TransferSession *session);
+        // TransferSession &add_session(TransferSession session);
 
         /// @brief Remove a session from the client
         /// @param session_id  ID of the session to remove
@@ -162,7 +162,7 @@ namespace dunedaq::snbmodules
         /// @brief Create a metadata from a file
         /// @param src Path of the file
         /// @return Metadata of the file
-        TransferMetadata create_metadata_from_file(const std::filesystem::path &src);
+        std::shared_ptr<TransferMetadata> create_metadata_from_file(const std::filesystem::path &src);
     };
 } // namespace dunedaq::snbmodules
 #endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFER_CLIENT_HPP_

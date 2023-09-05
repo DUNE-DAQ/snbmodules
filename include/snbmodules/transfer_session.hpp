@@ -72,12 +72,15 @@ namespace dunedaq::snbmodules
         /// @return is less than ?
         bool operator<(TransferSession const &other) const { return m_session_id.compare(other.m_session_id); }
 
+        TransferSession(TransferSession &&) = default;
+        TransferSession &operator=(TransferSession &&) = default;
+
         /// @brief Constructor
         /// @param transfer_options group metadata
         /// @param type type of session
         /// @param id unique identifier of the session
         /// @param ip ip of the client (TODO : useless ?)
-        TransferSession(const GroupMetadata &transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn = std::vector<std::string>(), std::set<std::string> client_conn = std::set<std::string>());
+        TransferSession(GroupMetadata transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn = std::vector<std::string>(), std::set<std::string> client_conn = std::set<std::string>());
 
         /// @brief Destructor
         /// Kill all threads created by the session (TODO : useless ?)
@@ -104,9 +107,9 @@ namespace dunedaq::snbmodules
         void set_target_clients(std::set<std::string> clients) { m_target_clients = std::move(clients); }
 
         // Interface for the transfer, TODO: add notifications : DO WE REALLY WANT THAT ?
-        void add_file(const TransferMetadata &fmeta)
+        void add_file(std::shared_ptr<TransferMetadata> fmeta)
         {
-            TransferMetadata &moved_meta = m_transfer_options.add_file(fmeta);
+            TransferMetadata &moved_meta = get_transfer_options().add_file(std::move(fmeta));
             update_metadata_to_bookkeeper(moved_meta);
         }
 
@@ -144,12 +147,12 @@ namespace dunedaq::snbmodules
         /// TODO : useless ? the session cannot have a unique connection
         IPFormat m_ip;
 
+        /// @brief Abstract interface can reference to any protocol used to transfer data
+        std::unique_ptr<TransferInterfaceAbstract> m_transfer_interface;
+
         /// @brief A session must contain a transfer matadata.
         /// The session is basically a transfer wrapper
         GroupMetadata m_transfer_options;
-
-        /// @brief Abstract interface can reference to any protocol used to transfer data
-        std::unique_ptr<TransferInterfaceAbstract> m_transfer_interface;
 
         /// @brief List of threads created by the session
         /// TODO : useless ? should be handle in client

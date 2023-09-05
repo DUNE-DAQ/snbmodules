@@ -37,7 +37,7 @@ int main()
         // add non existing file to the transfer
         transfer_options.add_expected_file("file1");
         TransferMetadata file("file1", 100, ip1);
-        TransferMetadata &file_ref = transfer_options.add_file(file);
+        TransferMetadata &file_ref = transfer_options.add_file(std::make_shared<TransferMetadata>(file));
 
         // write metadata file in folder
         file_ref.generate_metadata_file("./client1");

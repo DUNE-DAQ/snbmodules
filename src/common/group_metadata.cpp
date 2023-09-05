@@ -22,27 +22,27 @@ namespace dunedaq::snbmodules
 
     TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(const std::string &file_path)
     {
-        for (TransferMetadata &meta : get_transfers_meta())
+        for (std::shared_ptr<TransferMetadata> meta : get_transfers_meta())
         {
-            if (meta.get_file_path() == file_path)
+            if (meta->get_file_path() == file_path)
             {
-                return meta;
+                return *meta;
             }
         }
         ers::fatal(MetadataNotFoundInGroupError(ERS_HERE, m_group_id, file_path));
-        return m_transfers_meta[0]; // To avoid warning
+        return *m_transfers_meta[0]; // To avoid warning
     }
 
-    TransferMetadata &GroupMetadata::add_file(TransferMetadata meta)
+    TransferMetadata &GroupMetadata::add_file(std::shared_ptr<TransferMetadata> meta)
     {
-        if (m_expected_files.find(meta.get_file_path()) != m_expected_files.end())
+        if (m_expected_files.find(meta->get_file_path()) != m_expected_files.end())
         {
-            m_expected_files.erase(meta.get_file_path());
-            meta.set_group_id(m_group_id);
+            m_expected_files.erase(meta->get_file_path());
+            meta->set_group_id(m_group_id);
 
-            return m_transfers_meta.emplace_back(std::move(meta));
+            return *m_transfers_meta.emplace_back(meta);
         }
-        else if (meta.get_group_id() == m_group_id)
+        else if (meta->get_group_id() == m_group_id)
         {
             int pos = -1;
             int i = 0;
@@ -60,12 +60,12 @@ namespace dunedaq::snbmodules
             {
                 m_transfers_meta.erase(m_transfers_meta.begin() + pos);
             }
-            return m_transfers_meta.emplace_back(std::move(meta));
+            return *m_transfers_meta.emplace_back(std::move(meta));
         }
         else
         {
-            ers::fatal(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta.get_file_name()));
-            return m_transfers_meta[0]; // To avoid warning
+            ers::fatal(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta->get_file_name()));
+            return *m_transfers_meta[0]; // To avoid warning
         }
     }
 
@@ -81,7 +81,7 @@ namespace dunedaq::snbmodules
         std::vector<std::string> files;
         for (const auto &file : get_transfers_meta())
         {
-            files.push_back(file.get_file_path().string());
+            files.push_back(file->get_file_path().string());
         }
         j["files"] = files;
 
@@ -164,7 +164,7 @@ namespace dunedaq::snbmodules
 
         for (const auto &file : get_transfers_meta())
         {
-            str += "*file " + file.get_file_name() + "\n";
+            str += "*file " + file->get_file_name() + "\n";
         }
         for (const auto &file : get_expected_files())
         {

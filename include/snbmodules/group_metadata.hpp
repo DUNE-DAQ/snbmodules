@@ -39,11 +39,11 @@ namespace dunedaq::snbmodules
         status_type::e_status get_group_status() const
         {
             status_type::e_status status = status_type::e_status::PREPARING;
-            for (const TransferMetadata &transfer : m_transfers_meta)
+            for (const auto &transfer : get_transfers_meta())
             {
-                if (transfer.get_status() > status)
+                if (transfer->get_status() > status)
                 {
-                    status = transfer.get_status();
+                    status = transfer->get_status();
                 }
             }
             return status;
@@ -53,7 +53,7 @@ namespace dunedaq::snbmodules
         /// @param protocol
         /// @param transfers_meta
         /// @param transfer_id
-        GroupMetadata(std::string group_id, std::string source, const IPFormat &source_ip, protocol_type::e_protocol_type protocol, const nlohmann::json &protocol_options = nlohmann::json(), const std::vector<TransferMetadata> &transfers_meta = std::vector<TransferMetadata>())
+        GroupMetadata(std::string group_id, std::string source, const IPFormat &source_ip, protocol_type::e_protocol_type protocol, const nlohmann::json &protocol_options = nlohmann::json(), const std::vector<std::shared_ptr<TransferMetadata>> &transfers_meta = std::vector<std::shared_ptr<TransferMetadata>>())
             : m_group_id(std::move(group_id)),
               m_protocol(protocol),
               m_transfers_meta(transfers_meta),
@@ -100,11 +100,11 @@ namespace dunedaq::snbmodules
         // Setters
         inline void set_group_id(std::string transfer_id) { m_group_id = std::move(transfer_id); }
         inline void set_protocol(protocol_type::e_protocol_type protocol) { m_protocol = protocol; }
-        inline void set_transfers_meta(std::vector<TransferMetadata> files_meta) { m_transfers_meta = std::move(files_meta); }
+        inline void set_transfers_meta(std::vector<std::shared_ptr<TransferMetadata>> files_meta) { m_transfers_meta = std::move(files_meta); }
         inline void set_protocol_options(nlohmann::json protocol_options) { m_protocol_options = std::move(protocol_options); }
         inline void set_source_id(std::string source_id) { m_source_id = std::move(source_id); }
         inline void set_expected_files(std::set<std::string> expected_files) { m_expected_files = std::move(expected_files); }
-        TransferMetadata &add_file(TransferMetadata meta);
+        TransferMetadata &add_file(std::shared_ptr<TransferMetadata> meta);
         void add_expected_file(const std::filesystem::path &file)
         {
             // remove all occurences of ./ in the file path
@@ -129,8 +129,8 @@ namespace dunedaq::snbmodules
         // Getters
         inline std::string get_group_id() const { return m_group_id; }
         inline protocol_type::e_protocol_type get_protocol() const { return m_protocol; }
-        inline std::vector<TransferMetadata> &get_transfers_meta() { return m_transfers_meta; }
-        inline const std::vector<TransferMetadata> &get_transfers_meta() const { return m_transfers_meta; }
+        inline std::vector<std::shared_ptr<TransferMetadata>> &get_transfers_meta() { return m_transfers_meta; }
+        inline const std::vector<std::shared_ptr<TransferMetadata>> &get_transfers_meta() const { return m_transfers_meta; }
         TransferMetadata &get_transfer_meta_from_file_path(const std::string &file_path);
         inline const std::set<std::string> &get_expected_files() const { return m_expected_files; }
         inline nlohmann::json get_protocol_options() const { return m_protocol_options; }
@@ -149,7 +149,7 @@ namespace dunedaq::snbmodules
         nlohmann::json m_protocol_options;
 
         /// @brief Set of files to transfer
-        std::vector<TransferMetadata> m_transfers_meta;
+        std::vector<std::shared_ptr<TransferMetadata>> m_transfers_meta;
 
         /// @brief Set of expected files metadata to add later
         std::set<std::string> m_expected_files;

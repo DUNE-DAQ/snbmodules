@@ -18,12 +18,12 @@
 namespace dunedaq::snbmodules
 {
 
-    TransferSession::TransferSession(const GroupMetadata &transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn /*= std::vector<std::string>()*/, std::set<std::string> client_conn /*= std::set<std::string>()*/)
+    TransferSession::TransferSession(GroupMetadata transfer_options, e_session_type type, std::string id, const IPFormat &ip, std::filesystem::path work_dir, std::vector<std::string> bk_conn /*= std::vector<std::string>()*/, std::set<std::string> client_conn /*= std::set<std::string>()*/)
         : NotificationInterface(std::move(bk_conn), std::move(client_conn)),
           m_type(type),
           m_session_id(std::move(id)),
           m_ip(ip),
-          m_transfer_options(transfer_options),
+          m_transfer_options(std::move(transfer_options)),
           //   m_threads(std::vector<pid_t>()),
           m_work_dir(std::move(work_dir))
     {
@@ -49,11 +49,11 @@ namespace dunedaq::snbmodules
                 TLOG() << "Generating torrent files...";
                 dynamic_cast<TransferInterfaceBittorrent &>(*m_transfer_interface).generate_torrents_files(m_work_dir, "");
 
-                for (TransferMetadata &f_meta : m_transfer_options.get_transfers_meta())
+                for (auto f_meta : m_transfer_options.get_transfers_meta())
                 {
-                    TLOG() << "Writing magnet link data into transfer Metadata " << get_work_dir().append(f_meta.get_file_name() + ".torrent");
+                    TLOG() << "Writing magnet link data into transfer Metadata " << get_work_dir().append(f_meta->get_file_name() + ".torrent");
                     lt::error_code ec;
-                    lt::torrent_info t(get_work_dir().append(f_meta.get_file_name() + ".torrent").string(), ec);
+                    lt::torrent_info t(get_work_dir().append(f_meta->get_file_name() + ".torrent").string(), ec);
 
                     if (ec)
                     {
@@ -61,7 +61,7 @@ namespace dunedaq::snbmodules
                     }
 
                     TLOG() << "Magnet link: " << lt::make_magnet_uri(t);
-                    f_meta.set_magnet_link(lt::make_magnet_uri(t) + "&x.pe=" + get_ip().get_ip() + ":" + m_transfer_options.get_protocol_options()["port"].get<std::string>());
+                    f_meta->set_magnet_link(lt::make_magnet_uri(t) + "&x.pe=" + get_ip().get_ip() + ":" + m_transfer_options.get_protocol_options()["port"].get<std::string>());
                 }
             }
             break;
@@ -138,9 +138,9 @@ namespace dunedaq::snbmodules
             result = result && send_notification(notification_type::e_notification_type::GROUP_METADATA, get_session_id(), bk, bk, get_transfer_options().export_to_string());
         }
 
-        for (TransferMetadata &f_meta : m_transfer_options.get_transfers_meta())
+        for (std::shared_ptr<TransferMetadata> f_meta : m_transfer_options.get_transfers_meta())
         {
-            result = result && update_metadata_to_bookkeeper(f_meta);
+            result = result && update_metadata_to_bookkeeper(*f_meta);
         }
 
         return result;
@@ -194,12 +194,10 @@ namespace dunedaq::snbmodules
             return false;
         }
 
+        f_meta.set_status(status_type::e_status::PAUSED);
+
         bool res = m_transfer_interface->pause_file(f_meta);
-        if (res)
-        {
-            f_meta.set_status(status_type::e_status::PAUSED);
-        }
-        else
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -221,19 +219,17 @@ namespace dunedaq::snbmodules
             return false;
         }
 
-        bool res = m_transfer_interface->resume_file(f_meta);
-        if (res)
+        if (is_downloader())
         {
-            if (is_downloader())
-            {
-                f_meta.set_status(status_type::e_status::DOWNLOADING);
-            }
-            else if (is_uploader())
-            {
-                f_meta.set_status(status_type::e_status::UPLOADING);
-            }
+            f_meta.set_status(status_type::e_status::DOWNLOADING);
         }
-        else
+        else if (is_uploader())
+        {
+            f_meta.set_status(status_type::e_status::UPLOADING);
+        }
+
+        bool res = m_transfer_interface->resume_file(f_meta);
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -255,12 +251,10 @@ namespace dunedaq::snbmodules
             return false;
         }
 
+        f_meta.set_status(status_type::e_status::HASHING);
+
         bool res = m_transfer_interface->hash_file(f_meta);
-        if (res)
-        {
-            f_meta.set_status(status_type::e_status::HASHING);
-        }
-        else
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -281,12 +275,10 @@ namespace dunedaq::snbmodules
             return false;
         }
 
+        f_meta.set_status(status_type::e_status::CANCELLED);
+
         bool res = m_transfer_interface->cancel_file(f_meta);
-        if (res)
-        {
-            f_meta.set_status(status_type::e_status::CANCELLED);
-        }
-        else
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -312,12 +304,10 @@ namespace dunedaq::snbmodules
             return false;
         }
 
+        f_meta.set_status(status_type::e_status::UPLOADING);
+
         bool res = m_transfer_interface->upload_file(f_meta);
-        if (res)
-        {
-            f_meta.set_status(status_type::e_status::UPLOADING);
-        }
-        else
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -346,12 +336,10 @@ namespace dunedaq::snbmodules
         // wait for the uploader to be ready
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
+        f_meta.set_status(status_type::e_status::DOWNLOADING);
+
         bool res = m_transfer_interface->download_file(f_meta, std::move(dest));
-        if (res)
-        {
-            f_meta.set_status(status_type::e_status::DOWNLOADING);
-        }
-        else
+        if (!res)
         {
             f_meta.set_status(status_type::e_status::ERROR);
         }
@@ -390,7 +378,7 @@ namespace dunedaq::snbmodules
         bool result = true;
         for (auto file : m_transfer_options.get_transfers_meta())
         {
-            result = result && pause_file(file, true);
+            result = result && pause_file(*file, true);
         }
 
         update_metadatas_to_bookkeeper();
@@ -402,7 +390,7 @@ namespace dunedaq::snbmodules
         bool result = true;
         for (auto file : m_transfer_options.get_transfers_meta())
         {
-            result = result && resume_file(file, true);
+            result = result && resume_file(*file, true);
         }
 
         // wait 1 second
@@ -418,7 +406,7 @@ namespace dunedaq::snbmodules
         bool result = true;
         for (auto file : m_transfer_options.get_transfers_meta())
         {
-            result = result && cancel_file(file, true);
+            result = result && cancel_file(*file, true);
         }
 
         send_notification_to_targets(notification_type::e_notification_type::CANCEL_TRANSFER);
@@ -435,9 +423,9 @@ namespace dunedaq::snbmodules
         }
 
         bool result = true;
-        for (auto &file : m_transfer_options.get_transfers_meta())
+        for (auto file : m_transfer_options.get_transfers_meta())
         {
-            result = result && download_file(file, dest, true);
+            result = result && download_file(*file, dest, true);
         }
         update_metadatas_to_bookkeeper();
         return result;
@@ -452,9 +440,9 @@ namespace dunedaq::snbmodules
         }
 
         bool result = true;
-        for (auto &file : m_transfer_options.get_transfers_meta())
+        for (auto file : m_transfer_options.get_transfers_meta())
         {
-            result = result && upload_file(file, true);
+            result = result && upload_file(*file, true);
         }
         send_notification_to_targets(notification_type::e_notification_type::START_TRANSFER);
         update_metadatas_to_bookkeeper();

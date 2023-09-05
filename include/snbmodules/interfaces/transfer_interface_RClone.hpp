@@ -130,6 +130,7 @@ namespace dunedaq::snbmodules
         virtual ~TransferInterfaceRClone()
         {
             m_thread.stop_working_thread();
+
             RcloneFinalize();
         }
 
@@ -155,6 +156,8 @@ namespace dunedaq::snbmodules
             //     // TODO: error
             //     return false;
             // }
+
+            f_meta.set_status(status_type::e_status::FINISHED);
 
             return true;
         }
@@ -551,14 +554,14 @@ namespace dunedaq::snbmodules
 
             for (auto &meta : get_transfer_options().get_transfers_meta())
             {
-                if (meta.get_status() == status_type::e_status::UPLOADING)
+                if (meta->get_status() == status_type::e_status::UPLOADING)
                 {
-                    meta.set_status(status_type::e_status::FINISHED);
+                    meta->set_status(status_type::e_status::FINISHED);
                 }
-                if (meta.get_status() == status_type::e_status::DOWNLOADING)
+                if (meta->get_status() == status_type::e_status::DOWNLOADING)
                 {
-                    meta.set_status(status_type::e_status::ERROR);
-                    meta.set_error_code("Transfer interrupted");
+                    meta->set_status(status_type::e_status::ERROR);
+                    meta->set_error_code("Transfer interrupted");
                 }
             }
         }

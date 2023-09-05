@@ -101,10 +101,6 @@ namespace dunedaq::snbmodules
             }
 
             m_file_path = std::filesystem::absolute(file_path_str);
-            if (group_id == "")
-            {
-                m_group_id = get_file_name();
-            }
         }
 
         /// @brief Load from file constructor
