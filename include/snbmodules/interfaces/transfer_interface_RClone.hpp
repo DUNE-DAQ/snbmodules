@@ -552,18 +552,19 @@ namespace dunedaq::snbmodules
                 std::this_thread::sleep_for(std::chrono::seconds(m_params.refresh_rate));
             }
 
-            for (auto &meta : get_transfer_options().get_transfers_meta())
-            {
-                if (meta->get_status() == status_type::e_status::UPLOADING)
-                {
-                    meta->set_status(status_type::e_status::FINISHED);
-                }
-                if (meta->get_status() == status_type::e_status::DOWNLOADING)
-                {
-                    meta->set_status(status_type::e_status::ERROR);
-                    meta->set_error_code("Transfer interrupted");
-                }
-            }
+            // TODO Leo joly 11/09/2023 : segmentation fault
+            // for (auto &meta : get_transfer_options().get_transfers_meta())
+            // {
+            //     if (meta->get_status() == status_type::e_status::UPLOADING)
+            //     {
+            //         meta->set_status(status_type::e_status::FINISHED);
+            //     }
+            //     if (meta->get_status() == status_type::e_status::DOWNLOADING)
+            //     {
+            //         meta->set_status(status_type::e_status::ERROR);
+            //         meta->set_error_code("Transfer interrupted");
+            //     }
+            // }
         }
     };
 } // namespace dunedaq::snbmodules
