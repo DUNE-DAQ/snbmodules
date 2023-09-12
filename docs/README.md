@@ -27,3 +27,4 @@ Please follow the wiki pages for detailed instructions and informations about:
 - [Installation](https://github.com/DUNE-DAQ/snbmodules/wiki/Installation)
 - [Configuration](https://github.com/DUNE-DAQ/snbmodules/wiki/Configuration)
 - [Transfers](https://github.com/DUNE-DAQ/snbmodules/wiki/Transfers)
+- [Technical Documentation](https://github.com/DUNE-DAQ/snbmodules/wiki/Technical-Documentation)
