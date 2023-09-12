@@ -17,9 +17,7 @@ find_package(Boost COMPONENTS iostreams REQUIRED)
 find_package(iomanager REQUIRED)
 find_package(appfwk REQUIRED)
 find_package(logging REQUIRED)
-find_package(hdf5libs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(HighFive REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
 find_package(readoutlibs REQUIRED)
@@ -31,11 +29,9 @@ set(linked_libraries
     logging::logging
     ers::ers
     appfwk::appfwk
-    hdf5libs::hdf5libs
     daqdataformats::daqdataformats
     detdataformats::detdataformats
     nlohmann_json::nlohmann_json
-    HighFive
     readoutlibs::readoutlibs
     Boost::iostreams
 )

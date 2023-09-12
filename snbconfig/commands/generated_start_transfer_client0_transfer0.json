@@ -1,0 +1,14 @@
+{
+	"data": {
+		"modules": [
+			{
+				"data": {
+					"transfer_id": "transfer0"
+				},
+				"match": "client0"
+			}
+		]
+	},
+	"id": "start_transfer"
+}
+

@@ -5,7 +5,8 @@
                 "data": {
                     "transfer_id": "transfer0",
                     "files": [
-                        "/home/ljoly/N23-07-15/Makefile"
+                        "./output_localhosteth0_0.out",
+                        "./output_localhosteth0_1.out"
                     ],
                     "src": "client0",
                     "dests": [
@@ -16,7 +17,7 @@
                         "protocol": "sftp",
                         "rate_limit": "off",
                         "port": 22,
-                        "refresh_rate": 5,
+                        "refresh_rate": 2,
                         "user": "ljoly"
                     }
                 },

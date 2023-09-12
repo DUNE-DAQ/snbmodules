@@ -170,6 +170,7 @@ namespace dunedaq::snbmodules
 
         if (session == nullptr)
         {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
             return;
         }
 
@@ -183,6 +184,7 @@ namespace dunedaq::snbmodules
 
         if (session == nullptr)
         {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
             return;
         }
 
@@ -195,6 +197,7 @@ namespace dunedaq::snbmodules
 
         if (session == nullptr)
         {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
             return;
         }
 
@@ -208,6 +211,7 @@ namespace dunedaq::snbmodules
 
         if (session == nullptr)
         {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
             return;
         }
 
@@ -228,8 +232,6 @@ namespace dunedaq::snbmodules
                 return &s;
             }
         }
-
-        ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), transfer_id));
         return nullptr;
     }
 
@@ -475,6 +477,7 @@ namespace dunedaq::snbmodules
         auto s = get_session(session_id);
         if (s == nullptr)
         {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), session_id));
             return;
         }
         for (size_t i = 0; i < m_sessions.size(); i++)
