@@ -3,6 +3,7 @@ import urllib.request
 import json
 from os.path import exists
 
+ # Checks and tests functions
 import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
 import integrationtest.config_file_gen as config_file_gen
@@ -87,11 +88,12 @@ conf_dict["readout"] = {}
 conf_dict["readout"]["dro_map"] = dro_map_contents
 conf_dict["readout"]["use_fake_cards"] = True
 conf_dict["readout"]["default_data_file"] = "asset://?checksum=e96fd6efd3f98a9a3bfaba32975b476e"
-conf_dict["readout"]["enable_raw_recording"] = True
+conf_dict["readout"]["enable_raw_recording"] = True # readout raw recording enabled
 # conf_dict["readout"]["raw_recording_output_dir"] = "."
-interface_name = "localhosteth0"
+interface_name = "localhosteth0" # interface name, need to be changed for different machine testing
 
 # SNBmodules config
+# for now, majority of config is by default in daqconf generator script
 conf_dict["snbmodules"] = {}
 conf_dict["snbmodules"]["port"] = 5009
 conf_dict["snbmodules"]["host"] = "epdtdi105"
@@ -104,7 +106,7 @@ conf_dict["snbmodules"]["client_name"] = "client"
 
 confgen_arguments={"MinimalSystem": conf_dict}
 
-# Modify expert command to transfer files
+# Modify new transfer expert command to transfer every raw data files
 with open('new-RClone-transfer.json', 'r+') as f:
     data = json.load(f)
     
