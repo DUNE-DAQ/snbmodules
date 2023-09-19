@@ -11,6 +11,13 @@ import integrationtest.dro_map_gen as dro_map_gen
 import raw_file_check as raw_file_check
 import transfer_check as transfer_check
 
+# test parameters that need to be changed for different machine testing
+interface_name = "localhosteth0" # interface name
+sftp_user_name = "ljoly" # sftp user name
+host_interface = "localhost" # host interface for the clients data exchange
+snb_clients_number = 2 # number of clients
+root_path_commands="/home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/"
+
 # Values that help determine the running conditions
 number_of_data_producers=2
 data_rate_slowdown_factor=10 # 10 for ProtoWIB/DuneWIB
@@ -90,14 +97,18 @@ conf_dict["readout"]["use_fake_cards"] = True
 conf_dict["readout"]["default_data_file"] = "asset://?checksum=e96fd6efd3f98a9a3bfaba32975b476e"
 conf_dict["readout"]["enable_raw_recording"] = True # readout raw recording enabled
 # conf_dict["readout"]["raw_recording_output_dir"] = "."
-interface_name = "localhosteth0" # interface name, need to be changed for different machine testing
 
 # SNBmodules config
 # for now, majority of config is by default in daqconf generator script
 conf_dict["snbmodules"] = {}
-conf_dict["snbmodules"]["port"] = 5009
-conf_dict["snbmodules"]["host"] = "epdtdi105"
-conf_dict["snbmodules"]["client_name"] = "client"
+conf_dict["snbmodules"]["host_interface"] = host_interface
+conf_dict["snbmodules"]["client_num"] = snb_clients_number
+conf_dict["snbmodules"]["client_starting_port"] = 5009
+conf_dict["snbmodules"]["client_name"] = "snbclient"
+conf_dict["snbmodules"]["clients_root_dir"] = "./"
+conf_dict["snbmodules"]["have_bookkeeper"] = True
+conf_dict["snbmodules"]["bookkeeper_port"] = 5011
+conf_dict["snbmodules"]["bookkeeper_refresh_rate"] = 1
 
 # create text file containing simple text
 # with open("test.txt", "w") as f:
@@ -113,18 +124,30 @@ with open('new-RClone-transfer.json', 'r+') as f:
     file_names = []
     for i in range(number_of_data_producers):
         file_names.append("./output_" + interface_name + "_" + str(i) + ".out")
-        
     data['data']['modules'][0]['data']['files'] = file_names # <--- add `id` value.
+    data['data']['modules'][0]['data']['src'] = host_interface+"snbclient0"
+    data['data']['modules'][0]['data']['dests'] = [ f"{host_interface}snbclient{i}" for i in range(1, snb_clients_number)]
+    data['data']['modules'][0]['data']['protocol_args']['user'] = sftp_user_name
+    data['data']['modules'][0]['match'] = host_interface+"snbclient0"
+    
+    f.seek(0)        # <--- should reset file position to the beginning.
+    json.dump(data, f, indent=4)
+    f.truncate()     # remove remaining part
+    
+# Modify start transfer expert command
+with open('start-transfer.json', 'r+') as f:
+    data = json.load(f)
+    data['data']['modules'][0]['match'] = host_interface+"snbclient0"
     f.seek(0)        # <--- should reset file position to the beginning.
     json.dump(data, f, indent=4)
     f.truncate()     # remove remaining part
     
 # The commands to run in nanorc, as a list
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
-("expert_command /json0/json0/ru" + interface_name + " /home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/record-cmd.json ").split() + \
+("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
-"expert_command /json0/json0/snbmodules /home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/new-RClone-transfer.json ".split() + \
-"expert_command /json0/json0/snbmodules /home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/start-transfer.json ".split() + \
+f"expert_command /json0/json0/snbmodules {root_path_commands}new-RClone-transfer.json ".split() + \
+f"expert_command /json0/json0/snbmodules {root_path_commands}start-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
 
 # The tests themselves
@@ -160,21 +183,21 @@ def test_data_files(run_nanorc):
 def test_local_transfer_snbmodules(run_nanorc):
     # Check that the transfer was successful
     print(run_nanorc.run_dir)
-    assert exists(run_nanorc.run_dir / "client0")
-    assert exists(run_nanorc.run_dir / "client1")
+    for i in range(snb_clients_number):
+        assert exists(run_nanorc.run_dir / f"{host_interface}snbclient{i}")
     
     for i in range(number_of_data_producers):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
-        assert exists(run_nanorc.run_dir / "client1/transfer0/" / file_name)
-    
-        # Compare file size and content
-        assert raw_file_check.compare_raw_size(run_nanorc.run_dir / file_name, run_nanorc.run_dir / "client1/transfer0/" / file_name)
-        assert raw_file_check.compare_raw_content(run_nanorc.run_dir / file_name, run_nanorc.run_dir / "client1/transfer0/" / file_name)
+        for i in range(1,snb_clients_number):
+            assert exists(run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
+            # Compare file size and content
+            assert raw_file_check.compare_raw_size(run_nanorc.run_dir / file_name, run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
+            assert raw_file_check.compare_raw_content(run_nanorc.run_dir / file_name, run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
         
 def test_bookkeeper_snbmodules(run_nanorc):
-    assert exists(run_nanorc.run_dir / "bookkeeper.log")
+    assert exists(run_nanorc.run_dir / f"{host_interface}bookkeeper.log")
     
-    assert transfer_check.check_contain_no_errors(run_nanorc.run_dir / "bookkeeper.log")
+    assert transfer_check.check_contain_no_errors(run_nanorc.run_dir / f"{host_interface}bookkeeper.log")
     for i in range(number_of_data_producers):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
-        assert transfer_check.check_transfer_finished(run_nanorc.run_dir / "bookkeeper.log", file_name)
+        assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}bookkeeper.log", file_name)

@@ -5,7 +5,7 @@
                 "data": {
                     "transfer_id": "transfer0"
                 },
-                "match": "client0"
+                "match": "localhostsnbclient0"
             }
         ]
     },

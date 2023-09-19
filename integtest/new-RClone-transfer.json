@@ -8,9 +8,9 @@
                         "./output_localhosteth0_0.out",
                         "./output_localhosteth0_1.out"
                     ],
-                    "src": "client0",
+                    "src": "localhostsnbclient0",
                     "dests": [
-                        "client1"
+                        "localhostsnbclient1"
                     ],
                     "protocol": "RCLONE",
                     "protocol_args": {
@@ -21,7 +21,7 @@
                         "user": "ljoly"
                     }
                 },
-                "match": "client0"
+                "match": "localhostsnbclient0"
             }
         ]
     },
