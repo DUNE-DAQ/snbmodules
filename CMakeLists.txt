@@ -12,8 +12,7 @@ daq_setup_environment()
 
 find_package(ers REQUIRED)     
 find_package(TRACE REQUIRED)
-find_package(Boost COMPONENTS unit_test_framework program_options REQUIRED)
-find_package(Boost COMPONENTS iostreams REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework program_options iostreams REQUIRED)
 find_package(iomanager REQUIRED)
 find_package(appfwk REQUIRED)
 find_package(logging REQUIRED)
@@ -23,6 +22,9 @@ find_package(HighFive REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
 find_package(readoutlibs REQUIRED)
+find_package(rclone REQUIRED)
+find_package(LibtorrentRasterbar REQUIRED)
+
 
 set(linked_libraries
     iomanager::iomanager
@@ -36,34 +38,9 @@ set(linked_libraries
     HighFive
     readoutlibs::readoutlibs
     Boost::iostreams
+    LibtorrentRasterbar::torrent-rasterbar
+    rclone::rclone
 )
-
-option(WITH_LIBTORRENT_AS_PACKAGE "Libtorrent externals as a dunedaq package" OFF)
-# set(LIBTORRENT_INC ${LIBTORRENT_INC})
-# set(LIBTORRENT_LIB ${LIBTORRENT_LIB})
-
-if(WITH_LIBTORRENT_AS_PACKAGE)
-  set(LIBTORRENT_DEPENDENCIES 
-  )
-else()
-  set(LIBTORRENT_DEPENDENCIES
-    $ENV{LIBTORRENT_LIB}/libtorrent-rasterbar.so
-  )
-endif()
-
-option(WITH_RCLIB_AS_PACKAGE "RClone externals as a dunedaq package" OFF)
-# RCLIB_INC = ${RCLIB_INC}
-# RCLIB_LIB = ${RCLIB_LIB}
-
-if(WITH_RCLIB_AS_PACKAGE)
-  set(RCLIB_DEPENDENCIES 
-  )
-else()
-  set(RCLIB_DEPENDENCIES
-    $ENV{RCLIB_LIB}/librclone.so
-  )
-endif()
-
 
 set(tests
     snb_bookkeeper_app
@@ -144,22 +121,8 @@ list(TRANSFORM includes_common PREPEND common/)
 # Note that when the ers library is linked in, it uses a "::" because
 # it's in an external package, not a local CMake target. The semantics
 # are <namespace>::<shared library / executable>
-daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} LINK_LIBRARIES ${LIBTORRENT_DEPENDENCIES} ${RCLIB_DEPENDENCIES} ${linked_libraries})
+daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} LINK_LIBRARIES ${linked_libraries})
 
-if(WITH_LIBTORRENT_AS_PACKAGE)
-  # All good
-else()
-  # Hack target
-  target_include_directories(snbmodules PUBLIC $ENV{LIBTORRENT_INC})
-
-endif()
-if(WITH_RCLIB_AS_PACKAGE)
-  # All good
-else()
-  # Hack target
-  target_include_directories(snbmodules PUBLIC $ENV{RCLIB_INC})
-
-endif()
 ##############################################################################
 # Plugins
 
