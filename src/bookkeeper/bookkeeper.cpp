@@ -261,7 +261,7 @@ namespace dunedaq::snbmodules
 
         while (running_flag.load())
         {
-
+            lookups_connections();
             std::optional<NotificationData> msg = listen_for_notification(get_bookkeepers_conn().front());
             if (msg.has_value())
             {

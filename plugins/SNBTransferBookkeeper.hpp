@@ -45,12 +45,6 @@ namespace dunedaq::snbmodules
         void do_scrap(const nlohmann::json &obj);
         void do_info(const nlohmann::json &args);
 
-        void do_tr_new(const nlohmann::json &args);
-        void do_tr_start(const nlohmann::json &args);
-        void do_tr_pause(const nlohmann::json &args);
-        void do_tr_resume(const nlohmann::json &args);
-        void do_tr_stop(const nlohmann::json &args);
-
         // Configuration
         std::shared_ptr<Bookkeeper> m_bookkeeper;
         std::string m_name;

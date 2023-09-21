@@ -135,7 +135,6 @@ namespace dunedaq::snbmodules
         if (args.contains("client_ip") && args.contains("work_dir") && args.contains("connection_prefix") && args.contains("timeout_send") && args.contains("timeout_receive"))
         {
             m_client = std::make_shared<TransferClient>(IPFormat(args["client_ip"].get<std::string>()), m_name, args["work_dir"].get<std::filesystem::path>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
-            m_client->lookups_connections();
             m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
                                                                           { m_client->do_work(running); });
         }
@@ -165,6 +164,7 @@ namespace dunedaq::snbmodules
     SNBFileTransfer::do_start(const nlohmann::json &args)
     {
         (void)args;
+        m_client->lookups_connections();
         m_thread->start_working_thread();
     }
 

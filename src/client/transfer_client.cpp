@@ -76,6 +76,11 @@ namespace dunedaq::snbmodules
 
         while (running_flag.load())
         {
+            if (get_bookkeepers_conn().size() == 0)
+            {
+                TLOG() << "debug : no bookkeeper connected, looking for connections";
+                lookups_connections();
+            }
             // When starting, client wait for notification from bookkeeper.
             std::optional<NotificationData> msg = listen_for_notification(get_my_conn());
             if (msg.has_value())
