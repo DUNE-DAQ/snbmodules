@@ -8,8 +8,8 @@ import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
 import integrationtest.config_file_gen as config_file_gen
 import integrationtest.dro_map_gen as dro_map_gen
-import raw_file_check as raw_file_check
-import transfer_check as transfer_check
+import snbmodules.raw_file_check as raw_file_check
+import snbmodules.transfer_check as transfer_check
 
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name
