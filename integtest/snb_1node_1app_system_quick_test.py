@@ -15,14 +15,14 @@ import snbmodules.transfer_check as transfer_check
 interface_name = "localhosteth0" # interface name
 sftp_user_name = "ljoly" # sftp user name
 host_interface = "localhost" # host interface for the clients data exchange
-snb_clients_number = 2 # number of clients
+snb_clients_number = 3 # number of clients
 root_path_commands="/home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/"
 
 # Values that help determine the running conditions
 number_of_data_producers=2
 data_rate_slowdown_factor=10 # 10 for ProtoWIB/DuneWIB
 run_duration=5
-send_duration=5
+send_duration=10
 record_duration=5
 readout_window_time_before=1000
 readout_window_time_after=1001
@@ -121,7 +121,7 @@ client_conf = {}
 client_conf["host"] = "localhost"
 client_conf["interface"] = "0.0.0.0"
 client_conf["client_name"] = "snbclient"
-client_conf["client_num"] = 2
+client_conf["client_num"] = snb_clients_number
 client_conf["client_starting_port"] = 5001
 client_conf["clients_root_dir"] = "./"
 conf_dict["snbmodules"]["apps"].append(client_conf)
