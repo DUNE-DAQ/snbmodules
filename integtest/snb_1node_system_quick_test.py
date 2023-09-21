@@ -101,19 +101,30 @@ conf_dict["readout"]["enable_raw_recording"] = True # readout raw recording enab
 # SNBmodules config
 # for now, majority of config is by default in daqconf generator script
 conf_dict["snbmodules"] = {}
-conf_dict["snbmodules"]["host_interface"] = host_interface
-conf_dict["snbmodules"]["client_num"] = snb_clients_number
-conf_dict["snbmodules"]["client_starting_port"] = 5009
-conf_dict["snbmodules"]["client_name"] = "snbclient"
-conf_dict["snbmodules"]["clients_root_dir"] = "./"
+
+conf_dict["snbmodules"]["snb_connections_prefix"] = "snbmodules"
+conf_dict["snbmodules"]["snb_timeout_notification_send"] = 10
+conf_dict["snbmodules"]["snb_timeout_notification_receive"] = 100
+
+# Adding bookkeeper
 conf_dict["snbmodules"]["have_bookkeeper"] = True
-conf_dict["snbmodules"]["bookkeeper_port"] = 5011
+conf_dict["snbmodules"]["host_bookkeeper"] = "localhost"
+conf_dict["snbmodules"]["bookkeeper_name"] = "snbbookkeeper"
+conf_dict["snbmodules"]["bookkeeper_log_path"] = "./"
+conf_dict["snbmodules"]["bookkeeper_port"] = 5000
 conf_dict["snbmodules"]["bookkeeper_refresh_rate"] = 1
 
-# create text file containing simple text
-# with open("test.txt", "w") as f:
-#     f.write("Hello World")
+# Adding clients app, one per host (can contain multiple clients per host)
+conf_dict["snbmodules"]["apps"] = []
 
+client_conf = {}
+client_conf["host"] = "localhost"
+client_conf["interface"] = "0.0.0.0"
+client_conf["client_name"] = "snbclient"
+client_conf["client_num"] = 2
+client_conf["client_starting_port"] = 5001
+client_conf["clients_root_dir"] = "./"
+conf_dict["snbmodules"]["apps"].append(client_conf)
 
 confgen_arguments={"MinimalSystem": conf_dict}
 
@@ -146,14 +157,15 @@ with open('start-transfer.json', 'r+') as f:
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
 ("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
-f"expert_command /json0/json0/snbmodules {root_path_commands}new-RClone-transfer.json ".split() + \
-f"expert_command /json0/json0/snbmodules {root_path_commands}start-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient {root_path_commands}new-RClone-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient {root_path_commands}start-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
 
 # The tests themselves
 def test_nanorc_success(run_nanorc):
     print(run_nanorc.json_dir)
     print(run_nanorc.log_files)
+    print(run_nanorc.run_dir)
     # Check that nanorc completed correctly
     assert run_nanorc.completed_process.returncode==0
 
@@ -182,7 +194,6 @@ def test_data_files(run_nanorc):
             
 def test_local_transfer_snbmodules(run_nanorc):
     # Check that the transfer was successful
-    print(run_nanorc.run_dir)
     for i in range(snb_clients_number):
         assert exists(run_nanorc.run_dir / f"{host_interface}snbclient{i}")
     
@@ -195,9 +206,9 @@ def test_local_transfer_snbmodules(run_nanorc):
             assert raw_file_check.compare_raw_content(run_nanorc.run_dir / file_name, run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
         
 def test_bookkeeper_snbmodules(run_nanorc):
-    assert exists(run_nanorc.run_dir / f"{host_interface}bookkeeper.log")
+    assert exists(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log")
     
-    assert transfer_check.check_contain_no_errors(run_nanorc.run_dir / f"{host_interface}bookkeeper.log")
+    assert transfer_check.check_contain_no_errors(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log")
     for i in range(number_of_data_producers):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
-        assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}bookkeeper.log", file_name)
+        assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log", file_name)
