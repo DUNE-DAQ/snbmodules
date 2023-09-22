@@ -64,7 +64,7 @@ ignored_logfile_problems={"connectionservice": ["Searching for connections match
 # to run the config generation and nanorc
 
 # The name of the python module for the config generation
-confgen_name="daqconf_multiru_gen"
+confgen_name="snbmodules_multiru_multisnb_gen"
 # The arguments to pass to the config generator, excluding the json
 # output directory (the test framework handles that)
 
