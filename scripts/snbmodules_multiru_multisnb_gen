@@ -16,7 +16,6 @@ from daqconf.core.metadata import write_metadata_file, write_config_file
 from daqconf.core.sourceid import SourceIDBroker #, get_tpg_mode
 from daqconf.core.config_file import generate_cli_from_schema
 from daqconf.core.assets import resolve_asset_file
-# from detchannelmaps._daq_detchannelmaps_py import HardwareMapService
 from detdataformats import *
 
 import daqconf.detreadoutmap as dromap
@@ -27,13 +26,6 @@ import daqconf.detreadoutmap as dromap
 # from dunedaq.env import get_moo_model_path
 # import moo.io
 # moo.io.default_load_path = get_moo_model_path()
-
-# Load configuration types
-# import moo.otypes
-
-# moo.otypes.load_types('detchannelmaps/hardwaremapservice.jsonnet')
-# import dunedaq.detchannelmaps.hardwaremapservice as hwms
-
 
 def expand_conf(config_data, debug=False):
     """Expands the moo configuration record into sub-records, 
@@ -295,7 +287,7 @@ def cli(
         console.log("Loading dqm config generator")
         from daqconf.apps.dqm_gen import get_dqm_app
     console.log("Loading readout config generator")
-    from daqconf.apps.readout_gen import create_fake_readout_app, ReadoutAppGenerator
+    from fddaqconf.apps.readout_gen import create_fake_readout_app, FDReadoutAppGenerator
     console.log("Loading trigger config generator")
     from daqconf.apps.trigger_gen import get_trigger_app
     console.log("Loading DFO config generator")
@@ -498,7 +490,7 @@ def cli(
     #--------------------------------------------------------------------------
     # Readout generation
     #--------------------------------------------------------------------------
-    roapp_gen = ReadoutAppGenerator(readout, detector, daq_common)
+    roapp_gen = FDReadoutAppGenerator(readout, detector, daq_common)
     for ru_i,(ru_name, ru_desc) in enumerate(ru_descs.items()):
 
         #--------------------------------------------------------------------------
