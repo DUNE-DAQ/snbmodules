@@ -15,9 +15,7 @@ This library uses external libraries such as Bittorent or Rclone that need to be
 
 # TODO
 
-- Have default values for parameters (for now every parameters are mandatory)
-- See important parameters for RClone
-- Script for configuration generation
+- Add listening folder list for clients
 - Auto start RClone HTTP server on source client (Uploader)
     - For now, we can start the server with rclone serve, see [Install local server section](#run-local-server)
 
@@ -27,3 +25,4 @@ Please follow the wiki pages for detailed instructions and informations about:
 - [Installation](https://github.com/DUNE-DAQ/snbmodules/wiki/Installation)
 - [Configuration](https://github.com/DUNE-DAQ/snbmodules/wiki/Configuration)
 - [Transfers](https://github.com/DUNE-DAQ/snbmodules/wiki/Transfers)
+- [Technical Documentation](https://github.com/DUNE-DAQ/snbmodules/wiki/Technical-Documentation)
