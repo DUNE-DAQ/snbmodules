@@ -34,10 +34,10 @@ def cli(config, json_dir):
     # Get our config objects
     # Loading this one another time... (first time in config_file.generate_cli_from_schema)    
 
-    moo.otypes.load_types('snbmodules/confgen.jsonnet')
-    import dunedaq.snbmodules.confgen as confgen
-    moo.otypes.load_types('daqconf/confgen.jsonnet')
-    import dunedaq.daqconf.confgen as daqconfgen
+    # moo.otypes.load_types('snbmodules/confgen.jsonnet')
+    # import dunedaq.snbmodules.confgen as confgen
+    # moo.otypes.load_types('fddaqconf/confgen.jsonnet')
+    # import dunedaq.fddaqconf.confgen as daqconfgen
 
     console.log(f"\nIndividual configuration records before any command line overrides: ")    
 

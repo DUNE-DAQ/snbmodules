@@ -1,8 +1,8 @@
 // This is the configuration schema for snbmodules
 local moo = import "moo.jsonnet";
 
-local sdc = import "daqconf/confgen.jsonnet";
-local daqconfgen = moo.oschema.hier(sdc).dunedaq.daqconf.confgen;
+local sdc = import "fddaqconf/confgen.jsonnet";
+local fddaqconfgen = moo.oschema.hier(sdc).dunedaq.fddaqconf.confgen;
 
 local stypes = import "daqconf/types.jsonnet";
 local types = moo.oschema.hier(stypes).dunedaq.daqconf.types;
@@ -25,8 +25,8 @@ local timinggen = moo.oschema.hier(stiming).dunedaq.daqconf.timinggen;
 local shsi = import "daqconf/hsigen.jsonnet";
 local hsigen = moo.oschema.hier(shsi).dunedaq.daqconf.hsigen;
 
-local sreadout = import "daqconf/readoutgen.jsonnet";
-local readoutgen = moo.oschema.hier(sreadout).dunedaq.daqconf.readoutgen;
+local sreadout = import "fddaqconf/readoutgen.jsonnet";
+local readoutgen = moo.oschema.hier(sreadout).dunedaq.fddaqconf.readoutgen;
 
 local strigger = import "daqconf/triggergen.jsonnet";
 local triggergen = moo.oschema.hier(strigger).dunedaq.daqconf.triggergen;
@@ -59,7 +59,7 @@ local cs = {
     s.field('dataflow',    dataflowgen.dataflow,   default=dataflowgen.dataflow,     doc='Dataflow paramaters'),
     s.field('dqm',         dqmgen.dqm,        default=dqmgen.dqm,          doc='DQM parameters'),
     s.field('hsi',         hsigen.hsi,        default=hsigen.hsi,          doc='HSI parameters'),
-    // s.field('ctb_hsi',     daqconfgen.ctb_hsi,    default=daqconfgen.ctb_hsi,      doc='CTB parameters'),
+    // s.field('ctb_hsi',     fddaqconfgen.ctb_hsi,    default=fddaqconfgen.ctb_hsi,      doc='CTB parameters'),
     s.field('readout',     readoutgen.readout,    default=readoutgen.readout,      doc='Readout parameters'),
     s.field('timing',      timinggen.timing,     default=timinggen.timing,       doc='Timing parameters'),
     s.field('trigger',     triggergen.trigger,    default=triggergen.trigger,      doc='Trigger parameters'),

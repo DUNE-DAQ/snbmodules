@@ -45,7 +45,7 @@ def expand_conf(config_data, debug=False):
     import dunedaq.daqconf.daqcommongen as daqcommongen
     import dunedaq.daqconf.timinggen as timinggen
     import dunedaq.daqconf.hsigen as hsigen
-    import dunedaq.daqconf.readoutgen as readoutgen
+    import dunedaq.fddaqconf.readoutgen as readoutgen
     import dunedaq.daqconf.triggergen as triggergen
     import dunedaq.daqconf.dataflowgen as dataflowgen
     import dunedaq.daqconf.dqmgen as dqmgen
