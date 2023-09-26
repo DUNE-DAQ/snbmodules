@@ -1,5 +1,14 @@
+/**
+ * @file snb_notfication_test.cxx Test app of notification transfers
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
+#include "snbmodules/transfer_session.hpp"
+#include "snbmodules/bookkeeper.hpp"
 
 #include <iostream>
 #include <string>
@@ -9,9 +18,6 @@
 #include <vector>
 #include <unistd.h>
 #include <sys/types.h>
-
-#include "snbmodules/transfer_session.hpp"
-#include "snbmodules/bookkeeper.hpp"
 
 using namespace dunedaq::snbmodules;
 
@@ -57,7 +63,7 @@ int main()
                     TransferClient client(IPFormat("localhost", starting_port + i), "client" + std::to_string(i), "./client");
                     client.add_connection(client.get_ip(), "client" + std::to_string(i), "notification_t", true);
                     client.init_connection_interface();
-                    assert(client.send_notification(e_notification_type::CONNECTION_REQUEST, client.get_client_id(), "bookkeeper", "client" + std::to_string(i)) == true);
+                    assert(client.send_notification(notification_type::e_notification_type::CONNECTION_REQUEST, client.get_client_id(), "bookkeeper", "client" + std::to_string(i)) == true);
                 }
                 return 0;
             }
@@ -74,37 +80,45 @@ int main()
 
         for (auto pid : pids)
         {
-            std::cout << "Sending SIGINT to " << pid << std::endl;
+            TLOG() << "Sending SIGINT to " << pid;
             kill(pid, SIGINT);
         }
         for (auto pid : pids)
         {
-            std::cout << "Sending SIGKILL to " << pid << std::endl;
+            TLOG() << "Sending SIGKILL to " << pid;
             kill(pid, SIGKILL);
         }
         for (auto pid : pids)
         {
-            std::cout << "Waiting for app " << pid << std::endl;
+            TLOG() << "Waiting for app " << pid;
             siginfo_t status;
             auto sts = waitid(P_PID, pid, &status, WEXITED);
-            std::cout << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
-                      << ")" << std::endl;
+            TLOG() << "Forked process " << pid << " exited with status " << status.si_status << " (wait status " << sts
+                   << ")";
             if (status.si_status == 2)
+            {
                 success_counter++;
+            }
             else
-                std::cout << "App " << pid << " failed" << std::endl;
+            {
+                TLOG() << "App " << pid << " failed";
+            }
         }
 
         if (success_counter == n_apps)
-            std::cout << "Test passed" << std::endl;
+        {
+            TLOG() << "Test passed";
+        }
         else
-            std::cout << "Test failed" << std::endl;
+        {
+            TLOG() << "Test failed";
+        }
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 
     return 0;
-}
+} // NOLINT

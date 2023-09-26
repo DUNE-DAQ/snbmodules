@@ -1,3 +1,10 @@
+/**
+ * @file snb_group_metadata_save_load.cxx Test app to save and load group metadatas
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/group_metadata.hpp"
 
@@ -20,17 +27,17 @@ int main()
             }
         )"_json;
 
-        GroupMetadata metadata("group1", "source1", IPFormat("192.168.0.107", 42100), e_protocol_type::dummy, transfer_options);
-        metadata.generate_metadata_file();
+        GroupMetadata metadata("group1", "source1", IPFormat("192.168.0.107", 42100), protocol_type::e_protocol_type::dummy, transfer_options);
+        metadata.generate_metadata_file(".");
 
         // Test if file exist in current directory
         if (std::filesystem::exists("./group1" + GroupMetadata::m_file_extension))
         {
-            std::cout << "File exists" << std::endl;
+            TLOG() << "File exists";
         }
         else
         {
-            std::cout << "File does not exist" << std::endl;
+            TLOG() << "File does not exist";
             return 1;
         }
 
@@ -47,7 +54,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
 }

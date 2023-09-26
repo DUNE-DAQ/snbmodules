@@ -1,34 +1,72 @@
 // This is the configuration schema for snbmodules
-
 local moo = import "moo.jsonnet";
-local sdc = import "daqconf/confgen.jsonnet";
-local daqconf = moo.oschema.hier(sdc).dunedaq.daqconf.confgen;
+
+local sdc = import "fddaqconf/confgen.jsonnet";
+local fddaqconfgen = moo.oschema.hier(sdc).dunedaq.fddaqconf.confgen;
+
+local stypes = import "daqconf/types.jsonnet";
+local types = moo.oschema.hier(stypes).dunedaq.daqconf.types;
+
+local sctb = import "ctbmodules/ctbmodule.jsonnet";
+local ctbmodule = moo.oschema.hier(sctb).dunedaq.ctbmodules.ctbmodule;
+
+local sboot = import "daqconf/bootgen.jsonnet";
+local bootgen = moo.oschema.hier(sboot).dunedaq.daqconf.bootgen;
+
+local sdetector = import "daqconf/detectorgen.jsonnet";
+local detectorgen = moo.oschema.hier(sdetector).dunedaq.daqconf.detectorgen;
+
+local sdaqcommon = import "daqconf/daqcommongen.jsonnet";
+local daqcommongen = moo.oschema.hier(sdaqcommon).dunedaq.daqconf.daqcommongen;
+
+local stiming = import "daqconf/timinggen.jsonnet";
+local timinggen = moo.oschema.hier(stiming).dunedaq.daqconf.timinggen;
+
+local shsi = import "daqconf/hsigen.jsonnet";
+local hsigen = moo.oschema.hier(shsi).dunedaq.daqconf.hsigen;
+
+local sreadout = import "fddaqconf/readoutgen.jsonnet";
+local readoutgen = moo.oschema.hier(sreadout).dunedaq.fddaqconf.readoutgen;
+
+local strigger = import "daqconf/triggergen.jsonnet";
+local triggergen = moo.oschema.hier(strigger).dunedaq.daqconf.triggergen;
+
+local sdataflow = import "daqconf/dataflowgen.jsonnet";
+local dataflowgen = moo.oschema.hier(sdataflow).dunedaq.daqconf.dataflowgen;
+
+local sdqm = import "daqconf/dqmgen.jsonnet";
+local dqmgen = moo.oschema.hier(sdqm).dunedaq.daqconf.dqmgen;
+
+local ssnbmodules = import "snbmodules/snbmodulesgen.jsonnet";
+local snbmodulesgen = moo.oschema.hier(ssnbmodules).dunedaq.snbmodules.snbmodulesgen;
 
 local ns = "dunedaq.snbmodules.confgen";
-local s = moo.oschema.schema(ns);
+local s = moo.oschema.schema("dunedaq.snbmodules.confgen");
 
 local cs = {
 
-    int4 :    s.number(  "int4",    "i4",          doc="A signed integer of 4 bytes"),
-    uint4 :   s.number(  "uint4",   "u4",          doc="An unsigned integer of 4 bytes"),
-    int8 :    s.number(  "int8",    "i8",          doc="A signed integer of 8 bytes"),
-    uint8 :   s.number(  "uint8",   "u8",          doc="An unsigned integer of 8 bytes"),
-    float4 :  s.number(  "float4",  "f4",          doc="A float of 4 bytes"),
-    double8 : s.number(  "double8", "f8",          doc="A double of 8 bytes"),
-    boolean:  s.boolean( "Boolean",                doc="A boolean"),
-    string:   s.string(  "String",   		   doc="A string"),   
-    monitoring_dest: s.enum(     "MonitoringDest", ["local", "cern", "pocket"]),
+  snbmodules_gen: s.record('snbmodules_gen', [
+    s.field('detector',    detectorgen.detector,   default=detectorgen.detector,     doc='Boot parameters'),
+    s.field('daq_common',  daqcommongen.daq_common, default=daqcommongen.daq_common,   doc='DAQ common parameters'),
+    s.field("boot", bootgen.boot, default=bootgen.boot, doc="Boot parameters"),
+    s.field('snbmodules',     snbmodulesgen.snbmodules,    default=snbmodulesgen.snbmodules,      doc='SNBModules parameters'),
+  ]),
 
-    snbmodules: s.record("snbmodules", [
-        s.field( "num_snbfiletransfers", self.int4, default=1, doc="A value which configures the number of instances of SNBFileTransfer"),
-        s.field( "prefix_snb_connections", self.string, default="snbmodules", doc="Set the prefix for the snb connections"),
-    ]),
+  snbmodules_multiru_multisnb_gen: s.record('snbmodules_multiru_multisnb_gen', [
+    s.field('detector',    detectorgen.detector,   default=detectorgen.detector,     doc='Boot parameters'),
+    s.field('daq_common',  daqcommongen.daq_common, default=daqcommongen.daq_common,   doc='DAQ common parameters'),
+    s.field('boot',        bootgen.boot,    default=bootgen.boot,      doc='Boot parameters'),
+    s.field('dataflow',    dataflowgen.dataflow,   default=dataflowgen.dataflow,     doc='Dataflow paramaters'),
+    s.field('dqm',         dqmgen.dqm,        default=dqmgen.dqm,          doc='DQM parameters'),
+    s.field('hsi',         hsigen.hsi,        default=hsigen.hsi,          doc='HSI parameters'),
+    // s.field('ctb_hsi',     fddaqconfgen.ctb_hsi,    default=fddaqconfgen.ctb_hsi,      doc='CTB parameters'),
+    s.field('readout',     readoutgen.readout,    default=readoutgen.readout,      doc='Readout parameters'),
+    s.field('timing',      timinggen.timing,     default=timinggen.timing,       doc='Timing parameters'),
+    s.field('trigger',     triggergen.trigger,    default=triggergen.trigger,      doc='Trigger parameters'),
+    s.field('snbmodules',     snbmodulesgen.snbmodules,    default=snbmodulesgen.snbmodules,      doc='SNBModules parameters'),
+  ]),
 
-    snbmodules_gen: s.record("snbmodules_gen", [
-        s.field("boot", daqconf.boot, default=daqconf.boot, doc="Boot parameters"),
-        s.field("snbmodules", self.snbmodules, default=self.snbmodules, doc="snbmodules parameters"),
-    ]),
 };
 
 // Output a topologically sorted array.
-sdc + moo.oschema.sort_select(cs, ns)
+stypes + sctb + sdc + sboot + sdetector + sdaqcommon + stiming + shsi + sreadout + strigger + sdataflow + sdqm + ssnbmodules + moo.oschema.sort_select(cs, ns)

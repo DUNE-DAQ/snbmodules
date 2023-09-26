@@ -1,9 +1,22 @@
+/**
+ * @file transfer_client.hpp TransferClient class, everything a client can do containing one session for each transfer
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
 
+#include <string>
+#include <set>
+#include <vector>
+#include <utility>
+#include <memory>
+
 namespace dunedaq::snbmodules
 {
-    TransferClient::TransferClient(IPFormat listening_ip, std::string client_id, std::filesystem::path listening_dir, std::string connection_prefix, int timeout_send, int timeout_receive)
+    TransferClient::TransferClient(const IPFormat &listening_ip, const std::string &client_id, const std::filesystem::path &listening_dir, const std::string &connection_prefix /*= "snbmodules"*/, int timeout_send /*= 10*/, int timeout_receive /*= 100*/)
         : NotificationInterface(connection_prefix, timeout_send, timeout_receive),
           m_listening_ip(listening_ip),
           m_client_id(client_id)
@@ -13,7 +26,7 @@ namespace dunedaq::snbmodules
         std::string x = "./";
 
         size_t pos = 0;
-        while (1)
+        while (true)
         {
             pos = file_path_str.find(x, pos);
             if (pos == std::string::npos)
@@ -29,16 +42,12 @@ namespace dunedaq::snbmodules
 
     TransferClient::~TransferClient()
     {
-        for (auto &s : m_sessions)
-        {
-            delete s.second;
-        }
     }
 
     bool TransferClient::start(int timeout)
     {
 
-        while (1)
+        while (true)
         {
             // When starting, client wait for notification from bookkeeper.
             std::optional<NotificationData> msg = listen_for_notification(get_my_conn(), "", timeout);
@@ -53,9 +62,9 @@ namespace dunedaq::snbmodules
             }
 
             // print status of sessions
-            for (auto &session : m_sessions)
+            for (const auto &session : m_sessions)
             {
-                TLOG() << session.second->to_string();
+                TLOG() << session.to_string();
             }
         }
 
@@ -67,6 +76,11 @@ namespace dunedaq::snbmodules
 
         while (running_flag.load())
         {
+            if (get_bookkeepers_conn().size() == 0)
+            {
+                TLOG() << "debug : no bookkeeper connected, looking for connections";
+                lookups_connections();
+            }
             // When starting, client wait for notification from bookkeeper.
             std::optional<NotificationData> msg = listen_for_notification(get_my_conn());
             if (msg.has_value())
@@ -74,9 +88,9 @@ namespace dunedaq::snbmodules
                 action_on_receive_notification(msg.value());
 
                 // print status of sessions
-                for (auto &session : m_sessions)
+                for (const auto &session : m_sessions)
                 {
-                    TLOG() << session.second->to_string();
+                    TLOG() << session.to_string();
                 }
             }
         }
@@ -84,14 +98,14 @@ namespace dunedaq::snbmodules
         return true;
     }
 
-    void TransferClient::create_new_transfer(std::string transfer_id, std::string protocol, std::set<std::string> dest_clients, std::set<std::filesystem::path> files, const nlohmann::json &protocol_options)
+    void TransferClient::create_new_transfer(const std::string &transfer_id, const std::string &protocol, const std::set<std::string> &dest_clients, const std::set<std::filesystem::path> &files, const nlohmann::json &protocol_options /*= nlohmann::json()*/)
     {
 
-        std::string session_name = get_client_id() + "_ses" + transfer_id;
+        std::string session_name = generate_session_id(transfer_id);
 
         // Checking if transfer already exists
-        auto ses = get_sessions();
-        if (ses.find(session_name) != ses.end())
+        auto ses = get_session(session_name);
+        if (ses != nullptr)
         {
             TLOG() << "debug : transfer " << transfer_id << " already exists !";
             return;
@@ -99,7 +113,7 @@ namespace dunedaq::snbmodules
 
         TLOG() << "debug : creating new transfer with protocol " << protocol;
 
-        std::optional<e_protocol_type> _protocol = magic_enum::enum_cast<e_protocol_type>(protocol);
+        std::optional<protocol_type::e_protocol_type> _protocol = protocol_type::string_to_protocols(protocol);
         if (!_protocol.has_value())
         {
             ers::error(InvalidProtocolError(ERS_HERE, get_client_id(), protocol));
@@ -109,7 +123,7 @@ namespace dunedaq::snbmodules
 
         GroupMetadata group_transfer(transfer_id, session_name, m_listening_ip, _protocol.value(), protocol_options);
 
-        for (auto file : files)
+        for (const auto &file : files)
         {
             // Check if file exists
             if (!std::filesystem::exists(file))
@@ -120,7 +134,7 @@ namespace dunedaq::snbmodules
             else
             {
                 group_transfer.add_expected_file(file);
-                group_transfer.add_file(create_metadata_from_file(file));
+                group_transfer.add_file(std::move(create_metadata_from_file(file)));
             }
         }
 
@@ -131,30 +145,30 @@ namespace dunedaq::snbmodules
         }
 
         // Sending to bookkeepers to update preparing state
-        for (auto bk : get_bookkeepers_conn())
+        for (auto &bk : get_bookkeepers_conn())
         {
-            send_notification(e_notification_type::GROUP_METADATA, session_name, bk, bk, group_transfer.export_to_string());
+            send_notification(notification_type::e_notification_type::GROUP_METADATA, session_name, bk, bk, group_transfer.export_to_string());
         }
 
         // Create local session, can take time depending on protocol
-        create_session(&group_transfer, e_session_type::Uploader, session_name, get_listening_dir().append(transfer_id), m_listening_ip, dest_clients);
+        auto &s = create_session(std::move(group_transfer), e_session_type::Uploader, session_name, get_listening_dir().append(transfer_id), m_listening_ip, dest_clients);
 
         // Notify clients and sending group metadata
-        for (auto client : dest_clients)
+        for (const auto &client : dest_clients)
         {
-            std::string new_session_name = client + "_ses" + transfer_id;
+            std::string new_session_name = generate_session_id(transfer_id, client);
             TLOG() << "debug : notifying client " << client;
-            send_notification(e_notification_type::NEW_TRANSFER, get_client_id(), new_session_name, client, group_transfer.export_to_string());
+            send_notification(notification_type::e_notification_type::NEW_TRANSFER, get_client_id(), new_session_name, client, s.get_transfer_options().export_to_string());
 
             // Send transfer metadata
-            for (auto file : group_transfer.get_transfers_meta())
+            for (auto file : s.get_transfer_options().get_transfers_meta())
             {
-                send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), new_session_name, client, file->export_to_string());
+                send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), new_session_name, client, file->export_to_string());
             }
         }
     }
 
-    void TransferClient::start_transfer(std::string transfer_id)
+    void TransferClient::start_transfer(const std::string &transfer_id)
     {
 
         TransferSession *session = get_session(transfer_id);
@@ -168,7 +182,7 @@ namespace dunedaq::snbmodules
         session->start_all();
     }
 
-    void TransferClient::pause_transfer(std::string transfer_id)
+    void TransferClient::pause_transfer(const std::string &transfer_id)
     {
 
         TransferSession *session = get_session(transfer_id);
@@ -181,7 +195,7 @@ namespace dunedaq::snbmodules
 
         session->pause_all();
     }
-    void TransferClient::resume_transfer(std::string transfer_id)
+    void TransferClient::resume_transfer(const std::string &transfer_id)
     {
 
         TransferSession *session = get_session(transfer_id);
@@ -195,7 +209,7 @@ namespace dunedaq::snbmodules
         session->resume_all();
     }
 
-    void TransferClient::cancel_transfer(std::string transfer_id)
+    void TransferClient::cancel_transfer(const std::string &transfer_id)
     {
 
         TransferSession *session = get_session(transfer_id);
@@ -211,35 +225,47 @@ namespace dunedaq::snbmodules
 
     TransferSession *TransferClient::get_session(std::string transfer_id)
     {
-        return get_sessions()[get_client_id() + "_ses" + transfer_id];
+        if (transfer_id.find("ses") == std::string::npos)
+        {
+            transfer_id = generate_session_id(transfer_id);
+        }
+
+        for (auto &s : m_sessions)
+        {
+            if (s.get_session_id() == transfer_id)
+            {
+                return &s;
+            }
+        }
+        return nullptr;
     }
 
     // TODO ip useless ?
-    TransferSession *TransferClient::create_session(GroupMetadata *transfer_options, e_session_type type, std::string id, std::filesystem::path work_dir, IPFormat ip, std::set<std::string> dest_clients)
+    TransferSession &TransferClient::create_session(GroupMetadata transfer_options, e_session_type type, std::string id, const std::filesystem::path &work_dir, IPFormat ip /*= IPFormat()*/, const std::set<std::string> &dest_clients /*= std::set<std::string>()*/)
     {
-
         if (ip.is_default())
         {
             ip = get_ip();
         }
 
-        TransferSession *new_session = new TransferSession(transfer_options, type, id, ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
-        new_session->set_target_clients(dest_clients);
-        add_sessions(new_session);
+        TransferSession new_session(std::move(transfer_options), type, id, ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
 
-        TLOG() << "debug : session created " << magic_enum::enum_name(type);
-        return new_session;
+        m_sessions.emplace_back(std::move(new_session));
+        TLOG() << "debug : session created " << TransferSession::session_type_to_string(type);
+        m_sessions.back().set_target_clients(dest_clients);
+
+        return m_sessions.back();
     }
 
-    void TransferClient::share_available_files(std::set<std::filesystem::path> *to_share, std::string dest)
+    void TransferClient::share_available_files(const std::set<std::filesystem::path> &to_share, const std::string &dest)
     {
 
-        for (std::filesystem::path f : *to_share)
+        for (const std::filesystem::path &f : to_share)
         {
             TLOG() << "debug : Sharing " << f.filename();
-            TransferMetadata *fmeta = create_metadata_from_file(f);
-            m_available_files.insert({f.string(), *fmeta});
-            this->send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), dest, dest, fmeta->export_to_string());
+            std::shared_ptr<TransferMetadata> fmeta = create_metadata_from_file(f);
+            m_available_files.insert({f.string(), fmeta});
+            send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), dest, dest, fmeta->export_to_string());
         }
     }
 
@@ -254,7 +280,7 @@ namespace dunedaq::snbmodules
         }
 
         // Use enum cast for converting string to enum, still working with older clients and user readable
-        auto action = magic_enum::enum_cast<e_notification_type>(notif.m_notification);
+        auto action = notification_type::string_to_notification(notif.m_notification);
 
         if (action.has_value() == false)
         {
@@ -264,23 +290,23 @@ namespace dunedaq::snbmodules
         switch (action.value())
         {
 
-        case e_notification_type::CONNECTION_REQUEST:
+        case notification_type::e_notification_type::CONNECTION_REQUEST:
         {
             TLOG() << "debug : receive connection request, sending available files";
             std::set<std::filesystem::path> to_share;
-            scan_available_files(&to_share, true);
-            share_available_files(&to_share, notif.m_source_id);
-            send_notification(e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
+            scan_available_files(to_share, true);
+            share_available_files(to_share, notif.m_source_id);
+            send_notification(notification_type::e_notification_type::TRANSFER_METADATA, get_client_id(), notif.m_source_id, notif.m_source_id, "end");
             break;
         }
 
-        case e_notification_type::NEW_TRANSFER:
+        case notification_type::e_notification_type::NEW_TRANSFER:
         {
-            GroupMetadata *metadata = new GroupMetadata(notif.m_data, false);
+            GroupMetadata metadata(notif.m_data, false);
             e_session_type type = Downloader;
 
             // If file is available, create a downloader session
-            for (auto f : metadata->get_expected_files())
+            for (const auto &f : metadata.get_expected_files())
             {
                 if (m_available_files.find(f) != m_available_files.end())
                 {
@@ -289,101 +315,152 @@ namespace dunedaq::snbmodules
                 }
             }
 
-            TLOG() << "debug : creating session " << notif.m_target_id << " type " << magic_enum::enum_name(type);
-            create_session(metadata, type, notif.m_target_id, get_listening_dir().append(metadata->get_group_id()));
+            TLOG() << "debug : creating session " << notif.m_target_id << " type " << TransferSession::session_type_to_string(type);
+            std::string group_id_tmp = metadata.get_group_id();
+            create_session(metadata, type, notif.m_target_id, get_listening_dir().append(group_id_tmp));
             break;
         }
 
-        case e_notification_type::TRANSFER_METADATA:
+        case notification_type::e_notification_type::TRANSFER_METADATA:
         {
-            TransferMetadata *fmeta = new TransferMetadata(notif.m_data, false);
+            auto fmeta = std::make_shared<TransferMetadata>(notif.m_data, false);
+            auto &sessions_ref = get_sessions();
 
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            // print sessions names
+            for (auto &s : sessions_ref)
             {
-                fmeta->set_dest(get_sessions()[notif.m_target_id]->get_ip());
-                get_sessions()[notif.m_target_id]->add_file(fmeta);
+                TLOG() << "debug : session " << s.get_session_id();
+                if (s.get_session_id().find(notif.m_target_id) != std::string::npos)
+                {
+                    TLOG() << "debug : session found";
+                    fmeta->set_dest(s.get_ip());
+                    s.add_file(fmeta);
+                    return true;
+                }
             }
-            else
-                ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
-            break;
+
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+
             break;
         }
 
-        case e_notification_type::START_TRANSFER:
+        case notification_type::e_notification_type::START_TRANSFER:
         {
             TLOG() << "debug : starting transfer " << notif.m_target_id;
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            TransferSession *ses = get_session(notif.m_target_id);
+            if (ses != nullptr)
             {
+
                 if (notif.m_data == "")
-                    get_sessions()[notif.m_target_id]->start_all();
+                {
+                    ses->start_all();
+                }
                 else
-                    get_sessions()[notif.m_target_id]->start_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                {
+                    ses->start_file(ses->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
+
             break;
         }
 
-        case e_notification_type::PAUSE_TRANSFER:
+        case notification_type::e_notification_type::PAUSE_TRANSFER:
         {
             TLOG() << "debug : pausing transfer " << notif.m_target_id;
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            TransferSession *ses = get_session(notif.m_target_id);
+            if (ses != nullptr)
             {
+
                 if (notif.m_data == "")
-                    get_sessions()[notif.m_target_id]->pause_all();
+                {
+                    ses->pause_all();
+                }
                 else
-                    get_sessions()[notif.m_target_id]->pause_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                {
+                    ses->pause_file(ses->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
-            break;
+            }
+
             break;
         }
 
-        case e_notification_type::RESUME_TRANSFER:
+        case notification_type::e_notification_type::RESUME_TRANSFER:
         {
             TLOG() << "debug : resuming transfer " << notif.m_target_id;
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            TransferSession *ses = get_session(notif.m_target_id);
+            if (ses != nullptr)
             {
+
                 if (notif.m_data == "")
-                    get_sessions()[notif.m_target_id]->resume_all();
+                {
+                    ses->resume_all();
+                }
                 else
-                    get_sessions()[notif.m_target_id]->resume_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                {
+                    ses->resume_file(ses->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
+            }
+
             break;
         }
 
-        case e_notification_type::CANCEL_TRANSFER:
+        case notification_type::e_notification_type::CANCEL_TRANSFER:
         {
             TLOG() << "debug : cancelling transfer " << notif.m_target_id;
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            TransferSession *ses = get_session(notif.m_target_id);
+            if (ses != nullptr)
             {
+
                 if (notif.m_data == "")
-                    get_sessions()[notif.m_target_id]->cancel_all();
+                {
+                    ses->cancel_all();
+                }
                 else
-                    get_sessions()[notif.m_target_id]->cancel_file(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                {
+                    ses->cancel_file(ses->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
-            break;
+            }
+
             break;
         }
 
-        case e_notification_type::UPDATE_REQUEST:
+        case notification_type::e_notification_type::UPDATE_REQUEST:
         {
             TLOG() << "debug : updating grp transfer for " << notif.m_target_id;
-            if (get_sessions()[notif.m_target_id] != nullptr)
+            TransferSession *ses = get_session(notif.m_target_id);
+            if (ses != nullptr)
             {
+
                 if (notif.m_data == "")
-                    get_sessions()[notif.m_target_id]->update_metadatas_to_bookkeeper();
+                {
+                    ses->update_metadatas_to_bookkeeper();
+                }
                 else
-                    get_sessions()[notif.m_target_id]->update_metadata_to_bookkeeper(get_sessions()[notif.m_target_id]->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                {
+                    ses->update_metadata_to_bookkeeper(ses->get_transfer_options().get_transfer_meta_from_file_path(notif.m_data));
+                }
             }
             else
+            {
                 ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), notif.m_target_id));
-            break;
+            }
+
             break;
         }
 
@@ -393,32 +470,47 @@ namespace dunedaq::snbmodules
         return true;
     }
 
-    void TransferClient::add_sessions(TransferSession *session)
+    // TransferSession &TransferClient::add_session(TransferSession session)
+    // {
+    //     // std::string ses_id = session.get_session_id();
+    //     // m_sessions[ses_id] = std::move(session);
+    //     // return m_sessions.at(ses_id);
+    // }
+
+    void TransferClient::remove_session(const std::string &session_id)
     {
-        m_sessions[session->get_session_id()] = session;
+        auto s = get_session(session_id);
+        if (s == nullptr)
+        {
+            ers::warning(SessionIDNotFoundInClientError(ERS_HERE, get_client_id(), session_id));
+            return;
+        }
+        for (size_t i = 0; i < m_sessions.size(); i++)
+        {
+            if (s->get_session_id() == session_id)
+            {
+                m_sessions.erase(m_sessions.begin() + i);
+                return;
+            }
+        }
     }
 
-    void TransferClient::remove_session(std::string session_id)
-    {
-        m_sessions.erase(session_id);
-    }
-
-    std::string TransferClient::generate_session_id()
+    std::string TransferClient::generate_session_id(const std::string &transferid, const std::string &dest_id /*= ""*/)
     {
         std::string id = "";
 
-        id += this->get_client_id();
-        id += "_";
-        id += this->get_sessions().size();
+        id += dest_id == "" ? get_client_id() : dest_id;
+        id += "_ses";
+        id += transferid;
 
         return id;
     }
 
-    void TransferClient::scan_available_files(std::set<std::filesystem::path> *previous_scan, bool nested, std::filesystem::path folder)
+    void TransferClient::scan_available_files(std::set<std::filesystem::path> &previous_scan, bool nested, std::filesystem::path folder) // NOLINT
     {
         if (folder.empty())
         {
-            folder = this->get_listening_dir();
+            folder = get_listening_dir();
         }
 
         TLOG() << "debug : scanning files in " << folder;
@@ -428,16 +520,16 @@ namespace dunedaq::snbmodules
         {
             if (entry.is_regular_file() && entry.path().extension() == GroupMetadata::m_file_extension)
             {
-                if (previous_scan->insert(entry.path()).second)
+                if (previous_scan.insert(entry.path()).second)
                 {
                     TLOG() << "debug : found new file " << entry.path();
 
-                    GroupMetadata *metadata = new GroupMetadata(entry.path());
+                    GroupMetadata metadata = GroupMetadata(entry.path());
                     bool already_active = false;
 
-                    for (auto s : this->get_sessions())
+                    for (const auto &s : get_sessions())
                     {
-                        if (s.second->get_transfer_options() == *metadata)
+                        if (s.get_transfer_options() == metadata)
                         {
                             already_active = true;
                             break;
@@ -446,11 +538,8 @@ namespace dunedaq::snbmodules
 
                     if (!already_active)
                     {
-                        create_session(metadata, Uploader, generate_session_id(), get_listening_dir().append("ses" + m_sessions.size()));
-                    }
-                    else
-                    {
-                        delete metadata;
+                        std::string group_id_tmp = metadata.get_group_id();
+                        create_session(metadata, Uploader, generate_session_id(group_id_tmp), get_listening_dir().append("ses" + std::to_string(m_sessions.size())));
                     }
                 }
             }
@@ -460,19 +549,20 @@ namespace dunedaq::snbmodules
         {
             if (entry.is_regular_file() && entry.path().extension() != GroupMetadata::m_file_extension)
             {
-                if (previous_scan->insert(entry.path()).second)
+                if (previous_scan.insert(entry.path()).second)
                 {
                     TLOG() << "debug : found new file " << entry.path();
                     if (entry.path().extension() == TransferMetadata::m_file_extension)
                     {
-                        TransferMetadata *metadata = new TransferMetadata(entry.path());
+                        std::shared_ptr<TransferMetadata> metadata = std::make_shared<TransferMetadata>(entry.path());
 
                         bool wanted = false;
-                        for (auto s : this->get_sessions())
+                        for (auto &s : get_sessions())
                         {
-                            if (s.second->get_transfer_options().get_expected_files().find(metadata->get_file_name()) != s.second->get_transfer_options().get_expected_files().end())
+                            auto expect_ref = s.get_transfer_options().get_expected_files();
+                            if (expect_ref.find(metadata->get_file_name()) != expect_ref.end())
                             {
-                                s.second->add_file(metadata);
+                                s.add_file(metadata);
                                 wanted = true;
                                 break;
                             }
@@ -481,8 +571,8 @@ namespace dunedaq::snbmodules
                         {
                             // If not wanted yet (or never), delete the file from the scan list to find it again later
                             TLOG() << "debug : " << entry.path() << " not wanted yet, deleting from scan list";
-                            previous_scan->erase(entry.path());
-                            delete metadata;
+                            previous_scan.erase(entry.path());
+                            metadata.reset();
                         }
                     }
                 }
@@ -491,21 +581,23 @@ namespace dunedaq::snbmodules
             {
                 TLOG() << "debug : found directory " << entry.path();
                 if (nested)
-                    scan_available_files(previous_scan, nested, entry.path());
+                {
+                    scan_available_files(previous_scan, nested, entry.path()); // NOLINT
+                }
             }
         }
     }
 
-    TransferMetadata *TransferClient::create_metadata_from_file(std::filesystem::path src)
+    std::shared_ptr<TransferMetadata> TransferClient::create_metadata_from_file(const std::filesystem::path &src)
     {
-        return new TransferMetadata(src, std::filesystem::file_size(src), this->get_ip());
+        return std::make_shared<TransferMetadata>(src, std::filesystem::file_size(src), get_ip());
     }
 
     std::string TransferClient::get_my_conn()
     {
         if (m_my_conn.empty())
         {
-            for (std::string c : get_clients_conn())
+            for (const std::string &c : get_clients_conn())
             {
                 if (c.find(get_client_id()) != std::string::npos)
                 {

@@ -1,5 +1,5 @@
 {
-    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/resume-transfer.json http://localhost:3333/command",
+    "_comment_post_command": "curl --header 'Content-Type: application/json' --header 'X-Answer-Port: 56789' --request POST --data @test1/commands/resume_transfer.json http://localhost:3333/command",
     "data": {
         "modules": [
             {
@@ -10,5 +10,5 @@
             }
         ]
     },
-    "id": "resume-transfer"
+    "id": "resume_transfer"
 }

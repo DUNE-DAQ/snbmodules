@@ -1,7 +1,13 @@
+/**
+ * @file transfer_interface_abstract.hpp TransferInterfaceAbstract class interface for a transfer protocol type
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
-
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACE_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_ABSTRACT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_ABSTRACT_HPP_
 
 #include "snbmodules/group_metadata.hpp"
 #include "snbmodules/transfer_metadata.hpp"
@@ -19,22 +25,23 @@ namespace dunedaq::snbmodules
 {
     class TransferInterfaceAbstract
     {
-    protected:
-        /// @brief MetadataAbstract of the transfer, contain settings and status of the transfer
-        GroupMetadata *m_config;
 
     public:
-        TransferInterfaceAbstract(GroupMetadata *config) : m_config(config) {}
+        explicit TransferInterfaceAbstract(GroupMetadata &config) : m_config(config) {}
         virtual ~TransferInterfaceAbstract() = default;
 
-        GroupMetadata *get_transfer_options() { return m_config; }
+        GroupMetadata &get_transfer_options() { return m_config; }
 
-        virtual bool upload_file(TransferMetadata *f_meta) = 0;
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) = 0;
-        virtual bool pause_file(TransferMetadata *f_meta) = 0;
-        virtual bool resume_file(TransferMetadata *f_meta) = 0;
-        virtual bool hash_file(TransferMetadata *f_meta) = 0;
-        virtual bool cancel_file(TransferMetadata *f_meta) = 0;
+        virtual bool upload_file(TransferMetadata &f_meta) = 0;
+        virtual bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) = 0;
+        virtual bool pause_file(TransferMetadata &f_meta) = 0;
+        virtual bool resume_file(TransferMetadata &f_meta) = 0;
+        virtual bool hash_file(TransferMetadata &f_meta) = 0;
+        virtual bool cancel_file(TransferMetadata &f_meta) = 0;
+
+    protected:
+        /// @brief MetadataAbstract of the transfer, contain settings and status of the transfer
+        GroupMetadata &m_config;
     };
 
     /// @brief Example of a transfer interface class.
@@ -43,39 +50,39 @@ namespace dunedaq::snbmodules
     {
 
     public:
-        TransferInterfaceDummy(GroupMetadata *config) : TransferInterfaceAbstract(config) {}
+        explicit TransferInterfaceDummy(GroupMetadata &config) : TransferInterfaceAbstract(config) {}
 
-        virtual bool upload_file(TransferMetadata *f_meta) override
+        bool upload_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Upload file " << f_meta->get_file_name();
+            TLOG() << "Upload file " << f_meta.get_file_name();
             return true;
         }
-        virtual bool download_file(TransferMetadata *f_meta, std::filesystem::path dest) override
+        bool download_file(TransferMetadata &f_meta, std::filesystem::path dest) override
         {
             (void)dest;
-            TLOG() << "Download file " << f_meta->get_file_name();
+            TLOG() << "Download file " << f_meta.get_file_name();
             return true;
         }
-        virtual bool pause_file(TransferMetadata *f_meta) override
+        bool pause_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Pause file " << f_meta->get_file_name();
+            TLOG() << "Pause file " << f_meta.get_file_name();
             return true;
         }
-        virtual bool resume_file(TransferMetadata *f_meta) override
+        bool resume_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Resume file " << f_meta->get_file_name();
+            TLOG() << "Resume file " << f_meta.get_file_name();
             return true;
         }
-        virtual bool cancel_file(TransferMetadata *f_meta) override
+        bool cancel_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Cancel file " << f_meta->get_file_name();
+            TLOG() << "Cancel file " << f_meta.get_file_name();
             return true;
         }
-        virtual bool hash_file(TransferMetadata *f_meta) override
+        bool hash_file(TransferMetadata &f_meta) override
         {
-            TLOG() << "Hash file " << f_meta->get_file_name();
+            TLOG() << "Hash file " << f_meta.get_file_name();
             return true;
         }
     };
 } // namespace dunedaq::snbmodules
-#endif // SNBMODULES_INCLUDE_SNBMODULES_TRANSFERINTERFACE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_INTERFACES_TRANSFER_INTERFACE_ABSTRACT_HPP_

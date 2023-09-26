@@ -1,17 +1,26 @@
+/**
+ * @file notification_interface.hpp NotificationData class, NotificationInterface class, interface used by clients or bookkeepers to send/receive notifications
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
-
-#include "snbmodules/common/notification_enum.hpp"
-#include "snbmodules/ip_format.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_
 
 #include "iomanager/IOManager.hpp"
 #include "iomanager/network/ConfigClient.hpp"
 #include "iomanager/network/NetworkIssues.hpp"
-#include <string>
 
+#include "snbmodules/common/notification_enum.hpp"
+#include "snbmodules/ip_format.hpp"
 #include "snbmodules/iomanager_wrapper.hpp"
+
+#include <string>
+#include <set>
+#include <vector>
+#include <utility>
 
 namespace dunedaq
 {
@@ -31,11 +40,11 @@ namespace dunedaq
 
             NotificationData() = default;
             NotificationData(std::string source_id, std::string target_id, std::string notification, std::string data = "")
-                : m_source_id(source_id), m_target_id(target_id), m_notification(notification), m_data(data)
+                : m_source_id(std::move(source_id)), m_target_id(std::move(target_id)), m_notification(std::move(notification)), m_data(std::move(data))
             {
             }
-            NotificationData(std::string source_id, std::string target_id, e_notification_type notification, std::string data = "")
-                : m_source_id(source_id), m_target_id(target_id), m_notification(magic_enum::enum_name(notification)), m_data(data)
+            NotificationData(std::string source_id, std::string target_id, notification_type::e_notification_type notification, std::string data = "")
+                : m_source_id(std::move(source_id)), m_target_id(std::move(target_id)), m_notification(notification_type::notification_to_string(notification)), m_data(std::move(data))
             {
             }
             virtual ~NotificationData() = default;
@@ -51,22 +60,20 @@ namespace dunedaq
         {
 
         public:
-            NotificationInterface(std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
+            explicit NotificationInterface(std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
                 : m_timeout_send(timeout_send),
                   m_timeout_receive(timeout_receive),
-                  m_connection_prefix(connection_prefix)
+                  m_connection_prefix(std::move(connection_prefix))
             {
-                m_iomanager = IOManagerWrapper::GetInstance();
             }
 
-            NotificationInterface(std::vector<std::string> bk_conn, std::set<std::string> client_conn, std::string connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
+            NotificationInterface(std::vector<std::string> bk_conn, std::set<std::string> client_conn, const std::string &connection_prefix = "snbmodules", int timeout_send = 10, int timeout_receive = 100)
                 : m_timeout_send(timeout_send),
                   m_timeout_receive(timeout_receive),
                   m_connection_prefix(connection_prefix)
             {
-                m_iomanager = IOManagerWrapper::GetInstance();
-                m_bookkeepers_conn = bk_conn;
-                m_clients_conn = client_conn;
+                m_bookkeepers_conn = std::move(bk_conn);
+                m_clients_conn = std::move(client_conn);
             }
             virtual ~NotificationInterface() = default;
 
@@ -75,7 +82,7 @@ namespace dunedaq
             /// @param expected_from Expected source of the notification, if empty, accept any source
             /// @param timeout Timeout for receiving the notification in ms, if -1, use the default timeout
             /// @return std::optional<NotificationData> Notification received or not
-            virtual std::optional<NotificationData> listen_for_notification(std::string id, std::string expected_from = "", int timeout = -1, int tries = -1);
+            std::optional<NotificationData> listen_for_notification(const std::string &id, const std::string &expected_from = "", int timeout = -1, int tries = -1);
 
             /// @brief Send a notification during m_timeout_send ms
             /// @param notif   Type of the notification
@@ -84,7 +91,7 @@ namespace dunedaq
             /// @param id_conn ID of the connection
             /// @param data Data of the notification (optional)
             /// @return
-            virtual bool send_notification(e_notification_type notif, std::string src, std::string dst, std::string id_conn, std::string data = "", int tries = -1);
+            bool send_notification(const notification_type::e_notification_type &notif, const std::string &src, const std::string &dst, const std::string &id_conn, const std::string &data = "", int tries = -1);
 
             /// @brief Action to do when receiving a notification
             /// @param notif Notification received
@@ -100,8 +107,8 @@ namespace dunedaq
 
                 try
                 {
-                    iomanager::ConnectionResponse result = m_iomanager->lookups_connection(id, false);
-                    for (auto conn : result.connections)
+                    iomanager::ConnectionResponse result = IOManagerWrapper::get().lookups_connection(id, false);
+                    for (const auto &conn : result.connections)
                     {
                         m_bookkeepers_conn.push_back(conn.uid);
                     }
@@ -112,8 +119,8 @@ namespace dunedaq
                 try
                 {
                     id = {m_connection_prefix + ".*client.*", "notification_t", ""};
-                    iomanager::ConnectionResponse result = m_iomanager->lookups_connection(id, false);
-                    for (auto conn : result.connections)
+                    iomanager::ConnectionResponse result = IOManagerWrapper::get().lookups_connection(id, false);
+                    for (const auto &conn : result.connections)
                     {
                         m_clients_conn.insert(conn.uid);
                     }
@@ -128,14 +135,18 @@ namespace dunedaq
             /// @param connection_name Name of the connection
             /// @param data_type Type of the data
             /// @param is_client Is the connection a client
-            virtual inline void add_connection(IPFormat ip, std::string connection_name, std::string data_type, bool is_client)
+            virtual inline void add_connection(const IPFormat &ip, const std::string &connection_name, const std::string &data_type, bool is_client)
             {
-                m_iomanager->add_connection(ip, connection_name, data_type);
+                IOManagerWrapper::get().add_connection(ip, connection_name, data_type);
 
                 if (is_client)
+                {
                     m_clients_conn.insert(connection_name);
+                }
                 else
+                {
                     m_bookkeepers_conn.push_back(connection_name);
+                }
             }
 
             /// @brief Init the connection interface,
@@ -143,19 +154,16 @@ namespace dunedaq
             /// @param session_name Name of the session
             /// @param use_connectivity_service Use the connectivity service
             /// @param ip IP of the connectivity service
-            virtual inline void init_connection_interface(std::string session_name = "SNBMODULES", bool use_connectivity_service = false, IPFormat ip = IPFormat("localhost", 5000))
+            void init_connection_interface(const std::string &session_name = "SNBMODULES", bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000))
             {
-                m_iomanager->init_connection_interface(session_name, use_connectivity_service, ip);
+                IOManagerWrapper::get().init_connection_interface(session_name, use_connectivity_service, ip);
             }
 
             // Getters
-            inline std::vector<std::string> get_bookkeepers_conn() const { return m_bookkeepers_conn; }
-            inline std::set<std::string> get_clients_conn() const { return m_clients_conn; }
+            inline const std::vector<std::string> &get_bookkeepers_conn() const { return m_bookkeepers_conn; }
+            inline const std::set<std::string> &get_clients_conn() const { return m_clients_conn; }
 
         private:
-            /// @brief IOManagerWrapper instance
-            IOManagerWrapper *m_iomanager;
-
             /// @brief List of bookkeepers connections
             std::vector<std::string> m_bookkeepers_conn;
             /// @brief List of clients connections
@@ -178,4 +186,4 @@ namespace dunedaq
 
 } // namespace dunedaq
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATIONINTERFACE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_NOTIFICATION_INTERFACE_HPP_

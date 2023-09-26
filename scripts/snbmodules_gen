@@ -34,18 +34,20 @@ def cli(config, json_dir):
     # Get our config objects
     # Loading this one another time... (first time in config_file.generate_cli_from_schema)    
 
-    moo.otypes.load_types('snbmodules/confgen.jsonnet')
-    import dunedaq.snbmodules.confgen as confgen
-    moo.otypes.load_types('daqconf/confgen.jsonnet')
-    import dunedaq.daqconf.confgen as daqconfgen
+    # moo.otypes.load_types('snbmodules/confgen.jsonnet')
+    # import dunedaq.snbmodules.confgen as confgen
+    # moo.otypes.load_types('fddaqconf/confgen.jsonnet')
+    # import dunedaq.fddaqconf.confgen as daqconfgen
 
     console.log(f"\nIndividual configuration records before any command line overrides: ")    
 
     # Copy-of-a-hack, see daqconf's daqconf_multiru_gen file (commit e26a21d54fc5)
-    boot = daqconfgen.boot(**config_data.boot)
+    import dunedaq.daqconf.bootgen as bootgen
+    boot = bootgen.boot(**config_data.boot)
     console.log(f"boot configuration object: {boot.pod()}")
 
-    snbmodules = confgen.snbmodules(**config_data.snbmodules)
+    import dunedaq.snbmodules.snbmodulesgen as snbmodulesgen
+    snbmodules = snbmodulesgen.snbmodules(**config_data.snbmodules)
     console.log(f"snbmodules configuration object: {snbmodules.pod()}")
 
     console.log(f"\nIndividual configuration records after any command line overrides: ")
@@ -53,15 +55,26 @@ def cli(config, json_dir):
     console.log(f"snbmodules configuration object: {snbmodules.pod()}")	
 
     console.log("Loading snbmodulesapp config generator")
-    from snbmodules import snbmodulesapp_gen
-
+    from snbmodules import snbmodules_gen
+    
     the_system = System()
     
-    the_system.apps["snbmodulesapp"] = snbmodulesapp_gen.get_snbmodules_app(
-        nickname = "the_solo_app", 
-	num_snbfiletransfers = snbmodules.num_snbfiletransfers,
-	some_configured_value = snbmodules.some_configured_value
-    )
+    for snbmodulesclient in snbmodules.apps:
+        snbmodulesclientapp = snbmodulesgen.snbmodulesapp(**snbmodulesclient)
+        the_system.apps[snbmodulesclientapp.client_name] = snbmodules_gen.get_snbmodules_client_app(snbmodulesclientapp, 
+                                                SNB_CONNECTION_PREFIX=snbmodules.snb_connections_prefix,
+                                                SNB_TIMEOUT_SEND=snbmodules.snb_timeout_notification_send,
+                                                SNB_TIMEOUT_RECEIVE=snbmodules.snb_timeout_notification_receive)
+    # if bookkeeper, add bookkeeper app
+    if snbmodules.have_bookkeeper:
+        the_system.apps[snbmodules.bookkeeper_name] = snbmodules_gen.get_snbmodules_bookkeeper_app(snbmodules.host_bookkeeper,
+                                                BOOKKEEPER_NAME=snbmodules.bookkeeper_name,
+                                                BOOKKEEPER_LOG_PATH=snbmodules.bookkeeper_log_path,
+                                                BOOKKEEPER_PORT=snbmodules.bookkeeper_port,
+                                                BOOKKEEPER_REFRESH_RATE=snbmodules.bookkeeper_refresh_rate,
+                                                SNB_CONNECTION_PREFIX=snbmodules.snb_connections_prefix,
+                                                SNB_TIMEOUT_SEND=snbmodules.snb_timeout_notification_send,
+                                                SNB_TIMEOUT_RECEIVE=snbmodules.snb_timeout_notification_receive)
 
     ####################################################################                                  
     # Application command data generation                                                                 

@@ -1,3 +1,10 @@
+/**
+ * @file snb_rclone_full_test.cxx Test app to test rclone protocol functionalities
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -34,7 +41,8 @@ int main()
         c0.init_connection_interface();
 
         // Start client0 in a thread ( listening to notifications, Dowloader )
-        dunedaq::utilities::WorkerThread thread(std::bind(&TransferClient::do_work, &c0, std::placeholders::_1));
+        dunedaq::utilities::WorkerThread thread([&](std::atomic<bool> &running)
+                                                { c0.do_work(running); });
         thread.start_working_thread();
 
         // Create file to transfer
@@ -57,7 +65,8 @@ int main()
                 "chunk_size": "8GiB",
                 "buffer_size": "0",
                 "use_mmap": false,
-                "checksum": true
+                "checksum": true,
+                "root_folder": "/"
             }
         )"_json;
 
@@ -66,7 +75,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         c1.get_session("transfer0")->start_all();
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
 
         // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed
         // c0.get_session("transfer0")->pause_all();
@@ -81,10 +90,14 @@ int main()
         io::mapped_file_source f1(file_name);
         io::mapped_file_source f2("./client0/transfer0/test.txt");
 
-        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data()))
-            TLOG() << "The files are equal";
+        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data())) // NOLINT
+        {
+            TLOG() << "Files are equals";
+        }
         else
-            TLOG() << "The files are not equal";
+        {
+            TLOG() << "Files are not equals";
+        }
 
         // Clean files
         std::filesystem::remove_all("client0");
@@ -92,8 +105,8 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
     return 0;
-}
+} // NOLINT
