@@ -1,52 +1,71 @@
+/**
+ * @file group_metadata.cpp GroupMetadata class header, used to store the metadata of a group of transfers metadata (one uploader to multiple downloaders)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/group_metadata.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace dunedaq::snbmodules
 {
 
-    const std::string GroupMetadata::m_file_extension = ".gmetadata";
+    const std::string GroupMetadata::m_file_extension = ".gmetadata"; // NOLINT
 
-    TransferMetadata *GroupMetadata::get_transfer_meta_from_file_path(std::string file_path)
+    TransferMetadata &GroupMetadata::get_transfer_meta_from_file_path(const std::string &file_path)
     {
-        for (auto meta : m_transfers_meta)
+        for (std::shared_ptr<TransferMetadata> meta : get_transfers_meta())
         {
             if (meta->get_file_path() == file_path)
             {
-                return meta;
+                return *meta;
             }
         }
-        ers::warning(MetadataNotFoundInGroupError(ERS_HERE, m_group_id, file_path));
-        return nullptr;
+        ers::fatal(MetadataNotFoundInGroupError(ERS_HERE, m_group_id, file_path));
+        return *m_transfers_meta[0]; // To avoid warning
     }
 
-    void GroupMetadata::add_file(TransferMetadata *meta)
+    TransferMetadata &GroupMetadata::add_file(std::shared_ptr<TransferMetadata> meta)
     {
         if (m_expected_files.find(meta->get_file_path()) != m_expected_files.end())
         {
             m_expected_files.erase(meta->get_file_path());
-            m_transfers_meta.insert(meta);
             meta->set_group_id(m_group_id);
+
+            return *m_transfers_meta.emplace_back(meta);
         }
         else if (meta->get_group_id() == m_group_id)
         {
-            for (auto m : m_transfers_meta)
+            int pos = -1;
+            int i = 0;
+            for (const auto &m : m_transfers_meta)
             {
-                if (*m == *meta)
+                if (m == meta)
                 {
                     // Already inserted, update the transfer
-                    m_transfers_meta.erase(m);
+                    pos = i;
                     break;
                 }
+                i++;
             }
-            m_transfers_meta.insert(meta);
+            if (pos != -1)
+            {
+                m_transfers_meta.erase(m_transfers_meta.begin() + pos);
+            }
+            return *m_transfers_meta.emplace_back(std::move(meta));
         }
         else
         {
-            ers::error(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta->get_file_name()));
+            ers::fatal(MetadataNotExpectedInGroupError(ERS_HERE, m_group_id, meta->get_file_name()));
+            return *m_transfers_meta[0]; // To avoid warning
         }
     }
 
@@ -56,11 +75,11 @@ namespace dunedaq::snbmodules
         j["transfer_id"] = get_group_id();
         j["source_id"] = get_source_id();
         j["source_ip"] = get_source_ip().get_ip_port();
-        j["protocol"] = static_cast<std::string>(magic_enum::enum_name(get_protocol()));
+        j["protocol"] = protocol_type::protocols_to_string(get_protocol());
         j["protocol_options"] = get_protocol_options().dump();
 
         std::vector<std::string> files;
-        for (auto file : get_transfers_meta())
+        for (const auto &file : get_transfers_meta())
         {
             files.push_back(file->get_file_path().string());
         }
@@ -69,7 +88,7 @@ namespace dunedaq::snbmodules
         return j.dump();
     }
 
-    void GroupMetadata::from_string(std::string str)
+    void GroupMetadata::from_string(const std::string &str)
     {
         nlohmann::json j = nlohmann::json::parse(str);
 
@@ -89,7 +108,7 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("protocol"))
         {
-            set_protocol(magic_enum::enum_cast<e_protocol_type>(j["protocol"].get<std::string>()).value());
+            set_protocol(protocol_type::string_to_protocols(j["protocol"].get<std::string>()).value());
         }
         if (j.contains("protocol_options"))
         {
@@ -99,7 +118,7 @@ namespace dunedaq::snbmodules
         {
             auto files = j["files"].get<std::vector<std::filesystem::path>>();
 
-            for (auto file : files)
+            for (const auto &file : files)
             {
                 add_expected_file(file);
             }
@@ -137,17 +156,17 @@ namespace dunedaq::snbmodules
         metadata_file.close();
     }
 
-    std::string GroupMetadata::to_string()
+    std::string GroupMetadata::to_string() const
     {
         std::string str;
         str += "transfer_id " + get_group_id() + " ";
-        str += "protocol " + static_cast<std::string>(magic_enum::enum_name(get_protocol())) + "\n";
+        str += "protocol " + protocol_type::protocols_to_string(get_protocol()) + "\n";
 
-        for (auto file : get_transfers_meta())
+        for (const auto &file : get_transfers_meta())
         {
             str += "*file " + file->get_file_name() + "\n";
         }
-        for (auto file : get_expected_files())
+        for (const auto &file : get_expected_files())
         {
             str += "*expectedfile " + file + "\n";
         }

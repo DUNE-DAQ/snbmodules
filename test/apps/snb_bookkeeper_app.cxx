@@ -1,3 +1,11 @@
+/**
+ * @file snb_bookkeeper_app.cxx Test app full bookkeeper implementation
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #include "snbmodules/bookkeeper.hpp"
 
 #include <iostream>

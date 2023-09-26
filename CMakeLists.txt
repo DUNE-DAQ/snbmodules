@@ -16,9 +16,7 @@ find_package(Boost COMPONENTS unit_test_framework program_options iostreams REQU
 find_package(iomanager REQUIRED)
 find_package(appfwk REQUIRED)
 find_package(logging REQUIRED)
-find_package(hdf5libs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(HighFive REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
 find_package(readoutlibs REQUIRED)
@@ -26,16 +24,16 @@ find_package(rclone REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
 
+daq_codegen( snbfiletransfer.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
+
 set(linked_libraries
     iomanager::iomanager
     logging::logging
     ers::ers
     appfwk::appfwk
-    hdf5libs::hdf5libs
     daqdataformats::daqdataformats
     detdataformats::detdataformats
     nlohmann_json::nlohmann_json
-    HighFive
     readoutlibs::readoutlibs
     Boost::iostreams
     LibtorrentRasterbar::torrent-rasterbar
@@ -45,7 +43,7 @@ set(linked_libraries
 set(tests
     snb_bookkeeper_app
     snb_transfer_client_app
-    snb_bittorent_full_test
+    snb_bittorrent_full_test
     snb_rclone_full_test
     snb_transfer_metadata_save_load
     snb_group_metadata_save_load
@@ -101,8 +99,6 @@ set(includes_common
     protocols_enum.hpp
     status_enum.hpp
     ip_format.hpp
-    magic_enum.hpp
-    natural_sort.hpp
     notification_interface.hpp
     iomanager_wrapper.hpp
     errors_declaration.hpp

@@ -1,3 +1,10 @@
+/**
+ * @file snb_bittorrent_full_test.cxx Test app to test bittorrent protocol functionalities
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
 
 #include "snbmodules/transfer_client.hpp"
 #include "snbmodules/common/protocols_enum.hpp"
@@ -36,7 +43,8 @@ int main()
         c0.init_connection_interface();
 
         // Start client0 in a thread ( listening to notifications, Dowloader )
-        dunedaq::utilities::WorkerThread thread(std::bind(&TransferClient::do_work, &c0, std::placeholders::_1));
+        dunedaq::utilities::WorkerThread thread([&](std::atomic<bool> &running)
+                                                { c0.do_work(running); });
         thread.start_working_thread();
 
         // Create file to transfer
@@ -73,10 +81,14 @@ int main()
         io::mapped_file_source f1(file_name);
         io::mapped_file_source f2("./client0/transfer0/test.txt");
 
-        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data()))
-            TLOG() << "The files are equal";
+        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data())) // NOLINT
+        {
+            TLOG() << "Files are equals";
+        }
         else
-            TLOG() << "The files are not equal";
+        {
+            TLOG() << "Files are not equals !";
+        }
 
         // Clean files
         std::filesystem::remove_all("client0");
@@ -84,7 +96,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        TLOG() << e.what();
         return 1;
     }
     return 0;

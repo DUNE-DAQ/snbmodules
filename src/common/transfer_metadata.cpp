@@ -1,9 +1,18 @@
+/**
+ * @file transfer_metadata.cpp TransferMetadata class, used to store metadata of a transfer (one uploader to one downloader)
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
 #include "snbmodules/transfer_metadata.hpp"
-#include "snbmodules/tools/magic_enum.hpp"
+
+#include <string>
 
 namespace dunedaq::snbmodules
 {
-    const std::string TransferMetadata::m_file_extension = ".tmetadata";
+    const std::string TransferMetadata::m_file_extension = ".tmetadata"; // NOLINT
 
     std::string TransferMetadata::export_to_string_partial(bool force_all)
     {
@@ -15,32 +24,52 @@ namespace dunedaq::snbmodules
 
         // not mandatory : to be refreshed when needed
         if (force_all || m_modified_fields["hash"] == true)
+        {
             j["hash"] = get_hash();
+        }
         if (force_all || m_modified_fields["size"] == true)
+        {
             j["size"] = get_size();
+        }
         if (force_all || m_modified_fields["bytes_transferred"] == true)
+        {
             j["transfered"] = get_bytes_transferred();
+        }
         if (force_all || m_modified_fields["transmission_speed"] == true)
+        {
             j["speed"] = get_transmission_speed();
+        }
         if (force_all || m_modified_fields["status"] == true)
-            j["status"] = static_cast<std::string>(magic_enum::enum_name(get_status()));
+        {
+            j["status"] = status_type::status_to_string(get_status());
+        }
         if (force_all || m_modified_fields["magnet_link"] == true)
+        {
             j["magnet_link"] = get_magnet_link();
+        }
         if (force_all || m_modified_fields["error_code"] == true)
+        {
             j["error_code"] = get_error_code();
+        }
         if (force_all || m_modified_fields["start_time"] == true)
+        {
             j["start_t"] = get_start_time();
+        }
         if (force_all || m_modified_fields["end_time"] == true)
+        {
             j["end_t"] = get_end_time();
+        }
         if (force_all || m_modified_fields["duration"] == true)
+        {
             j["duration"] = m_duration;
+        }
 
         m_modified_fields.clear();
 
         return j.dump();
     }
 
-    void TransferMetadata::from_string(std::string str)
+    void TransferMetadata::from_string(const std::string &str)
     {
         nlohmann::json j = nlohmann::json::parse(str);
 
@@ -56,15 +85,15 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("size"))
         {
-            set_size(j["size"].get<unsigned long>());
+            set_size(j["size"].get<uint64_t>()); // NOLINT
         }
         if (j.contains("transfered"))
         {
-            set_bytes_transferred(j["transfered"].get<unsigned long>());
+            set_bytes_transferred(j["transfered"].get<uint64_t>()); // NOLINT
         }
         if (j.contains("speed"))
         {
-            set_transmission_speed(j["speed"].get<unsigned long>());
+            set_transmission_speed(j["speed"].get<int32_t>());
         }
         if (j.contains("source"))
         {
@@ -76,7 +105,7 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("status"))
         {
-            auto status = magic_enum::enum_cast<e_status>(j["status"].get<std::string>());
+            auto status = status_type::string_to_status(j["status"].get<std::string>());
             if (status.has_value())
             {
                 set_status(status.value());
@@ -100,15 +129,15 @@ namespace dunedaq::snbmodules
         }
         if (j.contains("start_t"))
         {
-            set_start_time(j["start_t"].get<uint64_t>());
+            set_start_time(j["start_t"].get<int64_t>());
         }
         if (j.contains("end_t"))
         {
-            set_end_time(j["end_t"].get<uint64_t>());
+            set_end_time(j["end_t"].get<int64_t>());
         }
         if (j.contains("duration"))
         {
-            set_duration(j["duration"].get<uint64_t>());
+            set_duration(j["duration"].get<int64_t>());
         }
     }
 

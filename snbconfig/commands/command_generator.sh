@@ -45,7 +45,7 @@ do
         1) 
             read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
             read -p "Enter the destination client id (ex:'client0'): " client
-            command_id="new-transfer"
+            command_id="new_transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\",\n"
 
             # Add files
@@ -154,25 +154,25 @@ do
         2) 
             read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
             read -p "Enter the destination client id (ex:'client0'): " client
-            command_id="start-transfer"
+            command_id="start_transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         3) 
             read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
             read -p "Enter the destination client id (ex:'client0'): " client
-            command_id="pause-transfer"
+            command_id="pause_transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         4) 
             read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
             read -p "Enter the destination client id (ex:'client0'): " client
-            command_id="resume-transfer"
+            command_id="resume_transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         5) 
             read -p "Enter the transfer id (ex:'transfer0'): " transfer_id
             read -p "Enter the destination client id (ex:'client0'): " client
-            command_id="cancel-transfer"
+            command_id="cancel_transfer"
             command="${command}\t\t\t\t\t\"transfer_id\": \"${transfer_id}\"\n"
             ;;
         6) 
