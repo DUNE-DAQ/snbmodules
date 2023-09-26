@@ -1,7 +1,7 @@
 # SNBmodules
 Welcome to the snbmodules wiki!
 
-This library uses external libraries such as Bittorent or Rclone that need to be intalled.
+This library uses external libraries such as Bittorent or Rclone that need to be installed.
 
 1. Clone this repo into the sourcecode/ directory and add the library name to the dbt-build-order.cmake
 
@@ -21,7 +21,7 @@ This library uses external libraries such as Bittorent or Rclone that need to be
 
 # Wiki
 
-Please follow the wiki pages for detailed instructions and informations about:
+Please follow the wiki pages for detailed instructions and information about:
 - [Installation](https://github.com/DUNE-DAQ/snbmodules/wiki/Installation)
 - [Configuration](https://github.com/DUNE-DAQ/snbmodules/wiki/Configuration)
 - [Transfers](https://github.com/DUNE-DAQ/snbmodules/wiki/Transfers)
