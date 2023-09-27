@@ -1,0 +1,15 @@
+{
+    "modules": [
+        {
+            "data": {
+                "bookkeeper_ip": "localhost:5000",
+                "bookkeeper_log_path": "./",
+                "connection_prefix": "snbmodules",
+                "refresh_rate": 1,
+                "timeout_receive": 100,
+                "timeout_send": 10
+            },
+            "match": "localhostsnbbookkeeper"
+        }
+    ]
+}

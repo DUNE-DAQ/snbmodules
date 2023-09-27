@@ -1,6 +1,8 @@
 {
     "apps": {
-        "snbmodules0": "data/snbmodules0_conf",
-        "snbmodules1": "data/snbmodules1_conf"
+        "snbbookkeeper": "data/snbbookkeeper_conf",
+        "snbclient0": "data/snbclient0_conf",
+        "snbclient1": "data/snbclient1_conf",
+        "snbclient2": "data/snbclient2_conf"
     }
 }

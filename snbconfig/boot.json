@@ -1,9 +1,24 @@
 {
     "apps": {
-        "snbmodules0": {
+        "snbbookkeeper": {
             "exec": "daq_application_ssh",
-            "host": "snbmodules0",
+            "host": "snbbookkeeper",
+            "port": 3336
+        },
+        "snbclient0": {
+            "exec": "daq_application_ssh",
+            "host": "snbclient0",
             "port": 3333
+        },
+        "snbclient1": {
+            "exec": "daq_application_ssh",
+            "host": "snbclient1",
+            "port": 3334
+        },
+        "snbclient2": {
+            "exec": "daq_application_ssh",
+            "host": "snbclient2",
+            "port": 3335
         }
     },
     "env": {
@@ -15,6 +30,23 @@
         "DUNEDAQ_ERS_WARNING": "erstrace,throttle,lstdout"
     },
     "exec": {
+        "consvc_ssh": {
+            "args": [
+                "--bind=0.0.0.0:{APP_PORT}",
+                "--workers=1",
+                "--worker-class=gthread",
+                "--threads=2",
+                "--timeout=0",
+                "--pid={APP_NAME}_{APP_PORT}.pid",
+                "connection-service.connection-flask:app"
+            ],
+            "cmd": "gunicorn",
+            "env": {
+                "CONNECTION_FLASK_DEBUG": "getenv:2",
+                "PATH": "getenv",
+                "PYTHONPATH": "getenv"
+            }
+        },
         "daq_application_ssh": {
             "args": [
                 "--name",
@@ -31,7 +63,6 @@
             "env": {
                 "CET_PLUGIN_PATH": "getenv",
                 "CMD_FAC": "rest://localhost:{APP_PORT}",
-                "CONNECTION_PORT": "15000",
                 "CONNECTION_SERVER": "epdtdi105",
                 "DETCHANNELMAPS_SHARE": "getenv",
                 "DUNEDAQ_SHARE_PATH": "getenv",
@@ -45,14 +76,30 @@
     },
     "external_connections": [],
     "hosts-ctrl": {
-        "snbmodules0": "epdtdi105",
-        "snbmodules1": "epdtdi104"
+        "connectionservice": "epdtdi105",
+        "snbbookkeeper": "epdtdi105",
+        "snbclient0": "epdtdi105",
+        "snbclient1": "epdtdi105",
+        "snbclient2": "epdtdi105"
     },
     "hosts-data": {
-        "snbmodules0": "epdtdi105",
-        "snbmodules1": "epdtdi104"
+        "snbbookkeeper": "epdtdi105",
+        "snbclient0": "epdtdi105",
+        "snbclient1": "epdtdi105",
+        "snbclient2": "epdtdi105"
     },
     "response_listener": {
         "port": 56789
+    },
+    "rte_script": "/home/ljoly/NFD23-09-27/install/daq_app_rte.sh",
+    "services": {
+        "connectionservice": {
+            "exec": "consvc_ssh",
+            "host": "connectionservice",
+            "port": 15071,
+            "update-env": {
+                "CONNECTION_PORT": "{APP_PORT}"
+            }
+        }
     }
 }

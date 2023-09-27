@@ -1,0 +1,14 @@
+{
+    "modules": [
+        {
+            "data": {
+                "client_ip": "0.0.0.0:5002",
+                "connection_prefix": "snbmodules",
+                "timeout_receive": 100,
+                "timeout_send": 10,
+                "work_dir": "./localhostsnbclient10/"
+            },
+            "match": "localhostsnbclient10"
+        }
+    ]
+}

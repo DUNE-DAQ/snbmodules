@@ -1,0 +1,30 @@
+{
+    "connections": [
+        {
+            "connection_type": "kSendRecv",
+            "id": {
+                "data_type": "notification_t",
+                "session": "",
+                "uid": "snbmodules_bookkeeper_localhostsnbbookkeeper_notifications"
+            },
+            "uri": "tcp://{snbbookkeeper}:*"
+        }
+    ],
+    "connectivity_service_interval_ms": 1000,
+    "modules": [
+        {
+            "data": {
+                "conn_refs": [
+                    {
+                        "name": "notifications",
+                        "uid": "snbmodules_bookkeeper_localhostsnbbookkeeper_notifications"
+                    }
+                ]
+            },
+            "inst": "localhostsnbbookkeeper",
+            "plugin": "SNBTransferBookkeeper"
+        }
+    ],
+    "queues": [],
+    "use_connectivity_service": true
+}

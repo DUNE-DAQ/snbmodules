@@ -1,0 +1,6 @@
+{
+    "build_info": {},
+    "command_line": "/home/ljoly/NFD23-09-27/install/snbmodules/bin/snbmodules_gen --config /tmp/ljoly/pytest-of-ljoly/pytest-149/daqconf0.json /tmp/ljoly/pytest-of-ljoly/pytest-149/json0",
+    "config_file": "/tmp/ljoly/pytest-of-ljoly/pytest-149/daqconf0.json",
+    "daqconf_exe_dir": "/home/ljoly/NFD23-09-27/install/snbmodules/bin"
+}

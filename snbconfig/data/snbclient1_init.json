@@ -1,0 +1,30 @@
+{
+    "connections": [
+        {
+            "connection_type": "kSendRecv",
+            "id": {
+                "data_type": "notification_t",
+                "session": "",
+                "uid": "snbmodules_client_localhostsnbclient10_notifications"
+            },
+            "uri": "tcp://{snbclient1}:*"
+        }
+    ],
+    "connectivity_service_interval_ms": 1000,
+    "modules": [
+        {
+            "data": {
+                "conn_refs": [
+                    {
+                        "name": "notifications",
+                        "uid": "snbmodules_client_localhostsnbclient10_notifications"
+                    }
+                ]
+            },
+            "inst": "localhostsnbclient10",
+            "plugin": "SNBFileTransfer"
+        }
+    ],
+    "queues": [],
+    "use_connectivity_service": true
+}

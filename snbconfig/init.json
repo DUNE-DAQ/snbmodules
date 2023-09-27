@@ -1,6 +1,8 @@
 {
     "apps": {
-        "snbmodules0": "data/snbmodules0_init",
-        "snbmodules1": "data/snbmodules1_init"
+        "snbbookkeeper": "data/snbbookkeeper_init",
+        "snbclient0": "data/snbclient0_init",
+        "snbclient1": "data/snbclient1_init",
+        "snbclient2": "data/snbclient2_init"
     }
 }
