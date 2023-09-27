@@ -11,7 +11,7 @@
         "uncommitted changes": "",
         "user for build": "ljoly"
     },
-    "command_line": "/home/ljoly/N23-04-17/install/daqconf/bin/daqconf_multiru_gen -c ./daqconf.json --hardware-map-file ./default_hw_map.txt test1",
+    "command_line": "/home/ljoly/N23-04-17/install/daqconf/bin/fddaqconf_gen -c ./daqconf.json --hardware-map-file ./default_hw_map.txt test1",
     "config_file": "./daqconf.json",
     "daqconf_exe_dir": "/home/ljoly/N23-04-17/install/daqconf/bin"
 }
