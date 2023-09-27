@@ -1,6 +1,7 @@
 import pytest
 import urllib.request
 import json
+import os
 from os.path import exists
 
  # Checks and tests functions
@@ -11,12 +12,23 @@ import integrationtest.dro_map_gen as dro_map_gen
 import snbmodules.raw_file_check as raw_file_check
 import snbmodules.transfer_check as transfer_check
 
+# WARNING : 27/09/23 due to a bug in current version of nanorc, please follow the following steps to run the test:
+# 1. setup the environment '. ./env.sh'
+# 2. clone latest version of nanorc and install : 'git clone git@github.com:DUNE-DAQ/nanorc.git;pip install -U ./nanorc'
+# 3. build 'dbt-build'
+# 4. cd sourcecode/snbmodules/integtest folder and change parameters in this file if needed
+# 5. run the test : 'pytest -s snb_1node_multiapp_system_quick_test.py'
+
 # test parameters that need to be changed for different machine testing
-interface_name = "localhosteth0" # interface name
-sftp_user_name = "ljoly" # sftp user name
+interface_name = "localhosteth0" # interface name (for binary output file name)
+sftp_user_name = os.getlogin()
+# sftp_user_name = "ljoly" # sftp user name
+root_path_commands=os.getcwd()
+# root_path_commands="/home/ljoly/NFD23-09-27/sourcecode/snbmodules/integtest"
+
+# others tests parameters
 host_interface = "localhost" # host interface for the clients data exchange
 snb_clients_number = 3 # number of clients
-root_path_commands="/home/ljoly/NFD23-08-23/sourcecode/snbmodules/integtest/"
 
 # Values that help determine the running conditions
 number_of_data_producers=2
@@ -156,10 +168,10 @@ with open('start-transfer.json', 'r+') as f:
     
 # The commands to run in nanorc, as a list
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
-("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}record-cmd.json ").split() + \
+("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}/record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
-f"expert_command /json0/json0/snbclient0 {root_path_commands}new-RClone-transfer.json ".split() + \
-f"expert_command /json0/json0/snbclient0 {root_path_commands}start-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient0 {root_path_commands}/new-RClone-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient0 {root_path_commands}/start-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
 
 # The tests themselves
