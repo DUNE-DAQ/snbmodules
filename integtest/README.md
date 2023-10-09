@@ -137,6 +137,7 @@ The service is available from a standard DUNE-DAQ workarea environment. The life
 |   rulocalhosteth0  | usual integtest topology and config  (2 fake/sw based WIBEth producers, raw recording on) |
 |    snbbookkeper    |                                 1 x SNBTransferBookkeeper                                 |
 |      snbclient     |                   2 x SNBFileTransfer (one uploader and one downloader)                   |
+
 **Aim of the test**: Verify that files can be transferred between processes using the RClone HTTP based implementation. For source files, the integtest
 uses the readout raw recording features, in order to exercise the file registration ("new file transfer") command of SNBModules (bookkeeper and client).
 This also aims to verify the functionality and command sequence between readout and dataflow subsystems. The configuration parameters and aspects of the
@@ -193,3 +194,4 @@ This simple integration test contains a full system integration, exercising the 
 |     snbclient0     |                             1 x SNBFileTransfer (one uploader)                            |
 |     snbclient1     |                            1 x SNBFileTransfer (one downloader)                           |
 |     snbclient2     |                            1 x SNBFileTransfer (one downloader)                           |
+
