@@ -2,6 +2,7 @@ import pytest
 import urllib.request
 import json
 import os
+import psutil
 from os.path import exists
 
  # Checks and tests functions
@@ -12,19 +13,23 @@ import integrationtest.dro_map_gen as dro_map_gen
 import snbmodules.raw_file_check as raw_file_check
 import snbmodules.transfer_check as transfer_check
 
-# WARNING : 27/09/23 due to a bug in current version of nanorc, please follow the following steps to run the test:
-# 1. setup the environment '. ./env.sh'
-# 2. clone latest version of nanorc and install : 'git clone git@github.com:DUNE-DAQ/nanorc.git;pip install -U ./nanorc'
-# 3. build 'dbt-build'
-# 4. cd sourcecode/snbmodules/integtest folder and change parameters in this file if needed
-# 5. run the test : 'pytest -s snb_1node_multiapp_system_quick_test.py'
+# Check if `rclone http serve` remote server is running.
+rc_srvc_name = 'rclone'
+rc_proc = None
+for proc in psutil.process_iter():
+  if rc_srvc_name in proc.name():
+    rc_cmd = proc.cmdline()
+    if 'serve' in rc_cmd and 'http' in rc_cmd:
+      rc_proc = proc
+    break
+assert rc_proc is not None, "There is no rclone http server running. This test requires that service process running!\n" + \
+"Spawn an rclone process in another terminal like this:\n" + \
+"rclone serve http / --addr localhost:8080  --copy-links --dir-cache-time 2s"
 
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name (for binary output file name)
 sftp_user_name = os.getlogin()
-# sftp_user_name = "ljoly" # sftp user name
 root_path_commands=os.getcwd()
-# root_path_commands="/home/ljoly/NFD23-09-27/sourcecode/snbmodules/integtest"
 
 # others tests parameters
 host_interface = "localhost" # host interface for the clients data exchange

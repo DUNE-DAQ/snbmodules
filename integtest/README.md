@@ -137,7 +137,6 @@ The service is available from a standard DUNE-DAQ workarea environment. The life
 |   rulocalhosteth0  | usual integtest topology and config  (2 fake/sw based WIBEth producers, raw recording on) |
 |    snbbookkeper    |                                 1 x SNBTransferBookkeeper                                 |
 |      snbclient     |                   2 x SNBFileTransfer (one uploader and one downloader)                   |
-
 **Aim of the test**: Verify that files can be transferred between processes using the RClone HTTP based implementation. For source files, the integtest
 uses the readout raw recording features, in order to exercise the file registration ("new file transfer") command of SNBModules (bookkeeper and client).
 This also aims to verify the functionality and command sequence between readout and dataflow subsystems. The configuration parameters and aspects of the
@@ -175,3 +174,22 @@ f"expert_command /json0/json0/snbclient {root_path_commands}/start-transfer.json
 
 **Troubleshooting**: None
 
+
+## snb_1node_multiclientapps_rclone_http_system_quick_test.py
+
+This simple integration test contains a full system integration, exercising the same targets as the 1app variant, but uploading the same source files to two target destination clients. Both of the destination clients reside in their own daq_application.
+
+**Prerequisitis, main test steps, and pass criterias are equivalent with the 1app variant. Only the topology is different.**
+
+**App topology**:
+| daq_application(s) |                                      plugin(s), notes                                     |
+|:------------------:|:-----------------------------------------------------------------------------------------:|
+|      dataflow0     |                            usual integtest topology and config                            |
+|         dfo        |                            usual integtest topology and config                            |
+|       fakehsi      |                            usual integtest topology and config                            |
+|       trigger      |                            usual integtest topology and config                            |
+|   rulocalhosteth0  | usual integtest topology and config  (2 fake/sw based WIBEth producers, raw recording on) |
+|    snbbookkeper    |                                 1 x SNBTransferBookkeeper                                 |
+|     snbclient0     |                             1 x SNBFileTransfer (one uploader)                            |
+|     snbclient1     |                            1 x SNBFileTransfer (one downloader)                           |
+|     snbclient2     |                            1 x SNBFileTransfer (one downloader)                           |
