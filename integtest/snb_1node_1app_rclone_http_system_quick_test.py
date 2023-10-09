@@ -5,6 +5,7 @@ import os
 from os.path import exists
 import signal
 import subprocess
+import psutil
 
  # Checks and tests functions
 import integrationtest.data_file_checks as data_file_checks
@@ -13,6 +14,19 @@ import integrationtest.config_file_gen as config_file_gen
 import integrationtest.dro_map_gen as dro_map_gen
 import snbmodules.raw_file_check as raw_file_check
 import snbmodules.transfer_check as transfer_check
+
+# Check if `rclone http serve` remote server is running.
+rc_srvc_name = 'rclone'
+rc_proc = None
+for proc in psutil.process_iter():
+  if rc_srvc_name in proc.name():
+    rc_cmd = proc.cmdline()
+    if 'serve' in rc_cmd and 'http' in rc_cmd:
+      rc_proc = proc
+    break
+assert rc_proc is not None, "There is no rclone http server running. This test requires that service process running!\n" + \
+"Spawn an rclone process in another terminal like this:\n" + \
+"rclone serve http / --addr localhost:8080  --copy-links --dir-cache-time 2s"
 
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name (for binary output file name)
