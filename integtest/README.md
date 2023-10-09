@@ -3,7 +3,7 @@
 The integration tests of `snbmodules` are located in the integtest folder, and the tests are usually executed under the `snbmodules/integtest/` folder as follows:
 
 ```
-pytest -s <tesname>_test.py --nanorc-option partition-number 2
+pytest -s <test_file_name>.py --nanorc-option partition-number 2
 ```
 
 ## Nomenclature
