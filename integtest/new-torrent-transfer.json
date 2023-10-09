@@ -12,14 +12,10 @@
                     "dests": [
                         "localhostsnbclient1"
                     ],
-                    "protocol": "RCLONE",
+                    "protocol": "BITTORRENT",
                     "protocol_args": {
-                        "protocol": "http",
-                        "rate_limit": "off",
-                        "port": 8080,
-                        "refresh_rate": 2,
-                        "user": "rsipos",
-                        "key_file": "/nfs/home/rsipos/.ssh/id_rsa"
+                        "port": "12345",
+                        "rate_limit": -1
                     }
                 },
                 "match": "localhostsnbclient0"
