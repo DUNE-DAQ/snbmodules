@@ -11,7 +11,7 @@ The integration tests of `snbmodules` are located in the integtest folder.
 
 ## snb_minimal_system_test.py
 
-This very simple integration test contains 4 daq_applications (processes), each with a single module.
+This very simple integration test contains 4 daq_applications (processes), each with a single module, running on a single host.
 
 | daq_application(s) |          module(s)         |
 |:------------------:|:--------------------------:|
@@ -38,10 +38,69 @@ nanorc_command_list += "stop_run wait 2 scrap terminate".split()
 ```
 
 **Pass criteria**:
-1. test_nanorc_success: nanorc completed processes return code is 0
+1. test_nanorc_success: nanorc completed processes return code is 0 (no errors)
 2. test_log_files: log files are error free
 3. test_local_transfer_snbmodules: snb client process spawned and controlled successfully
 4. test_bookkeeper_snbmodules: snb bookkeeper process spawned and controlled succesffully
 
-## snb_1node_1app system quick tests
+**Caveats/extra steps needed**: None
 
+**Troubleshooting**: None
+
+## snb_1node_1app_torrent_system_quick_test.py
+
+This simple integration test contains a full system integration, exercising recorded SNB file transfer between different processes, running on a single host.
+The test exercises the torrent based file transfer implementation, and the SNB recording within the readout subsystem. The test contains a single SNB client process,
+which has both uploader and downloader sessions.
+
+| daq_application(s) |                                      plugin(s), notes                                     |
+|      dataflow0     |                            usual integtest topology and config                            |
+|         dfo        |                            usual integtest topology and config                            |
+|       fakehsi      |                            usual integtest topology and config                            |
+|       trigger      |                            usual integtest topology and config                            |
+|   rulocalhosteth0  | usual integtest topology and config  (2 fake/sw based WIBEth producers, raw recording on) |
+|    snbbookkeper    |                                 1 x SNBTransferBookkeeper                                 |
+|      snbclient     |                   2 x SNBFileTransfer (one uploader and one downloader)                   |
+
+**Aim of the test**: Verify that files can be transferred between processes using the torrent based implementation. For source files, the integtest
+uses the readout raw recording features, in order to exercise the file registration ("new file transfer") command of SNBModules (bookkeeper and client).
+This also aims to verify the functionality and command sequence between readout and dataflow subsystems. The configuration parameters and aspects of the
+torrent based transfer implementation is also demonstrated and tested here.
+
+**Test steps**:
+1. Generate default configs for subsystems.
+2. Modify `snbmodules` configurations.
+3. Add `bookkeeper` to `snbmodules` configuration.
+4. Prepare `record-cmd.json` to record raw content for 1 second from every data producers in the `rulocalhosteth0` app.
+5. Prepare `new-torrent-transfer.json` expert command for registering a transfer -> source and destination clients and file list. (Protocol arguments: select BITTORRENT and port to be used)
+6. Prepare `start-torrent-transfer.json` expert command to start the upload/download procedure for the registered transfers.
+7. Populate nanorc command list:
+
+```
+# The commands to run in nanorc, as a list
+nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
+("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}/record-cmd.json ").split() + \
+["wait"] + [str(record_duration)] + \
+f"expert_command /json0/json0/snbclient {root_path_commands}/new-torrent-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient {root_path_commands}/start-torrent-transfer.json ".split() + \
+["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
+```
+
+**Pass criteria**:
+1. test_nanorc_success: nanorc completed processes return code is 0 (no errors)
+2. test_log_files: log files are error free
+3. test_data_files: sanity check of the nominal request/response path (expected num. of Fragments and content is correct)
+4. test_local_transfer_snbmodules: checks if the content of transferred files are matching with the source files (size and byte-by-byte match)
+5. test_bookkeeper_snbmodules: snb bookkeeper reported correctly the transfer registration and state.
+
+**Caveats/extra steps needed**: 
+1. The pytest area can result in moderately big size: With 2 data producers, a successful test will results with 2x150MB source files, and their copies after transfer in the destination folder. So in total, the pytest run area will exceed 600MBs! It's advised to remove the pytest run area after successful runs. Potentially, we could add a raw file cleanup to the test itself.
+2. During the configuration generation step, the test looks up the IP address of the host. If the hostname is not IP resolvable, this information is not found in the system. The IP address is required for correct behavior of the torrent based transfer implementation.
+
+**Troubleshooting**:
+In case the hostname resolvable IP address seems to be a too strict requirement, we should modify the integtest to pass the expected IP address via configuration or command line argument, instead of the following line in the test:
+
+```
+L123: ip_addr = socket.gethostbyname(socket.gethostname())
+L124: assert ip_addr is not '192.168.0.1' and ip_addr is not 'localhost', 'Hostname resolvable IP address on the host is needed by this test!'
+```
