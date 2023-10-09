@@ -54,6 +54,7 @@ The test exercises the torrent based file transfer implementation, and the SNB r
 which has both uploader and downloader sessions.
 
 | daq_application(s) |                                      plugin(s), notes                                     |
+|:------------------:|:-----------------------------------------------------------------------------------------:|
 |      dataflow0     |                            usual integtest topology and config                            |
 |         dfo        |                            usual integtest topology and config                            |
 |       fakehsi      |                            usual integtest topology and config                            |
