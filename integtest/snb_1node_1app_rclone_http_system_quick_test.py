@@ -14,13 +14,6 @@ import integrationtest.dro_map_gen as dro_map_gen
 import snbmodules.raw_file_check as raw_file_check
 import snbmodules.transfer_check as transfer_check
 
-# WARNING : 27/09/23 due to a bug in current version of nanorc, please follow the following steps to run the test:
-# 1. setup the environment '. ./env.sh'
-# 2. clone latest version of nanorc and install : 'git clone git@github.com:DUNE-DAQ/nanorc.git;pip install -U ./nanorc'
-# 3. build 'dbt-build'
-# 4. cd sourcecode/snbmodules/integtest folder and change parameters in this file if needed
-# 5. run the test : 'pytest -s snb_1node_1app_system_quick_test.py'
-
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name (for binary output file name)
 root_path_commands=os.getcwd()
@@ -176,10 +169,6 @@ f"expert_command /json0/json0/snbclient {root_path_commands}/new-RClone-transfer
 f"expert_command /json0/json0/snbclient {root_path_commands}/start-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
 
-#def test_rclone_service_start(run_nanorc):
-#    print('Starting RClone serve over HTTP...')
-#    os.system('rclone serve http / --addr localhost:8080 &') 
-
 # The tests themselves
 def test_nanorc_success(run_nanorc):
     print(run_nanorc.json_dir)
@@ -232,5 +221,3 @@ def test_bookkeeper_snbmodules(run_nanorc):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
         assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log", file_name)
 
-# Kill rclone service that was spawned from this test suite
-#os.killpg(os.getpgid(rclone_srvc_proc.pid), signal.SIGTERM)  # Send the signal to a
