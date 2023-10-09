@@ -1,0 +1,15 @@
+{
+    "data": {
+        "modules": [
+            {
+                "data": {
+                    "transfer_id": "transfer0"
+                },
+                "match": ""
+            }
+        ]
+    },
+    "id": "start_transfer",
+    "entry_state": "ANY",
+    "exit_state": "ANY"
+}

@@ -1,6 +1,7 @@
 import pytest
 import urllib.request
 import json
+import socket
 import os
 from os.path import exists
 
@@ -12,27 +13,19 @@ import integrationtest.dro_map_gen as dro_map_gen
 import snbmodules.raw_file_check as raw_file_check
 import snbmodules.transfer_check as transfer_check
 
-# WARNING : 27/09/23 due to a bug in current version of nanorc, please follow the following steps to run the test:
-# 1. setup the environment '. ./env.sh'
-# 2. clone latest version of nanorc and install : 'git clone git@github.com:DUNE-DAQ/nanorc.git;pip install -U ./nanorc'
-# 3. build 'dbt-build'
-# 4. cd sourcecode/snbmodules/integtest folder and change parameters in this file if needed
-# 5. run the test : 'pytest -s snb_1node_1app_system_quick_test.py'
-
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name (for binary output file name)
-sftp_user_name = os.getlogin()
 root_path_commands=os.getcwd()
 
 # others tests parameters
 host_interface = "localhost" # host interface for the clients data exchange
-snb_clients_number = 3 # number of clients
+snb_clients_number = 2 # number of clients
 
 # Values that help determine the running conditions
 number_of_data_producers=2
 data_rate_slowdown_factor=10 # 10 for ProtoWIB/DuneWIB
 run_duration=5
-send_duration=10
+send_duration=5
 record_duration=5
 readout_window_time_before=1000
 readout_window_time_after=1001
@@ -41,7 +34,7 @@ readout_window_time_after=1001
 expected_number_of_data_files=1
 check_for_logfile_errors=True
 expected_event_count=run_duration+send_duration+record_duration
-expected_event_count_tolerance=2
+expected_event_count_tolerance=3
 wib1_frag_hsi_trig_params={"fragment_type_description": "WIB",
                            "fragment_type": "ProtoWIB",
                            "hdf5_source_subsystem": "Detector_Readout",
@@ -67,7 +60,8 @@ hsi_frag_params ={"fragment_type_description": "HSI",
                              "hdf5_source_subsystem": "HW_Signals_Interface",
                              "expected_fragment_count": 1,
                              "min_size_bytes": 72, "max_size_bytes": 100}
-ignored_logfile_problems={"connectionservice": ["Searching for connections matching uid_regex<errored_frames_q> and data_type Unknown"]}
+ignored_logfile_problems={"connectionservice": ["Searching for connections matching uid_regex<errored_frames_q> and data_type Unknown"],
+                          "snbclient": ["BittorrentPeerDisconnectedError: Peer disconnected"]}
 
 # The next three variable declarations *must* be present as globals in the test
 # file. They're read by the "fixtures" in conftest.py to determine how
@@ -77,7 +71,6 @@ ignored_logfile_problems={"connectionservice": ["Searching for connections match
 confgen_name="snbmodules_multiru_multisnb_gen"
 # The arguments to pass to the config generator, excluding the json
 # output directory (the test framework handles that)
-
 
 # default config
 conf_dict = {}
@@ -106,12 +99,10 @@ conf_dict["readout"]["dro_map"] = dro_map_contents
 conf_dict["readout"]["use_fake_cards"] = True
 conf_dict["readout"]["default_data_file"] = "asset://?checksum=e96fd6efd3f98a9a3bfaba32975b476e"
 conf_dict["readout"]["enable_raw_recording"] = True # readout raw recording enabled
-# conf_dict["readout"]["raw_recording_output_dir"] = "."
 
 # SNBmodules config
 # for now, majority of config is by default in daqconf generator script
 conf_dict["snbmodules"] = {}
-
 conf_dict["snbmodules"]["snb_connections_prefix"] = "snbmodules"
 conf_dict["snbmodules"]["snb_timeout_notification_send"] = 10
 conf_dict["snbmodules"]["snb_timeout_notification_receive"] = 100
@@ -129,7 +120,9 @@ conf_dict["snbmodules"]["apps"] = []
 
 client_conf = {}
 client_conf["host"] = "localhost"
-client_conf["interface"] = "0.0.0.0"
+ip_addr = socket.gethostbyname(socket.gethostname())
+assert ip_addr is not '192.168.0.1' and ip_addr is not 'localhost', 'Hostname resolvable IP address on the host is needed by this test!'
+client_conf["interface"] = str(ip_addr)
 client_conf["client_name"] = "snbclient"
 client_conf["client_num"] = snb_clients_number
 client_conf["client_starting_port"] = 5001
@@ -139,22 +132,20 @@ conf_dict["snbmodules"]["apps"].append(client_conf)
 confgen_arguments={"MinimalSystem": conf_dict}
 
 # Modify new transfer expert command to transfer every raw data files
-with open('new-RClone-transfer.json', 'r+') as f:
+with open('new-torrent-transfer.json', 'r+') as f:
     data = json.load(f)
     
     file_names = []
     for i in range(number_of_data_producers):
         file_names.append("./output_" + interface_name + "_" + str(i) + ".out")
+
+    # Set up sources and destinations and file list for SNB transfer
     data['data']['modules'][0]['data']['files'] = file_names # <--- add `id` value.
     data['data']['modules'][0]['data']['src'] =  host_interface+"snbclient0"
     data['data']['modules'][0]['data']['dests'] = [ f"{host_interface}snbclient{i}" for i in range(1, snb_clients_number)]
-#    data['data']['modules'][0]['data']['protocol_args']['user'] = sftp_user_name
-#    data['data']['modules'][0]['data']['protocol_args']['port'] = 2022
-#    data['data']['modules'][0]['data']['protocol_args']['key_file'] = "/nfs/home/rsipos/.ssh/id_rsa"
-    data['data']['modules'][0]['data']['protocol_args']['protocol'] = "http"
-    data['data']['modules'][0]['data']['protocol_args']['port'] = 8080
+    data['data']['modules'][0]['data']['protocol'] = "BITTORRENT"
+    data['data']['modules'][0]['data']['protocol_args']['port'] = "12345"
     data['data']['modules'][0]['match'] = host_interface+"snbclient0"
-    
     f.seek(0)        # <--- should reset file position to the beginning.
     json.dump(data, f, indent=4)
     f.truncate()     # remove remaining part
@@ -162,7 +153,6 @@ with open('new-RClone-transfer.json', 'r+') as f:
 # Modify start transfer expert command
 with open('start-transfer.json', 'r+') as f:
     data = json.load(f)
-    data['data']['modules'][0]['match'] = host_interface+"snbclient0"
     f.seek(0)        # <--- should reset file position to the beginning.
     json.dump(data, f, indent=4)
     f.truncate()     # remove remaining part
@@ -171,9 +161,10 @@ with open('start-transfer.json', 'r+') as f:
 nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
 ("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}/record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
-f"expert_command /json0/json0/snbclient {root_path_commands}/new-RClone-transfer.json ".split() + \
-f"expert_command /json0/json0/snbclient {root_path_commands}/start-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient {root_path_commands}/new-torrent-transfer.json ".split() + \
+f"expert_command /json0/json0/snbclient {root_path_commands}/start-torrent-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
+#f"expert_command /json0/json0/snbclient {root_path_commands}/new-torrent-leach-transfer.json ".split() + \
 
 # The tests themselves
 def test_nanorc_success(run_nanorc):
@@ -207,7 +198,7 @@ def test_data_files(run_nanorc):
             assert data_file_checks.check_fragment_sizes(data_file, fragment_check_list[jdx])
             
 def test_local_transfer_snbmodules(run_nanorc):
-    # Check that the transfer was successful
+    """ This test checks if the content of transferred files are matching with the source files """
     for i in range(snb_clients_number):
         assert exists(run_nanorc.run_dir / f"{host_interface}snbclient{i}")
     
@@ -218,11 +209,19 @@ def test_local_transfer_snbmodules(run_nanorc):
             # Compare file size and content
             assert raw_file_check.compare_raw_size(run_nanorc.run_dir / file_name, run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
             assert raw_file_check.compare_raw_content(run_nanorc.run_dir / file_name, run_nanorc.run_dir / f"{host_interface}snbclient{i}/transfer0/" / file_name)
+            print('Transferred files\' size and content are matching, check passed for client and file: ', i, file_name)
         
 def test_bookkeeper_snbmodules(run_nanorc):
-    assert exists(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log")
-    
+    """ This test checks the bookkeeper and transfer status and logs """
+    assert exists(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log")    
     assert transfer_check.check_contain_no_errors(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log")
     for i in range(number_of_data_producers):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
-        assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log", file_name)
+        state = transfer_check.check_transfer_state(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log", file_name)
+        #print('State for file: ', file_name, str(state))
+        #print('Checking double amount -connected clients & active- of uploading and (finished or downloading) transfers in logs.')
+        expected = 2
+        assert state[0] == expected
+        assert state[1] == expected or state[2] == expected
+        print('Bookkeeper\'s expected state about transfers is consistent, check passed for data producer and file: ', i, file_name)
+

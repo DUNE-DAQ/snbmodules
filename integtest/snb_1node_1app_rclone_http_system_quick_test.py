@@ -3,6 +3,8 @@ import urllib.request
 import json
 import os
 from os.path import exists
+import signal
+import subprocess
 
  # Checks and tests functions
 import integrationtest.data_file_checks as data_file_checks
@@ -21,12 +23,11 @@ import snbmodules.transfer_check as transfer_check
 
 # test parameters that need to be changed for different machine testing
 interface_name = "localhosteth0" # interface name (for binary output file name)
-sftp_user_name = os.getlogin()
 root_path_commands=os.getcwd()
 
 # others tests parameters
 host_interface = "localhost" # host interface for the clients data exchange
-snb_clients_number = 3 # number of clients
+snb_clients_number = 2 # number of clients
 
 # Values that help determine the running conditions
 number_of_data_producers=2
@@ -145,12 +146,12 @@ with open('new-RClone-transfer.json', 'r+') as f:
     file_names = []
     for i in range(number_of_data_producers):
         file_names.append("./output_" + interface_name + "_" + str(i) + ".out")
+
+    # Set up sources and destinations and file list for SNB transfer
     data['data']['modules'][0]['data']['files'] = file_names # <--- add `id` value.
     data['data']['modules'][0]['data']['src'] =  host_interface+"snbclient0"
     data['data']['modules'][0]['data']['dests'] = [ f"{host_interface}snbclient{i}" for i in range(1, snb_clients_number)]
-#    data['data']['modules'][0]['data']['protocol_args']['user'] = sftp_user_name
-#    data['data']['modules'][0]['data']['protocol_args']['port'] = 2022
-#    data['data']['modules'][0]['data']['protocol_args']['key_file'] = "/nfs/home/rsipos/.ssh/id_rsa"
+    # RClone transfer implementation to use HTTP. RClone service with matching port and HTTP protocol must be running.
     data['data']['modules'][0]['data']['protocol_args']['protocol'] = "http"
     data['data']['modules'][0]['data']['protocol_args']['port'] = 8080
     data['data']['modules'][0]['match'] = host_interface+"snbclient0"
@@ -174,6 +175,10 @@ nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_trigg
 f"expert_command /json0/json0/snbclient {root_path_commands}/new-RClone-transfer.json ".split() + \
 f"expert_command /json0/json0/snbclient {root_path_commands}/start-transfer.json ".split() + \
 ["wait"] + [str(send_duration)] + "stop_run wait 2 scrap terminate".split()
+
+#def test_rclone_service_start(run_nanorc):
+#    print('Starting RClone serve over HTTP...')
+#    os.system('rclone serve http / --addr localhost:8080 &') 
 
 # The tests themselves
 def test_nanorc_success(run_nanorc):
@@ -226,3 +231,6 @@ def test_bookkeeper_snbmodules(run_nanorc):
     for i in range(number_of_data_producers):
         file_name = "output_" + interface_name + "_" + str(i) + ".out"
         assert transfer_check.check_transfer_finished(run_nanorc.run_dir / f"{host_interface}{conf_dict['snbmodules']['bookkeeper_name']}.log", file_name)
+
+# Kill rclone service that was spawned from this test suite
+#os.killpg(os.getpgid(rclone_srvc_proc.pid), signal.SIGTERM)  # Send the signal to a
