@@ -100,7 +100,6 @@ conf_dict["dataflow"] = {
         "app_name": "dataflow0"
     }]
 }
-conf_dict["dqm"] = {}
 conf_dict["detector"]["op_env"] = "integtest"
 conf_dict["detector"]["clock_speed_hz"] = 62500000 # DuneWIB/WIBEth
 conf_dict["daq_common"]["data_rate_slowdown_factor"] = data_rate_slowdown_factor
