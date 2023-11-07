@@ -34,9 +34,6 @@ local triggergen = moo.oschema.hier(strigger).dunedaq.daqconf.triggergen;
 local sdataflow = import "daqconf/dataflowgen.jsonnet";
 local dataflowgen = moo.oschema.hier(sdataflow).dunedaq.daqconf.dataflowgen;
 
-local sdqm = import "daqconf/dqmgen.jsonnet";
-local dqmgen = moo.oschema.hier(sdqm).dunedaq.daqconf.dqmgen;
-
 local ssnbmodules = import "snbmodules/snbmodulesgen.jsonnet";
 local snbmodulesgen = moo.oschema.hier(ssnbmodules).dunedaq.snbmodules.snbmodulesgen;
 
@@ -57,7 +54,6 @@ local cs = {
     s.field('daq_common',  daqcommongen.daq_common, default=daqcommongen.daq_common,   doc='DAQ common parameters'),
     s.field('boot',        bootgen.boot,    default=bootgen.boot,      doc='Boot parameters'),
     s.field('dataflow',    dataflowgen.dataflow,   default=dataflowgen.dataflow,     doc='Dataflow paramaters'),
-    s.field('dqm',         dqmgen.dqm,        default=dqmgen.dqm,          doc='DQM parameters'),
     s.field('hsi',         hsigen.hsi,        default=hsigen.hsi,          doc='HSI parameters'),
     // s.field('ctb_hsi',     fddaqconfgen.ctb_hsi,    default=fddaqconfgen.ctb_hsi,      doc='CTB parameters'),
     s.field('readout',     readoutgen.readout,    default=readoutgen.readout,      doc='Readout parameters'),
@@ -69,4 +65,4 @@ local cs = {
 };
 
 // Output a topologically sorted array.
-stypes + sctb + sdc + sboot + sdetector + sdaqcommon + stiming + shsi + sreadout + strigger + sdataflow + sdqm + ssnbmodules + moo.oschema.sort_select(cs, ns)
+stypes + sctb + sdc + sboot + sdetector + sdaqcommon + stiming + shsi + sreadout + strigger + sdataflow + ssnbmodules + moo.oschema.sort_select(cs, ns)
