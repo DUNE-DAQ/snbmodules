@@ -58,10 +58,15 @@ def cli(config, json_dir):
     from snbmodules import snbmodules_gen
     
     the_system = System()
-    
+
     for snbmodulesclient in snbmodules.apps:
         snbmodulesclientapp = snbmodulesgen.snbmodulesapp(**snbmodulesclient)
-        the_system.apps[snbmodulesclientapp.client_name] = snbmodules_gen.get_snbmodules_client_app(snbmodulesclientapp, 
+        HOST = snbmodulesclientapp.host
+        HOST2 = HOST.replace("-", "")
+        client_count = snbmodulesclientapp.client_num
+        for jdx in range(client_count):
+            client_name = HOST2 + snbmodulesclientapp.client_name + str(jdx)
+            the_system.apps[client_name] = snbmodules_gen.get_snbmodules_client_app(snbmodulesclientapp, 
                                                 SNB_CONNECTION_PREFIX=snbmodules.snb_connections_prefix,
                                                 SNB_TIMEOUT_SEND=snbmodules.snb_timeout_notification_send,
                                                 SNB_TIMEOUT_RECEIVE=snbmodules.snb_timeout_notification_receive)

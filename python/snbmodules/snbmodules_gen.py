@@ -20,6 +20,8 @@ from daqconf.core.app import App, ModuleGraph
 from daqconf.core.daqmodule import DAQModule
 from daqconf.core.conf_utils import Direction
 
+import socket
+
 # Time to wait on pop()
 QUEUE_POP_WAIT_MS = 100
 
@@ -34,6 +36,7 @@ def get_snbmodules_client_app(
     Here the configuration for an entire daq_application instance using DAQModules from snbmodules is generated.
     """
     HOST=snbmodules.host
+    HOST2 = HOST.replace("-", "")
     INTERFACE=snbmodules.interface
     CLIENT_NUM=snbmodules.client_num
     CLIENT_NAME=snbmodules.client_name
@@ -44,16 +47,20 @@ def get_snbmodules_client_app(
     
     # Adding the modules
     for i in range(CLIENT_NUM):
+        RESOLVED_INTERFACE = INTERFACE
+        if RESOLVED_INTERFACE == "0.0.0.0":
+            RESOLVED_INTERFACE = socket.gethostbyname(HOST)
+
         if CLIENT_STARTING_PORT == 0:
-            client_ip = INTERFACE
+            client_ip = RESOLVED_INTERFACE
         else:
-            client_ip = INTERFACE + ":" + str(CLIENT_STARTING_PORT + i)
-        
-        modules += [DAQModule(name = HOST+CLIENT_NAME + str(i), # Adding host in the client name to avoid name clashes
+            client_ip = RESOLVED_INTERFACE + ":" + str(CLIENT_STARTING_PORT + i)
+
+        modules += [DAQModule(name = HOST2+CLIENT_NAME + str(i), # Adding host in the client name to avoid name clashes
                           plugin = "SNBFileTransfer", 
                             conf = snbfiletransfer.ConfParams(
                             client_ip = client_ip, 
-                            work_dir = CLIENTS_ROOT_DIR + HOST + CLIENT_NAME + str(i) + "/", 
+                            work_dir = CLIENTS_ROOT_DIR + HOST2 + CLIENT_NAME + str(i) + "/", 
                             connection_prefix = SNB_CONNECTION_PREFIX, 
                             timeout_send = SNB_TIMEOUT_SEND, 
                             timeout_receive = SNB_TIMEOUT_RECEIVE, 
@@ -62,9 +69,9 @@ def get_snbmodules_client_app(
         
     # Adding the endpoints
     mgraph = ModuleGraph(modules)
-    
+
     for i in range(CLIENT_NUM):
-        mgraph.add_endpoint(SNB_CONNECTION_PREFIX+"_client_" + HOST + CLIENT_NAME + str(i) + "_notifications", HOST + CLIENT_NAME + str(i) + ".notifications", "notification_t", Direction.IN, check_endpoints=False)
+        mgraph.add_endpoint(SNB_CONNECTION_PREFIX+"_client_" + HOST2 + CLIENT_NAME + str(i) + "_notifications", HOST2 + CLIENT_NAME + str(i) + ".notifications", "notification_t", Direction.IN, check_endpoints=False)
         
     snbmodules_app = App(modulegraph = mgraph, host = HOST, name = HOST+CLIENT_NAME)
 
@@ -84,15 +91,16 @@ def get_snbmodules_bookkeeper_app(
     """
     Here the configuration for an entire daq_application instance using DAQModules from snbmodules is generated.
     """
-    
+
     modules = []
-    
+
     if BOOKKEEPER_PORT == 0:
-        bookkeeper_ip = HOST
+        bookkeeper_ip = socket.gethostbyname(HOST)
     else:
-        bookkeeper_ip = HOST + ":" + str(BOOKKEEPER_PORT)
-    
-    modules += [DAQModule(name = HOST+BOOKKEEPER_NAME, 
+        bookkeeper_ip = socket.gethostbyname(HOST) + ":" + str(BOOKKEEPER_PORT)
+
+    HOST2 = HOST.replace("-", "")
+    modules += [DAQModule(name = HOST2+BOOKKEEPER_NAME, 
                             plugin = "SNBTransferBookkeeper", 
                             conf = snbtransferbookkeeper.ConfParams(
                             bookkeeper_ip = bookkeeper_ip, 
@@ -107,7 +115,7 @@ def get_snbmodules_bookkeeper_app(
     # Adding the endpoints
     mgraph = ModuleGraph(modules)
     
-    mgraph.add_endpoint(SNB_CONNECTION_PREFIX + "_bookkeeper_" + HOST + BOOKKEEPER_NAME+"_notifications", HOST + BOOKKEEPER_NAME + ".notifications", "notification_t", Direction.IN, check_endpoints=False)
+    mgraph.add_endpoint(SNB_CONNECTION_PREFIX + "_bookkeeper_" + HOST2 + BOOKKEEPER_NAME+"_notifications", HOST2 + BOOKKEEPER_NAME + ".notifications", "notification_t", Direction.IN, check_endpoints=False)
         
     snbmodules_app = App(modulegraph = mgraph, host = HOST, name = HOST+BOOKKEEPER_NAME)
 
