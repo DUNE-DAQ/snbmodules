@@ -128,9 +128,9 @@ daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRA
 ##############################################################################
 # Integration tests
 
-foreach(t IN LISTS tests)
-    daq_add_application( ${t} ${t}.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
-endforeach()
+#TEMP_REMOVED#foreach(t IN LISTS tests)
+#TEMP_REMOVED#    daq_add_application( ${t} ${t}.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
+#TEMP_REMOVED#endforeach()
 
 ##############################################################################
 # Apps

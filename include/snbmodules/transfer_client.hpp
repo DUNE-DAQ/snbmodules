@@ -14,7 +14,6 @@
 
 #include "snbmodules/common/notification_enum.hpp"
 #include "snbmodules/notification_interface.hpp"
-#include "snbmodules/iomanager_wrapper.hpp"
 
 // errors handling
 #include "snbmodules/common/errors_declaration.hpp"

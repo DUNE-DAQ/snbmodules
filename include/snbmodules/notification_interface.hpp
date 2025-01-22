@@ -154,10 +154,10 @@ namespace dunedaq
             /// @param session_name Name of the session
             /// @param use_connectivity_service Use the connectivity service
             /// @param ip IP of the connectivity service
-            void init_connection_interface(const std::string &session_name = "SNBMODULES", bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000))
-            {
-                IOManagerWrapper::get().init_connection_interface(session_name, use_connectivity_service, ip);
-            }
+	  //TEMP_REMOVED//void init_connection_interface(const std::string &session_name = "SNBMODULES", bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000))
+	  //TEMP_REMOVED//{
+	  //TEMP_REMOVED//IOManagerWrapper::get().init_connection_interface(session_name, use_connectivity_service, ip);
+	  //TEMP_REMOVED//}
 
             // Getters
             inline const std::vector<std::string> &get_bookkeepers_conn() const { return m_bookkeepers_conn; }

@@ -7,7 +7,6 @@
  */
 
 #include "SNBTransferBookkeeper.hpp"
-#include "appfwk/DAQModuleHelper.hpp"
 #include "appfwk/cmd/Nljs.hpp"
 
 #include <string>

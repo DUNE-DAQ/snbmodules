@@ -40,7 +40,7 @@ namespace dunedaq::snbmodules
         /// Only used for stand alone application
         /// @param use_connectivity_service if true, use the connectivity service
         /// @param ip ip of the connectivity service
-        void init_connection_interface(const std::string &session_name, bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000));
+      //TEMP_REMOVED//void init_connection_interface(const std::string &session_name, bool use_connectivity_service = false, const IPFormat &ip = IPFormat("localhost", 5000));
 
         /// @brief lookups a connection with the given pattern
         /// @param conn_id regex pattern of the connection

@@ -14,6 +14,7 @@
 namespace dunedaq::snbmodules
 {
 
+#if 0
     void IOManagerWrapper::init_connection_interface(const std::string &session_name, bool use_connectivity_service, const IPFormat &ip)
     {
         dunedaq::logging::Logging::setup();
@@ -28,6 +29,7 @@ namespace dunedaq::snbmodules
 
         iomanager::IOManager::get()->configure(m_queues, m_connections, use_connectivity_service, std::chrono::milliseconds(100));
     }
+#endif
 
     void IOManagerWrapper::add_connection(const IPFormat &ip, std::string id, std::string data_type)
     {

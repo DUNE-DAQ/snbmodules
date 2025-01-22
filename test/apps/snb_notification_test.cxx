@@ -7,7 +7,6 @@
  */
 
 #include "snbmodules/transfer_client.hpp"
-#include "snbmodules/transfer_session.hpp"
 #include "snbmodules/bookkeeper.hpp"
 
 #include <iostream>
