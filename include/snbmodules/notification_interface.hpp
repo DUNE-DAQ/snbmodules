@@ -130,6 +130,7 @@ namespace dunedaq
                 }
             }
 
+#if 0
             /// @brief Add a conection to the list of connections
             /// @param ip IP of the connection
             /// @param connection_name Name of the connection
@@ -148,6 +149,7 @@ namespace dunedaq
                     m_bookkeepers_conn.push_back(connection_name);
                 }
             }
+#endif
 
             /// @brief Init the connection interface,
             /// Only used for standalone application

@@ -20,7 +20,7 @@ find_dependency(nlohmann_json)
 find_dependency(HighFive)
 find_dependency(daqdataformats)
 find_dependency(detdataformats)
-find_dependency(readoutlibs)
+find_dependency(datahandlinglibs)
 
 # Figure out whether or not this dependency is an installed package or
 # in repo form

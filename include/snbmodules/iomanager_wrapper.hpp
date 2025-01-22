@@ -15,6 +15,8 @@
 #include "iomanager/IOManager.hpp"
 #include "iomanager/network/ConfigClient.hpp"
 #include "iomanager/network/NetworkIssues.hpp"
+#include "confmodel/NetworkConnection.hpp"
+#include "confmodel/Queue.hpp"
 
 #include <string>
 
@@ -53,13 +55,13 @@ namespace dunedaq::snbmodules
         /// @param ip ip of the connection
         /// @param id name of the connection
         /// @param data_type data type of the connection data
-        void add_connection(const IPFormat &ip, std::string id, std::string data_type);
+      //TEMP_REMOVED//void add_connection(const IPFormat &ip, std::string id, std::string data_type);
 
     protected:
         /// @brief List of connections
-        iomanager::connection::Connections_t m_connections;
+        std::vector<const confmodel::NetworkConnection*> m_connections;
         /// @brief List of queues
-        iomanager::connection::Queues_t m_queues;
+        std::vector<const confmodel::Queue*> m_queues;
 
     private:
         IOManagerWrapper() = default;

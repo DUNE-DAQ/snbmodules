@@ -36,9 +36,8 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBTransferBookkeeper::init(const nlohmann::json &args)
+    SNBTransferBookkeeper::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration>/* mcfg*/)
     {
-        (void)args;
     }
 
     void

@@ -123,9 +123,8 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::init(const nlohmann::json &args)
+    SNBFileTransfer::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration>/* mcfg*/)
     {
-        (void)args;
     }
 
     void

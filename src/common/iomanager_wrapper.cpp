@@ -29,7 +29,6 @@ namespace dunedaq::snbmodules
 
         iomanager::IOManager::get()->configure(m_queues, m_connections, use_connectivity_service, std::chrono::milliseconds(100));
     }
-#endif
 
     void IOManagerWrapper::add_connection(const IPFormat &ip, std::string id, std::string data_type)
     {
@@ -40,6 +39,7 @@ namespace dunedaq::snbmodules
         TLOG() << "debug : Added connection " << conn.id.uid << " uri: " << conn.uri;
         m_connections.emplace_back(std::move(conn));
     }
+#endif
 
     iomanager::ConnectionResponse IOManagerWrapper::lookups_connection(iomanager::ConnectionId const &conn_id, bool restrict_single)
     {

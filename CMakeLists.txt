@@ -19,7 +19,7 @@ find_package(logging REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
-find_package(readoutlibs REQUIRED)
+find_package(datahandlinglibs REQUIRED)
 find_package(rclone REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
@@ -34,7 +34,7 @@ set(linked_libraries
     daqdataformats::daqdataformats
     detdataformats::detdataformats
     nlohmann_json::nlohmann_json
-    readoutlibs::readoutlibs
+    datahandlinglibs::datahandlinglibs
     Boost::iostreams
     LibtorrentRasterbar::torrent-rasterbar
     rclone::rclone

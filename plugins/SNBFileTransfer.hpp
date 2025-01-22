@@ -34,7 +34,7 @@ namespace dunedaq::snbmodules
         SNBFileTransfer(SNBFileTransfer &&) = delete;
         SNBFileTransfer &operator=(SNBFileTransfer &&) = delete;
 
-        void init(const nlohmann::json &obj) override;
+        void init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration> mcfg);
         // void get_info(opmonlib::InfoCollector &ci, int level) override;
 
     private:
