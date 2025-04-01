@@ -251,22 +251,30 @@ namespace dunedaq::snbmodules
 
     void Bookkeeper::do_work(std::atomic<bool> &running_flag)
     {
+      TLOG() << "JAB " << __LINE__;
         // Just one request on startup, after that the clients will have to send by themself
         for (const std::string &client : get_clients_conn())
         {
+	  TLOG() << "JAB " << __LINE__ << " " << client;
             request_connection_and_available_files(client);
         }
+      TLOG() << "JAB " << __LINE__;
 
         auto time_point = std::chrono::high_resolution_clock::now();
 
         while (running_flag.load())
         {
+      TLOG() << "JAB " << __LINE__;
             lookups_connections();
+	    TLOG() << "JAB " << __LINE__ << " " << get_bookkeepers_conn().size();
             std::optional<NotificationData> msg = listen_for_notification(get_bookkeepers_conn().front());
+      TLOG() << "JAB " << __LINE__;
             if (msg.has_value())
             {
+      TLOG() << "JAB " << __LINE__;
                 action_on_receive_notification(msg.value());
             }
+      TLOG() << "JAB " << __LINE__;
 
             // check alives clients and available files
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

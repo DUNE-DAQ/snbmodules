@@ -31,6 +31,7 @@ namespace dunedaq::snbmodules
             timeout = m_timeout_receive;
         }
 
+	TLOG() << "AAA " << __LINE__ << " getting receiver for UID \"" << id << "\"";
         std::optional<NotificationData> msg = iomanager::IOManager::get()
                                                   ->get_receiver<NotificationData>(id)
                                                   ->try_receive(std::chrono::milliseconds(timeout));

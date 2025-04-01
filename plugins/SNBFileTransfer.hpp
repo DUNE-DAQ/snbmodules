@@ -13,7 +13,8 @@
 #include "snbmodules/common/protocols_enum.hpp"
 
 #include "appfwk/DAQModule.hpp"
-
+#include "appmodel/SNBFileTransfer.hpp"
+#include "appmodel/SNBTransferConf.hpp"
 #include "utilities/WorkerThread.hpp"
 
 #include <memory>
@@ -39,10 +40,10 @@ namespace dunedaq::snbmodules
 
     private:
         // Commands
-        void do_conf(const nlohmann::json &obj);
-        void do_start(const nlohmann::json &obj);
-        void do_stop(const nlohmann::json &obj);
-        void do_scrap(const nlohmann::json &obj);
+        void do_conf(const data_t&);
+        void do_start(const data_t&);
+        void do_stop(const data_t&);
+        void do_scrap(const data_t&);
 
         void do_tr_new(const nlohmann::json &args);
         void do_tr_start(const nlohmann::json &args);
@@ -51,6 +52,7 @@ namespace dunedaq::snbmodules
         void do_tr_cancel(const nlohmann::json &args);
 
         // Configuration
+        const appmodel::SNBTransferConf* m_snbft_conf;
         std::shared_ptr<TransferClient> m_client;
         std::string m_name;
 

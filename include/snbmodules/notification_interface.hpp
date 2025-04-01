@@ -73,7 +73,8 @@ namespace dunedaq
                   m_connection_prefix(connection_prefix)
             {
                 m_bookkeepers_conn = std::move(bk_conn);
-                m_clients_conn = std::move(client_conn);
+		TLOG() << "CCC " << __LINE__ << " client_conn size=" << client_conn.size();
+		m_clients_conn = std::move(client_conn);
             }
             virtual ~NotificationInterface() = default;
 
@@ -104,29 +105,35 @@ namespace dunedaq
             {
 
                 iomanager::ConnectionId id = {m_connection_prefix + ".*bookkeeper.*", "notification_t", ""};
+		TLOG() << "LAB " << __LINE__ << " " << id.uid << " " << id.data_type << " " << id.session;
 
                 try
                 {
                     iomanager::ConnectionResponse result = IOManagerWrapper::get().lookups_connection(id, false);
                     for (const auto &conn : result.connections)
                     {
+		      TLOG() << "CCC " << __LINE__ << " adding bookkeeper conn.uid=" << conn.uid;
                         m_bookkeepers_conn.push_back(conn.uid);
                     }
                 }
                 catch (...) // Ignore if no connection found
                 {
+		  TLOG() << "LAB " << __LINE__;
                 }
                 try
                 {
-                    id = {m_connection_prefix + ".*client.*", "notification_t", ""};
+                    id = {m_connection_prefix + ".*transfer.*", "notification_t", ""};
+		    TLOG() << "LAB " << __LINE__ << " " << id.uid << " " << id.data_type << " " << id.session;
                     iomanager::ConnectionResponse result = IOManagerWrapper::get().lookups_connection(id, false);
                     for (const auto &conn : result.connections)
                     {
+		      TLOG() << "CCC " << __LINE__ << " adding transfer conn.uid=" << conn.uid;
                         m_clients_conn.insert(conn.uid);
                     }
                 }
                 catch (...) // Ignore if no connection found
                 {
+		  TLOG() << "LAB " << __LINE__;
                 }
             }
 
@@ -141,8 +148,9 @@ namespace dunedaq
                 IOManagerWrapper::get().add_connection(ip, connection_name, data_type);
 
                 if (is_client)
-                {
-                    m_clients_conn.insert(connection_name);
+		{
+		  TLOG() << "CCC " << __LINE__ << " adding connection_name=" << connection_name;
+		  m_clients_conn.insert(connection_name);
                 }
                 else
                 {

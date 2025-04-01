@@ -123,29 +123,28 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration>/* mcfg*/)
+    SNBFileTransfer::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration> mcfg)
     {
+      auto mdal = mcfg->module<appmodel::SNBFileTransfer>(get_name());
+      if (!mdal) {
+	throw appfwk::CommandFailed(ERS_HERE, "init", get_name(), "Unable to retrieve configuration object");
+      }
+
+      m_snbft_conf = mdal->get_configuration();
     }
 
     void
-    SNBFileTransfer::do_conf(const nlohmann::json &args)
+    SNBFileTransfer::do_conf(const data_t& /*payload*/)
     {
-        if (args.contains("client_ip") && args.contains("work_dir") && args.contains("connection_prefix") && args.contains("timeout_send") && args.contains("timeout_receive"))
-        {
-            m_client = std::make_shared<TransferClient>(IPFormat(args["client_ip"].get<std::string>()), m_name, args["work_dir"].get<std::filesystem::path>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
-            m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
-                                                                          { m_client->do_work(running); });
-        }
-        else
-        {
-            ers::error(ConfigError(ERS_HERE, "client_ip, work_dir, connection_prefix, timeout_send and timeout_receive are mandatory to configure a TransferClient"));
-        }
+      TLOG() << "FAB " << __LINE__ << " " << m_snbft_conf->get_work_dir();
+      m_client = std::make_shared<TransferClient>(IPFormat(m_snbft_conf->get_client_ip()), m_name, m_snbft_conf->get_work_dir(), m_snbft_conf->get_connection_prefix(), m_snbft_conf->get_timeout_send(), m_snbft_conf->get_timeout_receive());
+      m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
+                                                                    { m_client->do_work(running); });
     }
 
     void
-    SNBFileTransfer::do_scrap(const nlohmann::json &args)
+    SNBFileTransfer::do_scrap(const data_t& /*payload*/)
     {
-        (void)args;
         if (m_thread->thread_running())
         {
             m_thread->stop_working_thread();
@@ -159,17 +158,15 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::do_start(const nlohmann::json &args)
+    SNBFileTransfer::do_start(const data_t& /*payload*/)
     {
-        (void)args;
         m_client->lookups_connections();
         m_thread->start_working_thread();
     }
 
     void
-    SNBFileTransfer::do_stop(const nlohmann::json &args)
+    SNBFileTransfer::do_stop(const data_t& /*payload*/)
     {
-        (void)args;
         m_thread->stop_working_thread();
     }
 

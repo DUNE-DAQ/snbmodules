@@ -21,6 +21,7 @@ namespace dunedaq::snbmodules
           m_listening_ip(listening_ip),
           m_client_id(client_id)
     {
+      TLOG() << "DAB " << __LINE__ << " " << listening_dir;
         // remove all occurences of ./ in the file path
         std::string file_path_str = listening_dir.string();
         std::string x = "./";
@@ -28,6 +29,7 @@ namespace dunedaq::snbmodules
         size_t pos = 0;
         while (true)
         {
+	  TLOG() << "DAB " << __LINE__ << " " << file_path_str;
             pos = file_path_str.find(x, pos);
             if (pos == std::string::npos)
             {
@@ -36,7 +38,11 @@ namespace dunedaq::snbmodules
 
             file_path_str.replace(pos, x.length(), "");
         }
+      TLOG() << "DAB " << __LINE__ << " " << file_path_str;
+      if (file_path_str.length() == 0) {file_path_str = "blah";}
+      TLOG() << "DAB " << __LINE__ << " " << file_path_str;
         m_listening_dir = std::filesystem::absolute(file_path_str);
+      TLOG() << "DAB " << __LINE__ << " " << file_path_str;
         std::filesystem::create_directories(m_listening_dir);
     }
 
@@ -595,14 +601,27 @@ namespace dunedaq::snbmodules
 
     std::string TransferClient::get_my_conn()
     {
+      TLOG() << "BBB " << __LINE__ << " my_conn=\"" << m_my_conn << "\"";
         if (m_my_conn.empty())
         {
             for (const std::string &c : get_clients_conn())
             {
-                if (c.find(get_client_id()) != std::string::npos)
-                {
-                    m_my_conn = c;
-                    break;
+	      std::string str1 = c;
+	      std::string str2 = get_client_id();
+
+	      if (str1.starts_with("snbmodules_")) {str1 = str1.substr(11);}
+	      if (str2.starts_with("snbmodules_")) {str2 = str2.substr(11);}
+
+	      if (str1.starts_with("snb-sample-config-")) {str1 = str1.substr(18);}
+	      if (str2.starts_with("snb-sample-config-")) {str2 = str2.substr(18);}
+
+	      TLOG() << "BBB " << __LINE__ << " c=\"" << c << "\" client_id=" << get_client_id()
+		     << " " << str1 << " " << str2;
+	      //if (c.find(get_client_id()) != std::string::npos)
+	      if (str1 == str2)
+		{
+		  m_my_conn = c;
+		  break;
                 }
             }
 

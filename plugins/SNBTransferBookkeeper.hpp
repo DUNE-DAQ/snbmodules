@@ -12,7 +12,8 @@
 #include "snbmodules/bookkeeper.hpp"
 
 #include "appfwk/DAQModule.hpp"
-
+#include "appmodel/SNBTransferBookkeeper.hpp"
+#include "appmodel/SNBBookkeeperConf.hpp"
 #include "utilities/WorkerThread.hpp"
 
 // #include <ers/Issue.h>
@@ -39,13 +40,14 @@ namespace dunedaq::snbmodules
 
     private:
         // Commands
-        void do_conf(const nlohmann::json &obj);
-        void do_start(const nlohmann::json &obj);
-        void do_stop(const nlohmann::json &obj);
-        void do_scrap(const nlohmann::json &obj);
-        void do_info(const nlohmann::json &args);
+        void do_conf(const data_t&);
+        void do_start(const data_t&);
+        void do_stop(const data_t&);
+        void do_scrap(const data_t&);
+        //void do_info(const nlohmann::json &args);
 
         // Configuration
+        const appmodel::SNBBookkeeperConf* m_snbbk_conf;
         std::shared_ptr<Bookkeeper> m_bookkeeper;
         std::string m_name;
 

@@ -23,58 +23,54 @@ namespace dunedaq::snbmodules
         register_command("scrap", &SNBTransferBookkeeper::do_scrap);
         register_command("start", &SNBTransferBookkeeper::do_start);
         register_command("stop", &SNBTransferBookkeeper::do_stop);
-        register_command("info", &SNBTransferBookkeeper::do_info);
+        //register_command("info", &SNBTransferBookkeeper::do_info);
 
         m_name = name;
     }
 
+  //void
+  //SNBTransferBookkeeper::do_info(const nlohmann::json &args)
+  //{
+  //    (void)args;
+  //    m_bookkeeper->request_update_metadata(true);
+  //}
+
     void
-    SNBTransferBookkeeper::do_info(const nlohmann::json &args)
+    SNBTransferBookkeeper::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration> mcfg)
     {
-        (void)args;
-        m_bookkeeper->request_update_metadata(true);
+      auto mdal = mcfg->module<appmodel::SNBTransferBookkeeper>(get_name());
+      if (!mdal) {
+	throw appfwk::CommandFailed(ERS_HERE, "init", get_name(), "Unable to retrieve configuration object");
+      }
+
+      m_snbbk_conf = mdal->get_configuration();
     }
 
     void
-    SNBTransferBookkeeper::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration>/* mcfg*/)
+    SNBTransferBookkeeper::do_conf(const data_t& /*payload*/)
     {
+      m_bookkeeper = std::make_shared<Bookkeeper>(IPFormat(m_snbbk_conf->get_bookkeeper_ip()), m_name, m_snbbk_conf->get_bookkeeper_log_path(), m_snbbk_conf->get_refresh_rate(), m_snbbk_conf->get_connection_prefix(), m_snbbk_conf->get_timeout_send(), m_snbbk_conf->get_timeout_receive());
+      m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
+                                                                    { m_bookkeeper->do_work(running); });
     }
 
     void
-    SNBTransferBookkeeper::do_conf(const nlohmann::json &args)
+    SNBTransferBookkeeper::do_scrap(const data_t& /*payload*/)
     {
-        if (args.contains("bookkeeper_ip") && args.contains("bookkeeper_log_path") && args.contains("refresh_rate") && args.contains("connection_prefix") && args.contains("timeout_send") && args.contains("timeout_receive"))
-        {
-            m_bookkeeper = std::make_shared<Bookkeeper>(IPFormat(args["bookkeeper_ip"].get<std::string>()), m_name, args["bookkeeper_log_path"].get<std::string>(), args["refresh_rate"].get<int>(), args["connection_prefix"].get<std::string>(), args["timeout_send"].get<int>(), args["timeout_receive"].get<int>());
-            m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
-                                                                          { m_bookkeeper->do_work(running); });
-        }
-        else
-        {
-            ers::error(ConfigError(ERS_HERE, "bookkeeper_ip, bookkeeper_log_path, refresh_rate, connection_prefix, timeout_send and timeout_receive are mandatory to configure the bookkeeper"));
-        }
-    }
-
-    void
-    SNBTransferBookkeeper::do_scrap(const nlohmann::json &args)
-    {
-        (void)args;
         m_bookkeeper.reset();
         m_thread.reset();
     }
 
     void
-    SNBTransferBookkeeper::do_start(const nlohmann::json &args)
+    SNBTransferBookkeeper::do_start(const data_t& /*payload*/)
     {
-        (void)args;
         m_bookkeeper->lookups_connections();
         m_thread->start_working_thread();
     }
 
     void
-    SNBTransferBookkeeper::do_stop(const nlohmann::json &args)
+    SNBTransferBookkeeper::do_stop(const data_t& /*payload*/)
     {
-        (void)args;
         m_thread->stop_working_thread();
     }
 

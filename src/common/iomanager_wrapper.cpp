@@ -43,6 +43,7 @@ namespace dunedaq::snbmodules
 
     iomanager::ConnectionResponse IOManagerWrapper::lookups_connection(iomanager::ConnectionId const &conn_id, bool restrict_single)
     {
+      TLOG() << "BLAB " << __LINE__ << " " << conn_id.uid << " " << conn_id.data_type << " " << conn_id.session;
         return iomanager::NetworkManager::get().get_connections(conn_id, restrict_single);
     }
 } // namespace dunedaq::snbmodules
