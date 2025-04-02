@@ -36,9 +36,9 @@ namespace dunedaq::snbmodules
   //}
 
     void
-    SNBTransferBookkeeper::init(std::shared_ptr<dunedaq::appfwk::ModuleConfiguration> mcfg)
+    SNBTransferBookkeeper::init(std::shared_ptr<dunedaq::appfwk::ConfigurationManager> mcfg)
     {
-      auto mdal = mcfg->module<appmodel::SNBTransferBookkeeper>(get_name());
+      auto mdal = mcfg->get_dal<appmodel::SNBTransferBookkeeper>(get_name());
       if (!mdal) {
 	throw appfwk::CommandFailed(ERS_HERE, "init", get_name(), "Unable to retrieve configuration object");
       }
