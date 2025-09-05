@@ -40,16 +40,16 @@ namespace dunedaq::snbmodules
 
     private:
         // Commands
-        void do_conf(const data_t&);
-        void do_start(const data_t&);
-        void do_stop(const data_t&);
-        void do_scrap(const data_t&);
+      void do_conf(const CommandData_t&);
+        void do_start(const CommandData_t&);
+      void do_stop(const CommandData_t&);
+        void do_scrap(const CommandData_t&);
 
-        void do_tr_new(const nlohmann::json &args);
-        void do_tr_start(const nlohmann::json &args);
-        void do_tr_pause(const nlohmann::json &args);
-        void do_tr_resume(const nlohmann::json &args);
-        void do_tr_cancel(const nlohmann::json &args);
+        void do_tr_new(const CommandData_t& args);
+        void do_tr_start(const CommandData_t& args);
+        void do_tr_pause(const CommandData_t& args);
+        void do_tr_resume(const CommandData_t& args);
+        void do_tr_cancel(const CommandData_t& args);
 
         // Configuration
         const appmodel::SNBTransferConf* m_snbft_conf;

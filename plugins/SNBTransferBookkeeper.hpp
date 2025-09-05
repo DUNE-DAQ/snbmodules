@@ -40,11 +40,11 @@ namespace dunedaq::snbmodules
 
     private:
         // Commands
-        void do_conf(const data_t&);
-        void do_start(const data_t&);
-        void do_stop(const data_t&);
-        void do_scrap(const data_t&);
-        //void do_info(const nlohmann::json &args);
+      void do_conf(const CommandData_t&);
+      void do_start(const CommandData_t&);
+      void do_stop(const CommandData_t&);
+      void do_scrap(const CommandData_t&);
+        //void do_info(const CommandData_t &args);
 
         // Configuration
         const appmodel::SNBBookkeeperConf* m_snbbk_conf;

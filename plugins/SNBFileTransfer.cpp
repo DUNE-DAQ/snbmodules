@@ -35,7 +35,7 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::do_tr_new(const nlohmann::json &args)
+    SNBFileTransfer::do_tr_new(const CommandData_t& args)
     {
         TLOG() << "debug : New transfer request !";
 
@@ -74,7 +74,7 @@ namespace dunedaq::snbmodules
         }
     }
     void
-    SNBFileTransfer::do_tr_start(const nlohmann::json &args)
+    SNBFileTransfer::do_tr_start(const CommandData_t& args)
     {
         if (args.contains("transfer_id"))
         {
@@ -86,7 +86,7 @@ namespace dunedaq::snbmodules
         }
     }
     void
-    SNBFileTransfer::do_tr_pause(const nlohmann::json &args)
+    SNBFileTransfer::do_tr_pause(const CommandData_t& args)
     {
         if (args.contains("transfer_id"))
         {
@@ -98,7 +98,7 @@ namespace dunedaq::snbmodules
         }
     }
     void
-    SNBFileTransfer::do_tr_resume(const nlohmann::json &args)
+    SNBFileTransfer::do_tr_resume(const CommandData_t& args)
     {
         if (args.contains("transfer_id"))
         {
@@ -110,7 +110,7 @@ namespace dunedaq::snbmodules
         }
     }
     void
-    SNBFileTransfer::do_tr_cancel(const nlohmann::json &args)
+    SNBFileTransfer::do_tr_cancel(const CommandData_t& args)
     {
         if (args.contains("transfer_id"))
         {
@@ -134,7 +134,7 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::do_conf(const data_t& /*payload*/)
+    SNBFileTransfer::do_conf(const CommandData_t& /*payload*/)
     {
       TLOG() << "FAB " << __LINE__ << " " << m_snbft_conf->get_work_dir();
       m_client = std::make_shared<TransferClient>(IPFormat(m_snbft_conf->get_client_ip()), m_name, m_snbft_conf->get_work_dir(), m_snbft_conf->get_connection_prefix(), m_snbft_conf->get_timeout_send(), m_snbft_conf->get_timeout_receive());
@@ -143,7 +143,7 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::do_scrap(const data_t& /*payload*/)
+    SNBFileTransfer::do_scrap(const CommandData_t& /*payload*/)
     {
         if (m_thread->thread_running())
         {
@@ -158,14 +158,14 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBFileTransfer::do_start(const data_t& /*payload*/)
+    SNBFileTransfer::do_start(const CommandData_t& /*payload*/)
     {
         m_client->lookups_connections();
         m_thread->start_working_thread();
     }
 
     void
-    SNBFileTransfer::do_stop(const data_t& /*payload*/)
+    SNBFileTransfer::do_stop(const CommandData_t& /*payload*/)
     {
         m_thread->stop_working_thread();
     }

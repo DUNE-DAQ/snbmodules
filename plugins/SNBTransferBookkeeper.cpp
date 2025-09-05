@@ -47,7 +47,7 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBTransferBookkeeper::do_conf(const data_t& /*payload*/)
+    SNBTransferBookkeeper::do_conf(const CommandData_t& /*payload*/)
     {
       m_bookkeeper = std::make_shared<Bookkeeper>(IPFormat(m_snbbk_conf->get_bookkeeper_ip()), m_name, m_snbbk_conf->get_bookkeeper_log_path(), m_snbbk_conf->get_refresh_rate(), m_snbbk_conf->get_connection_prefix(), m_snbbk_conf->get_timeout_send(), m_snbbk_conf->get_timeout_receive());
       m_thread = std::make_unique<dunedaq::utilities::WorkerThread>([&](std::atomic<bool> &running)
@@ -55,21 +55,21 @@ namespace dunedaq::snbmodules
     }
 
     void
-    SNBTransferBookkeeper::do_scrap(const data_t& /*payload*/)
+    SNBTransferBookkeeper::do_scrap(const CommandData_t& /*payload*/)
     {
         m_bookkeeper.reset();
         m_thread.reset();
     }
 
     void
-    SNBTransferBookkeeper::do_start(const data_t& /*payload*/)
+    SNBTransferBookkeeper::do_start(const CommandData_t& /*payload*/)
     {
         m_bookkeeper->lookups_connections();
         m_thread->start_working_thread();
     }
 
     void
-    SNBTransferBookkeeper::do_stop(const data_t& /*payload*/)
+    SNBTransferBookkeeper::do_stop(const CommandData_t& /*payload*/)
     {
         m_thread->stop_working_thread();
     }
