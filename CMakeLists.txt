@@ -20,11 +20,10 @@ find_package(nlohmann_json REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
 find_package(datahandlinglibs REQUIRED)
+find_package(fdreadoutlibs REQUIRED)
 find_package(rclone REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
-
-daq_codegen( snbfiletransfer.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
 
 set(linked_libraries
     iomanager::iomanager
@@ -124,6 +123,7 @@ daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${s
 
 daq_add_plugin(SNBFileTransfer duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
+daq_add_plugin(SNBFileReaderModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
 
 ##############################################################################
 # Integration tests
