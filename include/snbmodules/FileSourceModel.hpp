@@ -46,22 +46,14 @@ class FileSourceModel : public FileSourceConcept
 public:
   explicit FileSourceModel(std::string name,
                                std::atomic<bool>& run_marker,
-                               uint64_t time_tick_diff, // NOLINT(build/unsigned)
-                               double dropout_rate,
-                               double frame_error_rate,
-                               double rate_khz,
-			       uint16_t frames_per_tick=1)
+                               double rate_khz)
     : m_run_marker(run_marker)
-    , m_time_tick_diff(time_tick_diff)
-    , m_dropout_rate(dropout_rate)
-    , m_frame_error_rate(frame_error_rate)
     , m_packet_count{ 0 }
     , m_raw_sender_timeout_ms(0)
     , m_raw_data_sender(nullptr)
     , m_producer_thread(0)
     , m_name(name)
     , m_rate_khz(rate_khz)
-    ,m_frames_per_tick(frames_per_tick)
   {}
 
   //void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
@@ -85,17 +77,23 @@ protected:
   void run_produce();
   virtual void generate_opmon_data() override;
 
+  void open_next_file();
+
 private:
   // Constuctor params
   std::atomic<bool>& m_run_marker;
 
   // CONFIGURATION
-  uint32_t m_this_apa_number;  // NOLINT(build/unsigned)
-  uint32_t m_this_link_number; // NOLINT(build/unsigned)
+    std::string m_name;
+  bool m_is_configured = false;
+  double m_rate_khz;
 
-  uint64_t m_time_tick_diff; // NOLINT(build/unsigned)
-  double m_dropout_rate;
-  double m_frame_error_rate;
+  std::vector<std::string> m_file_names;
+  std::vector<std::string>::const_iterator m_file_iterator;
+  uint32_t m_input_buffer_size;
+  std::string m_compression_algorithm;
+
+  daqdataformats::SourceID m_sourceid;
 
   // STATS
   std::atomic<int> m_packet_count{ 0 };
@@ -118,20 +116,7 @@ private:
   std::unique_ptr<dunedaq::datahandlinglibs::BufferedFileReader<ReadoutType>> m_file_reader;
 
   utilities::ReusableThread m_producer_thread;
-
-  std::string m_name;
-  bool m_is_configured = false;
-  double m_rate_khz;
-  uint16_t m_frames_per_tick;
-
-  daqdataformats::SourceID m_sourceid;
-  int m_crateid;
-  int m_slotid;
-  int m_linkid;
-
-  bool m_t0_now;
-
-};
+  };
 
 } // namespace snbmodules
 } // namespace dunedaq

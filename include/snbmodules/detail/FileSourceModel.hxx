@@ -5,9 +5,9 @@
 
 using dunedaq::datahandlinglibs::CannotWriteToQueue;
 using dunedaq::datahandlinglibs::ConfigurationError;
+using dunedaq::datahandlinglibs::logging::TLVL_BOOKKEEPING;
 using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
-using dunedaq::datahandlinglibs::logging::TLVL_BOOKKEEPING;
 
 namespace dunedaq {
 namespace snbmodules {
@@ -39,25 +39,40 @@ FileSourceModel<ReadoutType>::conf(const confmodel::DetectorStream* link_conf,
     m_sourceid.id = link_conf->get_source_id();
     m_sourceid.subsystem = ReadoutType::subsystem;
 
-    m_crateid = link_conf->get_geo_id()->get_crate_id();
-    m_slotid = link_conf->get_geo_id()->get_slot_id();
-    m_linkid = link_conf->get_geo_id()->get_stream_id();
+    m_file_names = file_params->get_data_files();
+    m_file_iterator = m_file_names.begin();
 
-    m_t0_now = file_params->get_set_t0();
-    try {
-      m_file_reader = std::make_unique<datahandlinglibs::BufferedFileReader<ReadoutType>>(
-        file_params->get_data_file_name(),
-        file_params->get_input_buffer_size(),
-        file_params->get_file_compression_algorithm());
-    } catch (const ers::Issue& ex) {
-      ers::fatal(ex);
-      throw ConfigurationError(ERS_HERE, m_sourceid, "", ex);
-    }
+    m_input_buffer_size = file_params->get_input_buffer_size();
+    m_compression_algorithm = file_params->get_file_compression_algorithm();
+
+    open_next_file();
 
     m_is_configured = true;
   }
   // Configure thread:
   m_producer_thread.set_name("fileread", m_sourceid.id);
+}
+
+template<class ReadoutType>
+void
+FileSourceModel<ReadoutType>::open_next_file()
+{
+  if (m_file_iterator == m_file_names.end()) {
+    if (m_file_reader) {
+      m_file_reader->close();
+    }
+    m_file_reader.reset();
+    m_is_configured = false;
+    return;
+  }
+  try {
+    m_file_reader = std::make_unique<datahandlinglibs::BufferedFileReader<ReadoutType>>(
+      *m_file_iterator, m_input_buffer_size, m_compression_algorithm);
+    ++m_file_iterator;
+  } catch (const ers::Issue& ex) {
+    ers::fatal(ex);
+    throw ConfigurationError(ERS_HERE, m_sourceid, "", ex);
+  }
 }
 
 template<class ReadoutType>
@@ -97,7 +112,7 @@ template<class ReadoutType>
 void
 FileSourceModel<ReadoutType>::run_produce()
 {
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_this_link_number << " started";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_sourceid.to_string() << " started";
 
   // pthread_setname_np(pthread_self(), get_name().c_str());
 
@@ -105,30 +120,13 @@ FileSourceModel<ReadoutType>::run_produce()
   while (m_run_marker.load()) {
     auto read_sts = m_file_reader->read(elem);
 
-    while (!read_sts) {
-      TLOG_DEBUG(TLVL_WORK_STEPS) << "No elements to read from buffer! Sleeping...";
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      read_sts = m_file_reader->read(elem);
+    if (!read_sts) {
+      open_next_file();
+      if (!m_is_configured) {
+        break;
+      }
+      continue;
     }
-
-    // set the initial timestamp to a configured value, otherwise just use the timestamp from the header
-    uint64_t ts_0 = elem.get_timestamp(); // NOLINT(build/unsigned)
-    if (m_t0_now) {
-      auto time_now = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t current_time = // NOLINT (build/unsigned)
-        std::chrono::duration_cast<std::chrono::microseconds>(time_now).count();
-      // FIXME: where do I get the clockspeed from?
-      // ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
-      ts_0 = 625 * current_time / 10;
-    }
-    TLOG_DEBUG(TLVL_BOOKKEEPING) << "Using first timestamp: " << ts_0;
-    uint64_t timestamp = ts_0; // NOLINT(build/unsigned)
-
-    // Fake timestamp
-    elem.fake_timestamps(timestamp, m_time_tick_diff);
-
-    // Fake geoid
-    elem.fake_geoid(m_crateid, m_slotid, m_linkid);
 
     // send it
     bool send_successful = false;
