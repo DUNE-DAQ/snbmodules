@@ -48,12 +48,12 @@ public:
                                std::atomic<bool>& run_marker,
                                double rate_khz)
     : m_run_marker(run_marker)
+    , m_name(name)
+    , m_rate_khz(rate_khz)
     , m_packet_count{ 0 }
     , m_raw_sender_timeout_ms(0)
     , m_raw_data_sender(nullptr)
     , m_producer_thread(0)
-    , m_name(name)
-    , m_rate_khz(rate_khz)
   {}
 
   //void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}

@@ -121,6 +121,7 @@ daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${s
 ##############################################################################
 # Plugins
 
+daq_add_plugin(PreconfiguredTriggerModule duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBFileTransfer duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBFileReaderModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
