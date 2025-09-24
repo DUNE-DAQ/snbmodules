@@ -1,0 +1,148 @@
+import pytest
+import urllib.request
+
+import conffwk
+import integrationtest.data_file_checks as data_file_checks
+import integrationtest.log_file_checks as log_file_checks
+import integrationtest.data_classes as data_classes
+
+pytest_plugins = "integrationtest.integrationtest_drunc"
+
+# Values that help determine the running conditions
+run_duration = 20  # seconds
+
+# Default values for validation parameters
+expected_number_of_data_files = 1
+check_for_logfile_errors = True
+expected_event_count = 1
+expected_event_count_tolerance = 0
+wibeth_frag_params = {
+    "fragment_type_description": "WIBEth",
+    "fragment_type": "WIBEth",
+    "expected_fragment_count": 1,
+    "min_size_bytes": 7272,
+    "max_size_bytes": 14472,
+}
+triggercandidate_frag_params = {
+    "fragment_type_description": "Trigger Candidate",
+    "fragment_type": "Trigger_Candidate",
+    "expected_fragment_count": 1,
+    "min_size_bytes": 128,
+    "max_size_bytes": 216,
+}
+hsi_frag_params = {
+    "fragment_type_description": "HSI",
+    "fragment_type": "Hardware_Signal",
+    "expected_fragment_count": 0,
+    "min_size_bytes": 72,
+    "max_size_bytes": 100,
+}
+ignored_logfile_problems = {
+    "-controller": [
+        "Worker with pid \\d+ was terminated due to signal",
+        "Connection '.*' not found on the application registry",
+    ],
+    "connectivity-service": [
+        "errorlog: -",
+    ],
+}
+
+# The next three variable declarations *must* be present as globals in the test
+# file. They're read by the "fixtures" in conftest.py to determine how
+# to run the config generation and nanorc
+
+# The arguments to pass to the config generator, excluding the json
+# output directory (the test framework handles that)
+
+# CCM includes FSM, hosts; moduleconfs includes connections
+object_databases = ["config/daqsystemtest/integrationtest-objects.data.xml", "config/snbmodules/simple-transform-test.data.xml"]
+
+
+dal = conffwk.dal.module("generated", "schema/appmodel/fdmodules.schema.xml")
+db = conffwk.Configuration("oksconflibs:config/snbmodules/simple-transform-test.data.xml")
+file_conf = db.get_dal(class_name="SNBFileSourceParameters", uid="snb-files-0")
+frame_file = file_conf.data_files[0]
+
+conf_dict = data_classes.drunc_config()
+conf_dict.dro_map_config = None
+conf_dict.op_env = "integtest"
+conf_dict.session = "snb-transform-simple"
+conf_dict.tpg_enabled = False
+conf_dict.frame_file = frame_file
+
+# For testing, allow drunc to manage ConnectivityService (default is False, integrationtest manages Connectivity Service)
+#conf_dict.drunc_connsvc = True
+# For testing, specify connectivity service port (default is 0, a random port is chosen for the Connectivity Service)
+#conf_dict.connsvc_port = 12345
+
+confgen_arguments = {"SNBTransform": conf_dict}
+# The commands to run in nanorc, as a list
+nanorc_command_list = (
+    "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
+    + [str(run_duration)]
+    + "disable-triggers wait 2 drain-dataflow wait 2 stop-trigger-sources stop scrap terminate".split()
+)
+
+# The tests themselves
+
+
+def test_nanorc_success(run_nanorc):
+    # Check that nanorc completed correctly
+    assert run_nanorc.completed_process.returncode == 0
+
+
+def test_log_files(run_nanorc):
+
+    # Check that at least some of the expected log files are present
+    assert any(
+        f"{run_nanorc.session}_df-01" in str(logname)
+        for logname in run_nanorc.log_files
+    )
+    assert any(
+        f"{run_nanorc.session}_dfo" in str(logname) for logname in run_nanorc.log_files
+    )
+    assert any(
+        f"{run_nanorc.session}_mlt" in str(logname) for logname in run_nanorc.log_files
+    )
+    assert any(
+        f"{run_nanorc.session}_ru" in str(logname) for logname in run_nanorc.log_files
+    )
+
+    if check_for_logfile_errors:
+        # Check that there are no warnings or errors in the log files
+        assert log_file_checks.logs_are_error_free(
+            run_nanorc.log_files, True, True, ignored_logfile_problems
+        )
+
+
+def test_data_files(run_nanorc):
+    # Run some tests on the output data file
+    all_ok = len(run_nanorc.data_files) == expected_number_of_data_files
+    print("") # Clear potential dot from pytest
+    if all_ok:
+        print(f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})")
+    else:
+        print(f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}")
+
+    fragment_check_list = [triggercandidate_frag_params, hsi_frag_params]
+    fragment_check_list.append(wibeth_frag_params)
+    nontrig_fragment_check_list = [hsi_frag_params, wibeth_frag_params]
+
+    for idx in range(len(run_nanorc.data_files)):
+        data_file = data_file_checks.DataFile(run_nanorc.data_files[idx])
+        all_ok &= data_file_checks.sanity_check(data_file)
+        all_ok &= data_file_checks.check_file_attributes(data_file)
+        all_ok &= data_file_checks.check_event_count(
+            data_file, expected_event_count, expected_event_count_tolerance
+        )
+        for jdx in range(len(fragment_check_list)):
+            all_ok &= data_file_checks.check_fragment_count(
+                data_file, fragment_check_list[jdx]
+            )
+            all_ok &= data_file_checks.check_fragment_sizes(
+                data_file, fragment_check_list[jdx]
+            )
+        for kdx in range(len(nontrig_fragment_check_list)):
+            all_ok &= data_file_checks.check_fragment_error_flags( data_file, nontrig_fragment_check_list[kdx])
+
+    assert all_ok

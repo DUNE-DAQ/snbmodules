@@ -62,7 +62,9 @@ public:
   void conf(const confmodel::DetectorStream* stream_conf, const appmodel::SNBFileSourceParameters* file_params);
   void scrap(const appfwk::DAQModule::CommandData_t& /*args*/)
   {
-    m_file_reader->close();
+    if (m_file_reader != nullptr) {
+      m_file_reader->close();
+    }
     m_file_reader.reset();
     m_is_configured = false;
   }

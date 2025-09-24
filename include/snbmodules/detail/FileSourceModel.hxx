@@ -121,12 +121,15 @@ FileSourceModel<ReadoutType>::run_produce()
     auto read_sts = m_file_reader->read(elem);
 
     if (!read_sts) {
+      TLOG_DEBUG(TLVL_BOOKKEEPING) << "Failed to read, moving to next file";
       open_next_file();
       if (!m_is_configured) {
         break;
       }
       continue;
     }
+
+    TLOG_DEBUG(TLVL_BOOKKEEPING) << "Read element with timestamp " << elem.get_timestamp() << " from file";
 
     // send it
     bool send_successful = false;

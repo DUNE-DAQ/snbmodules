@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="us-ascii"?>
+
+<!-- oks-data version 2.2 -->
+
+
+<!DOCTYPE oks-data [
+  <!ELEMENT oks-data (info, (include)?, (comments)?, (obj)+)>
+  <!ELEMENT info EMPTY>
+  <!ATTLIST info
+      name CDATA #IMPLIED
+      type CDATA #IMPLIED
+      num-of-items CDATA #REQUIRED
+      oks-format CDATA #FIXED "data"
+      oks-version CDATA #REQUIRED
+      created-by CDATA #IMPLIED
+      created-on CDATA #IMPLIED
+      creation-time CDATA #IMPLIED
+      last-modified-by CDATA #IMPLIED
+      last-modified-on CDATA #IMPLIED
+      last-modification-time CDATA #IMPLIED
+  >
+  <!ELEMENT include (file)*>
+  <!ELEMENT file EMPTY>
+  <!ATTLIST file
+      path CDATA #REQUIRED
+  >
+  <!ELEMENT comments (comment)*>
+  <!ELEMENT comment EMPTY>
+  <!ATTLIST comment
+      creation-time CDATA #REQUIRED
+      created-by CDATA #REQUIRED
+      created-on CDATA #REQUIRED
+      author CDATA #REQUIRED
+      text CDATA #REQUIRED
+  >
+  <!ELEMENT obj (attr | rel)*>
+  <!ATTLIST obj
+      class CDATA #REQUIRED
+      id CDATA #REQUIRED
+  >
+  <!ELEMENT attr (data)*>
+  <!ATTLIST attr
+      name CDATA #REQUIRED
+      type (bool|s8|u8|s16|u16|s32|u32|s64|u64|float|double|date|time|string|uid|enum|class|-) "-"
+      val CDATA ""
+  >
+  <!ELEMENT data EMPTY>
+  <!ATTLIST data
+      val CDATA #REQUIRED
+  >
+  <!ELEMENT rel (ref)*>
+  <!ATTLIST rel
+      name CDATA #REQUIRED
+      class CDATA ""
+      id CDATA ""
+  >
+  <!ELEMENT ref EMPTY>
+  <!ATTLIST ref
+      class CDATA #REQUIRED
+      id CDATA #REQUIRED
+  >
+]>
+
+<oks-data>
+
+<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20250924T124330" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20250924T124330"/>
+
+<include>
+ <file path="schema/confmodel/dunedaq.schema.xml"/>
+ <file path="schema/appmodel/application.schema.xml"/>
+ <file path="schema/appmodel/fdmodules.schema.xml"/>
+ <file path="schema/appmodel/trigger.schema.xml"/>
+</include>
+
+
+<obj class="DetectorStream" id="stream-0">
+ <rel name="geo_id" class="GeoId" id="geioId-0"/>
+</obj>
+
+<obj class="FakeDataSender" id="sender-0">
+ <rel name="streams">
+  <ref class="DetectorStream" id="stream-0"/>
+ </rel>
+ <rel name="uses" class="NetworkInterface" id="snb-nic-0"/>
+</obj>
+
+<obj class="FileReaderReceiver" id="dataRec-0">
+ <rel name="uses" class="NetworkInterface" id="snb-nic-0"/>
+</obj>
+
+<obj class="GeoId" id="geioId-0">
+ <attr name="detector_id" type="u32" val="6"/>
+ <attr name="crate_id" type="u32" val="4"/>
+ <attr name="slot_id" type="u32" val="4"/>
+ <attr name="stream_id" type="u32" val="1"/>
+</obj>
+
+<obj class="NetworkDetectorToDaqConnection" id="det-conn-0">
+ <rel name="net_senders">
+  <ref class="FakeDataSender" id="sender-0"/>
+ </rel>
+ <rel name="net_receiver" class="FileReaderReceiver" id="dataRec-0"/>
+</obj>
+
+<obj class="NetworkInterface" id="snb-nic-0">
+ <attr name="mac_address" type="string" val="00:00:00:00:00:00"/>
+ <attr name="network_name" type="enum" val="Control"/>
+</obj>
+
+<obj class="PreconfiguredTriggerModuleConf" id="pc-trig-conf">
+ <attr name="template_for" type="class" val="PreconfiguredTriggerModule"/>
+ <attr name="timestamp_method" type="enum" val="kTimeSync"/>
+ <attr name="latency_monitoring" type="bool" val="1"/>
+ <attr name="wait_time_ms" type="u64" val="1000"/>
+ <rel name="tc_readout" class="TCReadoutMap" id="tc-readout-snb"/>
+ <rel name="triggers">
+  <ref class="PreconfiguredTriggerModuleTrigger" id="pc-trig-79554162068719943"/>
+ </rel>
+</obj>
+
+<obj class="PreconfiguredTriggerModuleTrigger" id="pc-trig-79554162068719943">
+ <attr name="timestamp_start" type="u64" val="79554162068719943"/>
+ <attr name="timestamp_end" type="u64" val="79554162068785479"/>
+</obj>
+
+<obj class="SNBFileSourceParameters" id="snb-files-0">
+ <attr name="data_files" type="string">
+  <data val="asset://?checksum=e96fd6efd3f98a9a3bfaba32975b476e"/>
+ </attr>
+ <attr name="input_buffer_size" type="u32" val="5777280"/>
+ <attr name="file_compression_algorithm" type="string" val="None"/>
+</obj>
+
+<obj class="TCReadoutMap" id="tc-readout-snb">
+ <attr name="tc_type_name" type="string" val="kSupernova"/>
+ <attr name="time_before" type="u32" val="0"/>
+ <attr name="time_after" type="u32" val="0"/>
+</obj>
+
+</oks-data>
