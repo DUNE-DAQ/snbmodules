@@ -63,7 +63,12 @@ def get_file_info(filename):
                 last_timestamp = timestamp
             
             dheader = frame.get_daqheader()
-            geo_id = GeoID(det_id=dheader.det_id, crate_id=dheader.crate_id, slot_id=dheader.slot_id, stream_id=dheader.stream_id)
+            stream_id = 0
+            if isinstance(dheader, detdataformats._daq_detdataformats_py.DAQHeader):
+                stream_id = dheader.link_id
+            else:
+                stream_id = dheader.stream_id
+            geo_id = GeoID(det_id=dheader.det_id, crate_id=dheader.crate_id, slot_id=dheader.slot_id, stream_id=stream_id)
 
     return {"frame_count": frame_counter, "first": first_timestamp, "last": last_timestamp, "geo_id": geo_id}
 

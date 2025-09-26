@@ -1,7 +1,9 @@
 import pytest
 import urllib.request
+import os
 
 import conffwk
+from daqconf.assets import resolve_asset_file
 import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
 import integrationtest.data_classes as data_classes
@@ -20,8 +22,8 @@ wibeth_frag_params = {
     "fragment_type_description": "WIBEth",
     "fragment_type": "WIBEth",
     "expected_fragment_count": 1,
-    "min_size_bytes": 7272,
-    "max_size_bytes": 14472,
+    "min_size_bytes": 712872,
+    "max_size_bytes": 712872,
 }
 triggercandidate_frag_params = {
     "fragment_type_description": "Trigger Candidate",
@@ -62,6 +64,13 @@ dal = conffwk.dal.module("generated", "schema/appmodel/fdmodules.schema.xml")
 db = conffwk.Configuration("oksconflibs:config/snbmodules/simple-transform-test.data.xml")
 file_conf = db.get_dal(class_name="SNBFileSourceParameters", uid="snb-files-0")
 frame_file = file_conf.data_files[0]
+
+frame_file_name = frame_file
+if "asset:" in frame_file_name:
+   frame_file_name = resolve_asset_file(frame_file)
+frame_file_size = os.path.getsize(frame_file_name)
+wibeth_frag_params["min_size_bytes"] = frame_file_size + 72
+wibeth_frag_params["max_size_bytes"] = frame_file_size + 72
 
 conf_dict = data_classes.drunc_config()
 conf_dict.dro_map_config = None
