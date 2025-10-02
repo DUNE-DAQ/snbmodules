@@ -16,10 +16,9 @@ def get_file_info(filename):
     with open(filename, 'rb') as ff:
 
         # Get file type from first DaqEthHeader
-        hdr_size = fddetdataformats.WIBEthFrame.sizeof()
+        hdr_size = detdataformats.DAQEthHeader.sizeof()
         hdr_bin = ff.read(hdr_size)
-        eth_frame = fddetdataformats.WIBEthFrame(hdr_bin)
-        hdr = eth_frame.get_daqheader() # Should be in the same location regardless of frame type
+        hdr = detdataformats.DAQEthHeader(hdr_bin)
         detector_id = hdr.det_id
         ff.seek(0)
 
