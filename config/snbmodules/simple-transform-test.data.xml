@@ -63,7 +63,7 @@
 
 <oks-data>
 
-<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20250926T190107" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20250926T202401"/>
+<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20251009T180948" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20251009T180948"/>
 
 <include>
  <file path="schema/confmodel/dunedaq.schema.xml"/>
@@ -125,7 +125,7 @@
 
 <obj class="SNBFileSourceParameters" id="snb-files-0">
  <attr name="data_files" type="string">
-  <data val="/home/eflumerf/Desktop/dune-daq-base/dev-snbmodules-250922/wib_link_67.bin"/>
+  <data val="asset://?checksum=370df564205290d27cab47e44ae4ca47"/>
  </attr>
  <attr name="input_buffer_size" type="u32" val="5777280"/>
  <attr name="file_compression_algorithm" type="string" val="None"/>

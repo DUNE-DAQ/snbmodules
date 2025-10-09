@@ -41,7 +41,7 @@ hsi_frag_params = {
 }
 ignored_logfile_problems = {
     "-controller": [
-        "Worker with pid \\d+ was terminated due to signal",
+        "Worker \(pid:\\d+\) was sent SIGHUP!",
         "Connection '.*' not found on the application registry",
     ],
     "connectivity-service": [
