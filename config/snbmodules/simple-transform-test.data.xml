@@ -134,7 +134,7 @@
 <obj class="TCReadoutMap" id="tc-readout-snb">
  <attr name="tc_type_name" type="string" val="kSupernova"/>
  <attr name="time_before" type="u32" val="0"/>
- <attr name="time_after" type="u32" val="0"/>
+ <attr name="time_after" type="u32" val="1000"/>
 </obj>
 
 </oks-data>

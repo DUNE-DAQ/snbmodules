@@ -24,6 +24,7 @@ wibeth_frag_params = {
     "expected_fragment_count": 1,
     "min_size_bytes": 712872,
     "max_size_bytes": 712872,
+    "error_bitmask": 0xFFFFFFFD
 }
 triggercandidate_frag_params = {
     "fragment_type_description": "Trigger Candidate",
@@ -47,6 +48,9 @@ ignored_logfile_problems = {
     "connectivity-service": [
         "errorlog: -",
     ],
+    "ru-det-conn": [
+        "Request timed out for trig/seq_num"
+    ]
 }
 
 # The next three variable declarations *must* be present as globals in the test

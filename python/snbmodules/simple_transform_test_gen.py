@@ -164,7 +164,7 @@ def generate_transform_objs(oksfile, files):
         if not match:
             db.update_dal(pctmt_dal)
             triggers.append(pctmt_dal)
-    tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=0)
+    tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=1000)
     db.update_dal(tc_readout_dal)
     pct_dal = dal.PreconfiguredTriggerModuleConf(f'pc-trig-conf', template_for="PreconfiguredTriggerModule", wait_time_ms=1000, triggers=triggers, tc_readout=tc_readout_dal)
     db.update_dal(pct_dal)
