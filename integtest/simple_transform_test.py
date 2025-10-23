@@ -1,12 +1,14 @@
 import pytest
 import urllib.request
 import os
+import copy
 
 import conffwk
 from daqconf.assets import resolve_asset_file
 import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
 import integrationtest.data_classes as data_classes
+from hdf5libs import HDF5RawDataFile
 
 pytest_plugins = "integrationtest.integrationtest_drunc"
 
@@ -18,19 +20,21 @@ expected_number_of_data_files = 1
 check_for_logfile_errors = True
 expected_event_count = 1
 expected_event_count_tolerance = 0
+tr_splitting_overhead = 7200 # Bytes for WIBEth splitting (repeated frames)
+
 wibeth_frag_params = {
     "fragment_type_description": "WIBEth",
     "fragment_type": "WIBEth",
     "expected_fragment_count": 1,
-    "min_size_bytes": 712872,
-    "max_size_bytes": 712872,
-    "error_bitmask": 0xFFFFFFFD
+    "min_size_bytes": 0,
+    "max_size_bytes": 0,
+    "error_bitmask": 0xFFFFFFFC,  # Mask kIncomplete
 }
 triggercandidate_frag_params = {
     "fragment_type_description": "Trigger Candidate",
     "fragment_type": "Trigger_Candidate",
     "expected_fragment_count": 1,
-    "min_size_bytes": 128,
+    "min_size_bytes": 72, # Empty TCs for sequences
     "max_size_bytes": 216,
 }
 hsi_frag_params = {
@@ -48,9 +52,7 @@ ignored_logfile_problems = {
     "connectivity-service": [
         "errorlog: -",
     ],
-    "ru-det-conn": [
-        "Request timed out for trig/seq_num"
-    ]
+    "ru-det-conn": ["Request timed out for trig/seq_num"],
 }
 
 # The next three variable declarations *must* be present as globals in the test
@@ -61,20 +63,54 @@ ignored_logfile_problems = {
 # output directory (the test framework handles that)
 
 # CCM includes FSM, hosts; moduleconfs includes connections
-object_databases = ["config/daqsystemtest/integrationtest-objects.data.xml", "config/snbmodules/simple-transform-test.data.xml"]
+object_databases = [
+    "config/daqsystemtest/integrationtest-objects.data.xml",
+    "config/snbmodules/simple-transform-test.data.xml",
+]
 
 
 dal = conffwk.dal.module("generated", "schema/appmodel/fdmodules.schema.xml")
-db = conffwk.Configuration("oksconflibs:config/snbmodules/simple-transform-test.data.xml")
-file_conf = db.get_dal(class_name="SNBFileSourceParameters", uid="snb-files-0")
-frame_file = file_conf.data_files[0]
+db = conffwk.Configuration(
+    "oksconflibs:config/snbmodules/simple-transform-test.data.xml"
+)
 
-frame_file_name = frame_file
-if "asset:" in frame_file_name:
-   frame_file_name = resolve_asset_file(frame_file)
-frame_file_size = os.path.getsize(frame_file_name)
-wibeth_frag_params["min_size_bytes"] = frame_file_size + 72
-wibeth_frag_params["max_size_bytes"] = frame_file_size + 72
+found_file = True
+ii = 0
+file_size_map = {}
+frame_file = ""
+while found_file:
+    try:
+        file_conf = db.get_dal(
+            class_name="SNBFileSourceParameters", uid=f"snb-files-det-conn-{ii}"
+        )
+        frame_file = file_conf.data_files[0]
+
+        frame_file_name = frame_file
+        if "asset:" in frame_file_name:
+            frame_file_name = resolve_asset_file(frame_file)
+        frame_file_size = os.path.getsize(frame_file_name)
+        file_size_map[ii] = frame_file_size
+        if (
+            frame_file_size + 72 < wibeth_frag_params["min_size_bytes"]
+            or wibeth_frag_params["min_size_bytes"] == 0
+        ):
+            wibeth_frag_params["min_size_bytes"] = frame_file_size + 72
+        if frame_file_size + 72 > wibeth_frag_params["max_size_bytes"]:
+            wibeth_frag_params["max_size_bytes"] = frame_file_size + 72
+        ii = ii + 1
+    except:
+        found_file = False
+
+wibeth_frag_params["expected_fragment_count"] = ii
+
+pct_conf = db.get_dal(class_name="PreconfiguredTriggerModuleConf", uid="pc-trig-conf")
+expected_event_count = len(pct_conf.triggers)
+sequence_count = 0
+sequence_length = 500000 # intention is 8 msec sequences
+for trig_n,trig in enumerate(pct_conf.triggers):
+    trig_len = trig.timestamp_end - trig.timestamp_start
+    sequence_count = sequence_count + (trig_len // sequence_length) + 1
+
 
 conf_dict = data_classes.drunc_config()
 conf_dict.dro_map_config = None
@@ -83,12 +119,35 @@ conf_dict.session = "snb-transform-simple"
 conf_dict.tpg_enabled = False
 conf_dict.frame_file = frame_file
 
-# For testing, allow drunc to manage ConnectivityService (default is False, integrationtest manages Connectivity Service)
-#conf_dict.drunc_connsvc = True
-# For testing, specify connectivity service port (default is 0, a random port is chosen for the Connectivity Service)
-#conf_dict.connsvc_port = 12345
+conf_dict.config_substitutions.append(
+    data_classes.attribute_substitution(
+        obj_class="TRBConf",
+        updates={
+            "max_time_window": 0,  # Unlimited, no sequences
+            "trigger_record_timeout_ms": 1000 * run_duration,
+        },
+    )
+)
 
-confgen_arguments = {"SNBTransform": conf_dict}
+window_dict = copy.deepcopy(conf_dict)
+window_dict.config_substitutions.append(
+    data_classes.attribute_substitution(
+        obj_class="TRBConf",
+        updates={
+            "max_time_window": sequence_length,
+            "trigger_record_timeout_ms": 1000 * run_duration,
+        },
+    )
+)
+# For testing, allow drunc to manage ConnectivityService (default is False, integrationtest manages Connectivity Service)
+# conf_dict.drunc_connsvc = True
+# For testing, specify connectivity service port (default is 0, a random port is chosen for the Connectivity Service)
+# conf_dict.connsvc_port = 12345
+
+confgen_arguments = {
+    "SNBTransform": conf_dict,
+    "SNBTransformWithSequences": window_dict,
+}
 # The commands to run in nanorc, as a list
 nanorc_command_list = (
     "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
@@ -131,22 +190,34 @@ def test_log_files(run_nanorc):
 def test_data_files(run_nanorc):
     # Run some tests on the output data file
     all_ok = len(run_nanorc.data_files) == expected_number_of_data_files
-    print("") # Clear potential dot from pytest
+    print("")  # Clear potential dot from pytest
     if all_ok:
-        print(f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})")
+        print(
+            f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})"
+        )
     else:
-        print(f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}")
+        print(
+            f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}"
+        )
 
+    current_test = os.environ.get("PYTEST_CURRENT_TEST")
+    local_expected_event_count = expected_event_count
+    local_wibeth_frag_params = copy.deepcopy(wibeth_frag_params)
+    
+    if "WithSequences" in current_test:
+        local_expected_event_count = sequence_count
+        local_wibeth_frag_params["min_size_bytes"] = 73 # One byte of data must be present
+        
     fragment_check_list = [triggercandidate_frag_params, hsi_frag_params]
-    fragment_check_list.append(wibeth_frag_params)
-    nontrig_fragment_check_list = [hsi_frag_params, wibeth_frag_params]
+    fragment_check_list.append(local_wibeth_frag_params)
+    nontrig_fragment_check_list = [hsi_frag_params, local_wibeth_frag_params]
 
     for idx in range(len(run_nanorc.data_files)):
         data_file = data_file_checks.DataFile(run_nanorc.data_files[idx])
         all_ok &= data_file_checks.sanity_check(data_file)
         all_ok &= data_file_checks.check_file_attributes(data_file)
         all_ok &= data_file_checks.check_event_count(
-            data_file, expected_event_count, expected_event_count_tolerance
+            data_file, local_expected_event_count, expected_event_count_tolerance
         )
         for jdx in range(len(fragment_check_list)):
             all_ok &= data_file_checks.check_fragment_count(
@@ -156,6 +227,31 @@ def test_data_files(run_nanorc):
                 data_file, fragment_check_list[jdx]
             )
         for kdx in range(len(nontrig_fragment_check_list)):
-            all_ok &= data_file_checks.check_fragment_error_flags( data_file, nontrig_fragment_check_list[kdx])
+            all_ok &= data_file_checks.check_fragment_error_flags(
+                data_file, nontrig_fragment_check_list[kdx]
+            )
+        if "WithSequences" in current_test:
+            h5_file = HDF5RawDataFile(data_file.name)
+            records = h5_file.get_all_record_ids()
+            size_by_id = {}
+            record_count = len(records)
+            for rec in records:
+                src_ids = h5_file.get_source_ids_for_fragment_type(rec, "WIBEth")
+                for src_id in src_ids:
+                    frag=h5_file.get_frag(rec,src_id);
+                    size=frag.get_size()
+                    if src_id.id in size_by_id.keys():
+                        size_by_id[src_id.id] = size_by_id[src_id.id] + size - 72
+                    else:
+                        size_by_id[src_id.id] = size - 72
+            correct_sizes = True
+            for src_id,size in size_by_id.items():
+                expected_size = file_size_map[src_id] + ((record_count - 1) * tr_splitting_overhead)
+                if size != expected_size:
+                    print(f"\N{POLICE CARS REVOLVING LIGHT} Fragments with source ID {src_id} have total size {size}, expected {expected_size} \N{POLICE CARS REVOLVING LIGHT} ")
+                    correct_sizes = False
+                all_ok &= (size == expected_size)
+            if correct_sizes:
+                print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
 
     assert all_ok

@@ -71,7 +71,7 @@ def get_file_info(filename):
 
     return {"frame_count": frame_counter, "first": first_timestamp, "last": last_timestamp, "geo_id": geo_id}
 
-def generate_transform_objs(oksfile, files):
+def generate_transform_objs(oksfile, files, trigger_mode):
 
     schemafiles = [
         "schema/confmodel/dunedaq.schema.xml",
@@ -143,27 +143,78 @@ def generate_transform_objs(oksfile, files):
         db.update_dal(detconn_dal)
         groups.append(detconn_dal)
 
-        file_source_dal = dal.SNBFileSourceParameters(f"snb-files-{source_id}", data_files=geoid_files, input_buffer_size=5777280, 
+        file_source_dal = dal.SNBFileSourceParameters(f"snb-files-det-conn-{source_id}", data_files=geoid_files, input_buffer_size=5777280, 
                         file_compression_algorithm="None",)
         db.update_dal(file_source_dal)
 
         senders = []
         source_id = source_id + 1
 
-    triggers=[]
-    for file,file_info in file_infos.items():
-        first = file_info["first"]
-        last = file_info["last"]
-        pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{first}", timestamp_start=first, timestamp_end=last)
-        match = False
-        for trig in triggers:
-            if trig.timestamp_start == first:
-                match = True
-                break;
 
-        if not match:
-            db.update_dal(pctmt_dal)
-            triggers.append(pctmt_dal)
+    triggers=[]
+
+    if trigger_mode == "per-file": # Make a trigger matching the contents of each file
+
+        for file,file_info in file_infos.items():
+            first = file_info["first"]
+            last = file_info["last"]
+            pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{first}", timestamp_start=first, timestamp_end=last)
+            match = False
+            for trig in triggers:
+                if trig.timestamp_start == first:
+                    match = True
+                    break;
+
+            if not match:
+                db.update_dal(pctmt_dal)
+                triggers.append(pctmt_dal)
+    elif trigger_mode == "aligned-chunks": # Make a "start", "body" and "end" trigger
+        earliest_start = -1
+        latest_start = -1
+        earliest_end = -1
+        latest_end = -1
+
+        for file,file_info in file_infos.items():
+            first = file_info["first"]
+            last = file_info["last"]
+            if earliest_start == -1 or first < earliest_start:
+                earliest_start = first
+            if latest_start == -1 or first > latest_start:
+                latest_start = first
+            if earliest_end == -1 or last < earliest_end:
+                earliest_end = last
+            if latest_end == -1 or last > latest_end:
+                latest_end = last
+
+        if earliest_end < latest_start:
+            print(f"Warning: Latest window start time is after earliest end time! Only creating \"start\" and \"end\" triggers!")
+            earliest_end = latest_start
+
+        start_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_start)
+        db.update_dal(start_pctmt_dal)
+        triggers.append(start_pctmt_dal)
+        if earliest_end > latest_start:
+            body_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{latest_start}", timestamp_start=latest_start, timestamp_end=earliest_end)
+            db.update_dal(body_pctmt_dal)
+            triggers.append(body_pctmt_dal)
+        end_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_end}", timestamp_start=earliest_end, timestamp_end=latest_end)
+        db.update_dal(end_pctmt_dal)
+        triggers.append(end_pctmt_dal)
+    else: # One big trigger
+        earliest_start = -1
+        latest_end = -1
+
+        for file,file_info in file_infos.items():
+            first = file_info["first"]
+            last = file_info["last"]
+            if earliest_start == -1 or first < earliest_start:
+                earliest_start = first
+            if latest_end == -1 or last > latest_end:
+                latest_end = last
+        pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_end)
+        db.update_dal(pctmt_dal)
+        triggers.append(pctmt_dal)
+
     tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=1000)
     db.update_dal(tc_readout_dal)
     pct_dal = dal.PreconfiguredTriggerModuleConf(f'pc-trig-conf', template_for="PreconfiguredTriggerModule", wait_time_ms=1000, triggers=triggers, tc_readout=tc_readout_dal)
