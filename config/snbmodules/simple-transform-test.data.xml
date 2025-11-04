@@ -63,7 +63,7 @@
 
 <oks-data>
 
-<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20251009T180948" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20251009T180948"/>
+<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20251029T155309" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20251029T155349"/>
 
 <include>
  <file path="schema/confmodel/dunedaq.schema.xml"/>
@@ -90,9 +90,7 @@
 
 <obj class="GeoId" id="geioId-0">
  <attr name="detector_id" type="u32" val="10"/>
- <attr name="crate_id" type="u32" val="11"/>
- <attr name="slot_id" type="u32" val="2"/>
- <attr name="stream_id" type="u32" val="3"/>
+ <attr name="crate_id" type="u32" val="10"/>
 </obj>
 
 <obj class="NetworkDetectorToDaqConnection" id="det-conn-0">
@@ -114,18 +112,18 @@
  <attr name="wait_time_ms" type="u64" val="1000"/>
  <rel name="tc_readout" class="TCReadoutMap" id="tc-readout-snb"/>
  <rel name="triggers">
-  <ref class="PreconfiguredTriggerModuleTrigger" id="pc-trig-109833853170579467"/>
+  <ref class="PreconfiguredTriggerModuleTrigger" id="pc-trig-110071771508494347"/>
  </rel>
 </obj>
 
-<obj class="PreconfiguredTriggerModuleTrigger" id="pc-trig-109833853170579467">
- <attr name="timestamp_start" type="u64" val="109833853170579467"/>
- <attr name="timestamp_end" type="u64" val="109833853170780171"/>
+<obj class="PreconfiguredTriggerModuleTrigger" id="pc-trig-110071771508494347">
+ <attr name="timestamp_start" type="u64" val="110071771508494347"/>
+ <attr name="timestamp_end" type="u64" val="110071778129170443"/>
 </obj>
 
-<obj class="SNBFileSourceParameters" id="snb-files-0">
+<obj class="SNBFileSourceParameters" id="snb-files-det-conn-0">
  <attr name="data_files" type="string">
-  <data val="asset://?checksum=370df564205290d27cab47e44ae4ca47"/>
+  <data val="../Detector_Readout_0x00000190.bin"/>
  </attr>
  <attr name="input_buffer_size" type="u32" val="5777280"/>
  <attr name="file_compression_algorithm" type="string" val="None"/>

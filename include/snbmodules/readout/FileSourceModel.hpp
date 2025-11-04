@@ -17,9 +17,9 @@
 #include "confmodel/GeoId.hpp"
 
 #include "datahandlinglibs/DataHandlingIssues.hpp"
-#include "snbmodules/FileSourceConcept.hpp"
 #include "datahandlinglibs/utils/BufferedFileReader.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
+#include "snbmodules/readout/FileSourceConcept.hpp"
 #include "utilities/ReusableThread.hpp"
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"
@@ -39,14 +39,11 @@ using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
 namespace dunedaq {
 namespace snbmodules {
 
-
 template<class ReadoutType>
 class FileSourceModel : public FileSourceConcept
 {
 public:
-  explicit FileSourceModel(std::string name,
-                               std::atomic<bool>& run_marker,
-                               double rate_khz)
+  explicit FileSourceModel(std::string name, std::atomic<bool>& run_marker, double rate_khz)
     : m_run_marker(run_marker)
     , m_name(name)
     , m_rate_khz(rate_khz)
@@ -54,9 +51,10 @@ public:
     , m_raw_sender_timeout_ms(0)
     , m_raw_data_sender(nullptr)
     , m_producer_thread(0)
-  {}
+  {
+  }
 
-  //void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
+  // void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
   void set_sender(const std::string& conn_name);
 
   void conf(const confmodel::DetectorStream* stream_conf, const appmodel::SNBFileSourceParameters* file_params);
@@ -86,7 +84,7 @@ private:
   std::atomic<bool>& m_run_marker;
 
   // CONFIGURATION
-    std::string m_name;
+  std::string m_name;
   bool m_is_configured = false;
   double m_rate_khz;
 
@@ -101,7 +99,7 @@ private:
   std::atomic<int> m_packet_count{ 0 };
   std::atomic<int> m_packet_count_tot{ 0 };
 
-  //sourceemulatorconfig::Conf m_cfg;
+  // sourceemulatorconfig::Conf m_cfg;
 
   // RAW SENDER
   std::chrono::milliseconds m_raw_sender_timeout_ms;
@@ -109,16 +107,16 @@ private:
   std::shared_ptr<raw_sender_ct> m_raw_data_sender;
 
   bool m_sender_is_set = false;
-  //using module_conf_t = dunedaq::snbmodules::sourceemulatorconfig::Conf;
-  //module_conf_t m_conf;
-  //using link_conf_t = dunedaq::snbmodules::sourceemulatorconfig::LinkConfiguration;
-  //link_conf_t m_link_conf;
+  // using module_conf_t = dunedaq::snbmodules::sourceemulatorconfig::Conf;
+  // module_conf_t m_conf;
+  // using link_conf_t = dunedaq::snbmodules::sourceemulatorconfig::LinkConfiguration;
+  // link_conf_t m_link_conf;
 
   std::unique_ptr<dunedaq::datahandlinglibs::RateLimiter> m_rate_limiter;
   std::unique_ptr<dunedaq::datahandlinglibs::BufferedFileReader<ReadoutType>> m_file_reader;
 
   utilities::ReusableThread m_producer_thread;
-  };
+};
 
 } // namespace snbmodules
 } // namespace dunedaq

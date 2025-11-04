@@ -24,7 +24,6 @@ find_package(fdreadoutlibs REQUIRED)
 find_package(rclone REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
-
 set(linked_libraries
     iomanager::iomanager
     logging::logging
@@ -123,6 +122,15 @@ daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${s
 daq_add_plugin(SNBFileTransfer duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBFileReaderModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
+
+
+set(SNBMODULES_USE_INTRINSICS ON)
+
+if(${SNBMODULES_USE_INTRINSICS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+endif()
+
+daq_add_plugin(SNBDataHandlerModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
 
 ##############################################################################
 # Integration tests

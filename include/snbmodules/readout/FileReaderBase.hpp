@@ -9,20 +9,20 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef snbmodules_INCLUDE_snbmodules_FileReaderBase_HPP_
-#define snbmodules_INCLUDE_snbmodules_FileReaderBase_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
 
 // package
-#include "snbmodules/FileSourceConcept.hpp"
+#include "snbmodules/readout/FileSourceConcept.hpp"
 
-#include "confmodel/DaqModule.hpp"
+#include "appmodel/DataReaderConf.hpp"
+#include "appmodel/DataReaderModule.hpp"
 #include "confmodel/Connection.hpp"
-#include "confmodel/QueueWithSourceId.hpp"
-#include "confmodel/DetectorToDaqConnection.hpp"
+#include "confmodel/DaqModule.hpp"
 #include "confmodel/DetDataSender.hpp"
 #include "confmodel/DetectorStream.hpp"
-#include "appmodel/DataReaderModule.hpp"
-#include "appmodel/DataReaderConf.hpp"
+#include "confmodel/DetectorToDaqConnection.hpp"
+#include "confmodel/QueueWithSourceId.hpp"
 
 #include "appfwk/ConfigurationManager.hpp"
 #include "appfwk/DAQModule.hpp"
@@ -60,8 +60,8 @@ public:
   void init(std::shared_ptr<appfwk::ConfigurationManager> cfg);
 
   // To be implemented by final module
-  virtual std::shared_ptr<snbmodules::FileSourceConcept>
-  create_source_emulator(std::string qi, std::atomic<bool>& run_marker) = 0;
+  virtual std::shared_ptr<snbmodules::FileSourceConcept> create_source_emulator(std::string qi,
+                                                                                std::atomic<bool>& run_marker) = 0;
 
   // Commands
   void do_conf(const appfwk::DAQModule::CommandData_t& /*args*/);
@@ -89,4 +89,4 @@ private:
 // Declarations
 #include "detail/FileReaderBase.hxx"
 
-#endif // snbmodules_INCLUDE_snbmodules_FileReaderBase_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_

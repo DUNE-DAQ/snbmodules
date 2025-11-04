@@ -6,65 +6,63 @@
  * received with this code.
  */
 
-#include "snbmodules/transfer_client.hpp"
-#include "snbmodules/common/protocols_enum.hpp"
 #include "snbmodules/bookkeeper.hpp"
+#include "snbmodules/common/protocols_enum.hpp"
+#include "snbmodules/transfer_client.hpp"
 
-#include <iostream>
-#include <string>
-#include <filesystem>
 #include <cassert>
+#include <filesystem>
+#include <iostream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 using namespace dunedaq::snbmodules;
 
-int main()
+int
+main()
 {
 
-    try
-    {
+  try {
 
-        // Create clients
-        IPFormat ip1("127.0.0.1:42100");
-        IPFormat ip2("127.0.0.2:42100");
+    // Create clients
+    IPFormat ip1("127.0.0.1:42100");
+    IPFormat ip2("127.0.0.2:42100");
 
-        TransferClient client1(ip1, "client1", "./client");
-        TransferClient client2(ip2, "client2", "./client");
+    TransferClient client1(ip1, "client1", "./client");
+    TransferClient client2(ip2, "client2", "./client");
 
-        // Create new group transfer with 2 files and 1 expected file
-        GroupMetadata transfer_options("group1", "client1", ip1, protocol_type::e_protocol_type::dummy);
-        transfer_options.add_expected_file("test.txt");
-        transfer_options.add_expected_file("test2.txt");
-        transfer_options.add_file(std::make_shared<TransferMetadata>("test.txt", 100, ip1));
+    // Create new group transfer with 2 files and 1 expected file
+    GroupMetadata transfer_options("group1", "client1", ip1, protocol_type::e_protocol_type::dummy);
+    transfer_options.add_expected_file("test.txt");
+    transfer_options.add_expected_file("test2.txt");
+    transfer_options.add_file(std::make_shared<TransferMetadata>("test.txt", 100, ip1));
 
-        // Create sessions in each client
-        auto &ses1 = client1.create_session(transfer_options, e_session_type::Uploader, "session1", "./listen/s1");
-        auto &ses2 = client2.create_session(transfer_options, e_session_type::Downloader, "session2", "./listen/s2");
+    // Create sessions in each client
+    auto& ses1 = client1.create_session(transfer_options, e_session_type::Uploader, "session1", "./listen/s1");
+    auto& ses2 = client2.create_session(transfer_options, e_session_type::Downloader, "session2", "./listen/s2");
 
-        // Upload the first file
-        ses1.upload_all();
-        ses2.download_all("./listen");
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+    // Upload the first file
+    ses1.upload_all();
+    ses2.download_all("./listen");
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
-        // Add the second file
-        ses1.add_file(std::make_shared<TransferMetadata>("test2.txt", 50, ip1));
+    // Add the second file
+    ses1.add_file(std::make_shared<TransferMetadata>("test2.txt", 50, ip1));
 
-        // Upload the second file
-        ses1.upload_all();
-        ses2.download_all("./listen");
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+    // Upload the second file
+    ses1.upload_all();
+    ses2.download_all("./listen");
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
-        // Remove the files
-        std::filesystem::remove_all("./listen");
+    // Remove the files
+    std::filesystem::remove_all("./listen");
 
-        TLOG() << "Test passed";
+    TLOG() << "Test passed";
 
-        return 0;
-    }
-    catch (const std::exception &e)
-    {
-        TLOG() << e.what();
-        return 1;
-    }
+    return 0;
+  } catch (const std::exception& e) {
+    TLOG() << e.what();
+    return 1;
+  }
 }

@@ -9,9 +9,9 @@
 #ifndef snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
 #define snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
 
-#include "datahandlinglibs/utils/RateLimiter.hpp"
-#include "confmodel/DetectorStream.hpp"
 #include "appmodel/SNBFileSourceParameters.hpp"
+#include "confmodel/DetectorStream.hpp"
+#include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "opmonlib/MonitorableObject.hpp"
 
 #include <map>
@@ -27,11 +27,10 @@ public:
   FileSourceConcept() {}
 
   virtual ~FileSourceConcept() {}
-  FileSourceConcept(const FileSourceConcept&) = delete; ///< FileSourceConcept is not copy-constructible
-  FileSourceConcept& operator=(const FileSourceConcept&) =
-    delete;                                                ///< FileSourceConcept is not copy-assginable
-  FileSourceConcept(FileSourceConcept&&) = delete; ///< FileSourceConcept is not move-constructible
-  FileSourceConcept& operator=(FileSourceConcept&&) = delete; ///< FileSourceConcept is not move-assignable
+  FileSourceConcept(const FileSourceConcept&) = delete;            ///< FileSourceConcept is not copy-constructible
+  FileSourceConcept& operator=(const FileSourceConcept&) = delete; ///< FileSourceConcept is not copy-assginable
+  FileSourceConcept(FileSourceConcept&&) = delete;                 ///< FileSourceConcept is not move-constructible
+  FileSourceConcept& operator=(FileSourceConcept&&) = delete;      ///< FileSourceConcept is not move-assignable
 
   virtual void set_sender(const std::string& /*sink_name*/) = 0;
   virtual void conf(const confmodel::DetectorStream* conf, const appmodel::SNBFileSourceParameters* emu_conf) = 0;

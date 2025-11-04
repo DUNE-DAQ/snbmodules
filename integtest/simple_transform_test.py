@@ -13,14 +13,14 @@ from hdf5libs import HDF5RawDataFile
 pytest_plugins = "integrationtest.integrationtest_drunc"
 
 # Values that help determine the running conditions
-run_duration = 20  # seconds
+run_duration = 300  # seconds
 
 # Default values for validation parameters
 expected_number_of_data_files = 1
 check_for_logfile_errors = True
 expected_event_count = 1
 expected_event_count_tolerance = 0
-tr_splitting_overhead = 7200 # Bytes for WIBEth splitting (repeated frames)
+tr_splitting_overhead = 0 # Bytes for WIBEth splitting (repeated frames)
 
 wibeth_frag_params = {
     "fragment_type_description": "WIBEth",
@@ -145,12 +145,12 @@ window_dict.config_substitutions.append(
 # conf_dict.connsvc_port = 12345
 
 confgen_arguments = {
-    "SNBTransform": conf_dict,
+#    "SNBTransform": conf_dict,
     "SNBTransformWithSequences": window_dict,
 }
 # The commands to run in nanorc, as a list
 nanorc_command_list = (
-    "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
+    "boot wait 60 conf start --run-number 101 wait 1 enable-triggers wait ".split()
     + [str(run_duration)]
     + "disable-triggers wait 2 drain-dataflow wait 2 stop-trigger-sources stop scrap terminate".split()
 )

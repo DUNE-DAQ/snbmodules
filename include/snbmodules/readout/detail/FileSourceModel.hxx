@@ -34,7 +34,7 @@ FileSourceModel<ReadoutType>::conf(const confmodel::DetectorStream* link_conf,
   } else {
     // m_conf = args.get<module_conf_t>();
     // m_link_conf = link_conf.get<link_conf_t>();
-    m_raw_sender_timeout_ms = std::chrono::milliseconds(1);
+    m_raw_sender_timeout_ms = std::chrono::milliseconds(1000);
 
     m_sourceid.id = link_conf->get_source_id();
     m_sourceid.subsystem = ReadoutType::subsystem;
@@ -134,14 +134,8 @@ FileSourceModel<ReadoutType>::run_produce()
     // send it
     bool send_successful = false;
     while (!send_successful && m_run_marker.load()) {
-      try {
-        ReadoutType elem_copy(elem);
-        m_raw_data_sender->send(std::move(elem_copy), m_raw_sender_timeout_ms);
-        send_successful = true;
-      } catch (ers::Issue& excpt) {
-        ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, "raw data input queue", excpt));
-        // std::runtime_error("Queue timed out...");
-      }
+      ReadoutType elem_copy(elem);
+      send_successful = m_raw_data_sender->try_send(std::move(elem_copy), m_raw_sender_timeout_ms);
     }
 
     // Count packet and limit rate if needed.

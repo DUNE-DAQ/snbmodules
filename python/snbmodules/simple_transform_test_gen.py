@@ -73,6 +73,10 @@ def get_file_info(filename):
 
 def generate_transform_objs(oksfile, files, trigger_mode):
 
+    if os.path.exists(oksfile):
+        print(f"Target OKS database {oksfile} exists, aborting")
+        exit(1)
+
     schemafiles = [
         "schema/confmodel/dunedaq.schema.xml",
         "schema/appmodel/application.schema.xml",
@@ -215,7 +219,7 @@ def generate_transform_objs(oksfile, files, trigger_mode):
         db.update_dal(pctmt_dal)
         triggers.append(pctmt_dal)
 
-    tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=1000)
+    tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=0)
     db.update_dal(tc_readout_dal)
     pct_dal = dal.PreconfiguredTriggerModuleConf(f'pc-trig-conf', template_for="PreconfiguredTriggerModule", wait_time_ms=1000, triggers=triggers, tc_readout=tc_readout_dal)
     db.update_dal(pct_dal)
