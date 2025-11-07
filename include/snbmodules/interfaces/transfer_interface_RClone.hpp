@@ -13,6 +13,7 @@
 #include "snbmodules/interfaces/transfer_interface_abstract.hpp"
 
 #include "appfwk/cmd/Nljs.hpp"
+#include "utilities/WorkerThread.hpp"
 
 #include <librclone.h>
 
