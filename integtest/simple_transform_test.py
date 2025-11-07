@@ -101,6 +101,9 @@ while found_file:
     except:
         found_file = False
 
+# Add 10s per GB of input data
+run_duration = 30 + wibeth_frag_params["max_size_bytes"] * 10 // (1024 * 1024 * 1024)
+
 wibeth_frag_params["expected_fragment_count"] = ii
 
 pct_conf = db.get_dal(class_name="PreconfiguredTriggerModuleConf", uid="pc-trig-conf")
@@ -145,9 +148,12 @@ window_dict.config_substitutions.append(
 # conf_dict.connsvc_port = 12345
 
 confgen_arguments = {
-#    "SNBTransform": conf_dict,
     "SNBTransformWithSequences": window_dict,
 }
+
+if wibeth_frag_params["max_size_bytes"] < 1024 * 1024 * 1024: # 1 GB
+    confgen_arguments["SNBTransformSingle"] = conf_dict
+
 # The commands to run in nanorc, as a list
 nanorc_command_list = (
     "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
@@ -266,6 +272,8 @@ def test_data_files(run_nanorc):
             if size != expected_size:
                 print(f"\N{POLICE CARS REVOLVING LIGHT} Fragments with source ID {src_id} have total size {size}, expected {expected_size} \N{POLICE CARS REVOLVING LIGHT} ")
                 correct_sizes = False
+            else:
+                print(f"\N{WHITE HEAVY CHECK MARK} Fragments with source ID {src_id} have total size {size}, expected {expected_size}")
             all_ok &= (size == expected_size)
         if correct_sizes:
             print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")

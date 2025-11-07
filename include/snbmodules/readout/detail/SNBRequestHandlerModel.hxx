@@ -392,9 +392,8 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
     auto start_timestamp = start_win_ts;
     request_element.set_timestamp(start_timestamp);
 
-    auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
-                        ? m_latency_buffer->lower_bound(request_element, true)
-                        : m_latency_buffer->lower_bound(request_element, false);
+    auto start_iter = m_latency_buffer->begin();
+
     if (!start_iter.good()) {
       // Accessor problem
       rres.result_code = ResultCode::kNotFound;
@@ -402,13 +401,8 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Lower bound found " << start_iter->get_timestamp()
                                   << ", --> distance from window: "
                                   << int64_t(start_win_ts) - int64_t(start_iter->get_timestamp());
-      if (end_win_ts > newest_ts) {
-        rres.result_code = ResultCode::kPartial;
-      } else if (start_win_ts < last_ts) {
-        rres.result_code = ResultCode::kPartiallyOld;
-      } else {
+
         rres.result_code = ResultCode::kFound;
-      }
 
       auto elements_handled = 0;
 

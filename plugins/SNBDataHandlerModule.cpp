@@ -17,7 +17,7 @@
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
-#include "datahandlinglibs/models/DataHandlingModel.hpp"
+#include "snbmodules/readout/SNBDataHandlingModel.hpp"
 #include "datahandlinglibs/models/FixedRateQueueModel.hpp"
 
 #include "fdreadoutlibs/DAPHNEEthTypeAdapter.hpp"
@@ -93,7 +93,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   // IF WIBEth
   if (raw_dt.find("WIBEthFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for an Ethernet DUNE-WIB";
-    auto readout_model = std::make_shared<rol::DataHandlingModel<
+    auto readout_model = std::make_shared<SNBDataHandlingModel<
       fdt::DUNEWIBEthTypeAdapter,
       SNBRequestHandlerModel<fdt::DUNEWIBEthTypeAdapter, rol::FixedRateQueueModel<fdt::DUNEWIBEthTypeAdapter>>,
       rol::FixedRateQueueModel<fdt::DUNEWIBEthTypeAdapter>,
@@ -106,7 +106,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   // IF CRTBern
   if (raw_dt.find("CRTBernFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a CRTBern";
-    auto readout_model = std::make_shared<rol::DataHandlingModel<
+    auto readout_model = std::make_shared<SNBDataHandlingModel<
       fdt::CRTBernTypeAdapter,
       SNBRequestHandlerModel<fdt::CRTBernTypeAdapter, rol::FixedRateQueueModel<fdt::CRTBernTypeAdapter>>,
       rol::FixedRateQueueModel<fdt::CRTBernTypeAdapter>,
@@ -119,7 +119,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   // IF CRTGrenoble
   if (raw_dt.find("CRTGrenobleFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a CRTGrenoble";
-    auto readout_model = std::make_shared<rol::DataHandlingModel<
+    auto readout_model = std::make_shared<SNBDataHandlingModel<
       fdt::CRTGrenobleTypeAdapter,
       SNBRequestHandlerModel<fdt::CRTGrenobleTypeAdapter, rol::FixedRateQueueModel<fdt::CRTGrenobleTypeAdapter>>,
       rol::FixedRateQueueModel<fdt::CRTGrenobleTypeAdapter>,
@@ -132,7 +132,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   // IF TDEEth
   if (raw_dt.find("TDEEthFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for an Ethernet TDEEth";
-    auto readout_model = std::make_shared<rol::DataHandlingModel<
+    auto readout_model = std::make_shared<SNBDataHandlingModel<
       fdt::TDEEthTypeAdapter,
       SNBRequestHandlerModel<fdt::TDEEthTypeAdapter, rol::FixedRateQueueModel<fdt::TDEEthTypeAdapter>>,
       rol::FixedRateQueueModel<fdt::TDEEthTypeAdapter>,
@@ -146,7 +146,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   if (raw_dt.find("PDSFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a PDS DAPHNE using SkipList LB";
     auto readout_model = std::make_shared<
-      rol::DataHandlingModel<fdt::DAPHNESuperChunkTypeAdapter,
+      SNBDataHandlingModel<fdt::DAPHNESuperChunkTypeAdapter,
                              SNBRequestHandlerModel<fdt::DAPHNESuperChunkTypeAdapter,
                                                     rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>>,
                              rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>,
@@ -159,7 +159,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   // IF PDS Frame using skiplist
   if (raw_dt.find("DAPHNEEthFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a PDS DAPHNE Ethernet using SkipList LB";
-    auto readout_model = std::make_shared<rol::DataHandlingModel<
+    auto readout_model = std::make_shared<SNBDataHandlingModel<
       fdt::DAPHNEEthTypeAdapter,
       SNBRequestHandlerModel<fdt::DAPHNEEthTypeAdapter, rol::FixedRateQueueModel<fdt::DAPHNEEthTypeAdapter>>,
       rol::FixedRateQueueModel<fdt::DAPHNEEthTypeAdapter>,
@@ -173,7 +173,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   if (raw_dt.find("PDSStreamFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a PDS DAPHNE stream mode using BinarySearchQueue LB";
     auto readout_model = std::make_shared<
-      rol::DataHandlingModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
+      SNBDataHandlingModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
                              SNBRequestHandlerModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
                                                     rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>>,
                              rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>,
