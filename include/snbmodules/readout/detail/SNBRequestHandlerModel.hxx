@@ -123,6 +123,7 @@ SNBRequestHandlerModel<RDT, LBT>::stop(const appfwk::DAQModule::CommandData_t& /
   while (!m_periodic_transmission_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+  TLOG() << "Latency buffer occupancy at stop: " << m_latency_buffer->occupancy();
   m_waiting_queue_thread.join();
   m_request_handler_thread_pool->join();
 }
@@ -384,13 +385,11 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
   if (start_win_ts > newest_ts) {
     // No element is as small as the start window-> request is far in the future
     rres.result_code = ResultCode::kNotYet; // give it another chance
-  } else if (end_win_ts < last_ts) {
+  } else if (end_win_ts <= last_ts) {
     rres.result_code = ResultCode::kTooOld;
   } else {
     RDT request_element = RDT();
     auto start_timestamp = start_win_ts;
-    if (start_timestamp < last_ts)
-      start_timestamp = last_ts;
     request_element.set_timestamp(start_timestamp);
 
     auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
@@ -416,17 +415,22 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
       RDT* element = &(*start_iter);
 
       while (start_iter.good() && element->get_timestamp() <= end_win_ts) {
-        if (element->get_timestamp() + element->get_num_frames() * RDT::expected_tick_difference <= start_win_ts) {
-          // TLOG() << "skip processing for current element " << element->get_timestamp() << ", out of readout window.";
+        std::lock_guard<std::mutex> lk(m_pop_list_mutex);
+        if (m_pop_list.count(element->get_timestamp()) ) {
+          TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
+                         << ", already included in trigger.";
+        }
+        else if (element->get_timestamp() < start_win_ts) {
+          TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
+                         << ", out of readout window.";
         }
 
         else {
-          // TLOG() << "Add element " << element->get_timestamp();
+          // TLOG_DEBUG(50) << "Add element " << element->get_timestamp();
           //  SNB mode, the whole aggregated object (e.g.: superchunk) can be copied
           frag_pieces.emplace_back(
             std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
 
-          std::lock_guard<std::mutex> lk(m_pop_list_mutex);
           m_pop_list.insert(element->get_timestamp());
         }
 

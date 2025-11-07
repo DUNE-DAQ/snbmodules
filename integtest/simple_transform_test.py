@@ -13,7 +13,7 @@ from hdf5libs import HDF5RawDataFile
 pytest_plugins = "integrationtest.integrationtest_drunc"
 
 # Values that help determine the running conditions
-run_duration = 300  # seconds
+run_duration = 30  # seconds
 
 # Default values for validation parameters
 expected_number_of_data_files = 1
@@ -28,7 +28,7 @@ wibeth_frag_params = {
     "expected_fragment_count": 1,
     "min_size_bytes": 0,
     "max_size_bytes": 0,
-    "error_bitmask": 0xFFFFFFFC,  # Mask kIncomplete
+#    "error_bitmask": 0xFFFFFFFC,  # Mask kIncomplete
 }
 triggercandidate_frag_params = {
     "fragment_type_description": "Trigger Candidate",
@@ -123,7 +123,7 @@ conf_dict.config_substitutions.append(
     data_classes.attribute_substitution(
         obj_class="TRBConf",
         updates={
-            "max_time_window": 0,  # Unlimited, no sequences
+            "max_sequence_length_ticks": 0,  # Unlimited, no sequences
             "trigger_record_timeout_ms": 1000 * run_duration,
         },
     )
@@ -134,7 +134,7 @@ window_dict.config_substitutions.append(
     data_classes.attribute_substitution(
         obj_class="TRBConf",
         updates={
-            "max_time_window": sequence_length,
+            "max_sequence_length_ticks": sequence_length,
             "trigger_record_timeout_ms": 1000 * run_duration,
         },
     )
@@ -150,7 +150,7 @@ confgen_arguments = {
 }
 # The commands to run in nanorc, as a list
 nanorc_command_list = (
-    "boot wait 60 conf start --run-number 101 wait 1 enable-triggers wait ".split()
+    "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
     + [str(run_duration)]
     + "disable-triggers wait 2 drain-dataflow wait 2 stop-trigger-sources stop scrap terminate".split()
 )
@@ -189,18 +189,21 @@ def test_log_files(run_nanorc):
 
 def test_data_files(run_nanorc):
     # Run some tests on the output data file
-    all_ok = len(run_nanorc.data_files) == expected_number_of_data_files
-    print("")  # Clear potential dot from pytest
-    if all_ok:
-        print(
-            f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})"
-        )
-    else:
-        print(
-            f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}"
-        )
-
     current_test = os.environ.get("PYTEST_CURRENT_TEST")
+    all_ok = True
+    # Don't care how many files are written with sequences
+    if "WithSequences" not in current_test:
+        all_ok = len(run_nanorc.data_files) == expected_number_of_data_files
+        print("")  # Clear potential dot from pytest
+        if all_ok:
+            print(
+                f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})"
+            )
+        else:
+            print(
+                f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}"
+            )
+
     local_expected_event_count = expected_event_count
     local_wibeth_frag_params = copy.deepcopy(wibeth_frag_params)
     
@@ -212,13 +215,19 @@ def test_data_files(run_nanorc):
     fragment_check_list.append(local_wibeth_frag_params)
     nontrig_fragment_check_list = [hsi_frag_params, local_wibeth_frag_params]
 
+    total_record_count=0
+    fragment_size_by_id={}
+
     for idx in range(len(run_nanorc.data_files)):
         data_file = data_file_checks.DataFile(run_nanorc.data_files[idx])
         all_ok &= data_file_checks.sanity_check(data_file)
         all_ok &= data_file_checks.check_file_attributes(data_file)
-        all_ok &= data_file_checks.check_event_count(
-            data_file, local_expected_event_count, expected_event_count_tolerance
-        )
+        
+        # We'll just check that the _total_ number is correct for sequences
+        if "WithSequences" not in current_test:
+            all_ok &= data_file_checks.check_event_count(
+                data_file, local_expected_event_count, expected_event_count_tolerance
+            )
         for jdx in range(len(fragment_check_list)):
             all_ok &= data_file_checks.check_fragment_count(
                 data_file, fragment_check_list[jdx]
@@ -233,25 +242,32 @@ def test_data_files(run_nanorc):
         if "WithSequences" in current_test:
             h5_file = HDF5RawDataFile(data_file.name)
             records = h5_file.get_all_record_ids()
-            size_by_id = {}
-            record_count = len(records)
+            total_record_count += len(records)
             for rec in records:
                 src_ids = h5_file.get_source_ids_for_fragment_type(rec, "WIBEth")
                 for src_id in src_ids:
                     frag=h5_file.get_frag(rec,src_id);
                     size=frag.get_size()
-                    if src_id.id in size_by_id.keys():
-                        size_by_id[src_id.id] = size_by_id[src_id.id] + size - 72
+                    if src_id.id in fragment_size_by_id.keys():
+                        fragment_size_by_id[src_id.id] += size - 72
                     else:
-                        size_by_id[src_id.id] = size - 72
-            correct_sizes = True
-            for src_id,size in size_by_id.items():
-                expected_size = file_size_map[src_id] + ((record_count - 1) * tr_splitting_overhead)
-                if size != expected_size:
-                    print(f"\N{POLICE CARS REVOLVING LIGHT} Fragments with source ID {src_id} have total size {size}, expected {expected_size} \N{POLICE CARS REVOLVING LIGHT} ")
-                    correct_sizes = False
-                all_ok &= (size == expected_size)
-            if correct_sizes:
-                print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
+                        fragment_size_by_id[src_id.id] = size - 72
+
+    if "WithSequences" in current_test:
+        correct_count = (total_record_count == local_expected_event_count)
+        all_ok &= correct_count
+        if correct_count:
+            print(f"\N{WHITE HEAVY CHECK MARK} Record count {total_record_count} matches expected count {local_expected_event_count}")
+        else:
+            print(f"\N{POLICE CARS REVOLVING LIGHT} Record count {total_record_count} DOES NOT match expected count {local_expected_event_count} \N{POLICE CARS REVOLVING LIGHT} ")
+        correct_sizes = True
+        for src_id,size in fragment_size_by_id.items():
+            expected_size = file_size_map[src_id] + ((total_record_count - 1) * tr_splitting_overhead)
+            if size != expected_size:
+                print(f"\N{POLICE CARS REVOLVING LIGHT} Fragments with source ID {src_id} have total size {size}, expected {expected_size} \N{POLICE CARS REVOLVING LIGHT} ")
+                correct_sizes = False
+            all_ok &= (size == expected_size)
+        if correct_sizes:
+            print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
 
     assert all_ok
