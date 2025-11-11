@@ -10,7 +10,7 @@ from snbmodules.simple_transform_test_gen import generate_transform_objs
 @click.argument('oksfile')
 @click.argument('files', nargs=-1)
 def generate(oksfile, files, trigger_mode):
-  """Simple script to create an OKS configuration file that contains a readout map and preconfigured triggers for the given binary files
+  """Simple script to create an OKS configuration file that contains a readout map and preconfigured fixed-time triggers for the given binary files
 
   """
 

@@ -106,11 +106,11 @@ run_duration = 30 + wibeth_frag_params["max_size_bytes"] * 10 // (1024 * 1024 * 
 
 wibeth_frag_params["expected_fragment_count"] = ii
 
-pct_conf = db.get_dal(class_name="PreconfiguredTriggerModuleConf", uid="pc-trig-conf")
-expected_event_count = len(pct_conf.triggers)
+ft_conf = db.get_dal(class_name="FixedTimeTCMakerModuleConf", uid="ft-trig-conf")
+expected_event_count = len(ft_conf.triggers)
 sequence_count = 0
 sequence_length = 500000 # intention is 8 msec sequences
-for trig_n,trig in enumerate(pct_conf.triggers):
+for trig_n,trig in enumerate(ft_conf.triggers):
     trig_len = trig.timestamp_end - trig.timestamp_start
     sequence_count = sequence_count + (trig_len // sequence_length) + 1
 

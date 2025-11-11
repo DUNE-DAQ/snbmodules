@@ -63,7 +63,7 @@
 
 <oks-data>
 
-<info name="" type="" num-of-items="10" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20251107T160611" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20251107T160611"/>
+<info name="" type="" num-of-items="9" oks-format="data" oks-version="862f2957270" created-by="eflumerf" created-on="ironvirt9.mshome.net" creation-time="20251111T223656" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20251111T223656"/>
 
 <include>
  <file path="schema/confmodel/dunedaq.schema.xml"/>
@@ -88,6 +88,22 @@
  <rel name="uses" class="NetworkInterface" id="snb-nic-0"/>
 </obj>
 
+<obj class="FixedTimeTCConf" id="ft-trig-109833853170579467">
+ <attr name="timestamp_start" type="u64" val="109833853170579467"/>
+ <attr name="timestamp_end" type="u64" val="109833853170780171"/>
+</obj>
+
+<obj class="FixedTimeTCMakerModuleConf" id="ft-trig-conf">
+ <attr name="template_for" type="class" val="FixedTimeTCMakerModule"/>
+ <attr name="timestamp_method" type="enum" val="kTimeSync"/>
+ <attr name="latency_monitoring" type="bool" val="1"/>
+ <attr name="wait_time_ms" type="u64" val="1000"/>
+ <attr name="tc_type_name" type="string" val="kSupernova"/>
+ <rel name="triggers">
+  <ref class="FixedTimeTCConf" id="ft-trig-109833853170579467"/>
+ </rel>
+</obj>
+
 <obj class="GeoId" id="geioId-0">
  <attr name="detector_id" type="u32" val="10"/>
  <attr name="crate_id" type="u32" val="11"/>
@@ -107,34 +123,12 @@
  <attr name="network_name" type="enum" val="Control"/>
 </obj>
 
-<obj class="PreconfiguredTriggerModuleConf" id="pc-trig-conf">
- <attr name="template_for" type="class" val="PreconfiguredTriggerModule"/>
- <attr name="timestamp_method" type="enum" val="kTimeSync"/>
- <attr name="latency_monitoring" type="bool" val="1"/>
- <attr name="wait_time_ms" type="u64" val="1000"/>
- <rel name="tc_readout" class="TCReadoutMap" id="tc-readout-snb"/>
- <rel name="triggers">
-  <ref class="PreconfiguredTriggerModuleTrigger" id="pc-trig-109833853170579467"/>
- </rel>
-</obj>
-
-<obj class="PreconfiguredTriggerModuleTrigger" id="pc-trig-109833853170579467">
- <attr name="timestamp_start" type="u64" val="109833853170579467"/>
- <attr name="timestamp_end" type="u64" val="109833853170780171"/>
-</obj>
-
 <obj class="SNBFileSourceParameters" id="snb-files-det-conn-0">
  <attr name="data_files" type="string">
   <data val="asset://?checksum=370df564205290d27cab47e44ae4ca47"/>
  </attr>
  <attr name="input_buffer_size" type="u32" val="5777280"/>
  <attr name="file_compression_algorithm" type="string" val="None"/>
-</obj>
-
-<obj class="TCReadoutMap" id="tc-readout-snb">
- <attr name="tc_type_name" type="string" val="kSupernova"/>
- <attr name="time_before" type="u32" val="0"/>
- <attr name="time_after" type="u32" val="0"/>
 </obj>
 
 </oks-data>

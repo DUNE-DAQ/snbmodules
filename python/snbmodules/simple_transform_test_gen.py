@@ -162,7 +162,7 @@ def generate_transform_objs(oksfile, files, trigger_mode):
         for file,file_info in file_infos.items():
             first = file_info["first"]
             last = file_info["last"]
-            pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{first}", timestamp_start=first, timestamp_end=last)
+            fttc_dal = dal.FixedTimeTCConf(f"ft-trig-{first}", timestamp_start=first, timestamp_end=last)
             match = False
             for trig in triggers:
                 if trig.timestamp_start == first:
@@ -170,8 +170,8 @@ def generate_transform_objs(oksfile, files, trigger_mode):
                     break;
 
             if not match:
-                db.update_dal(pctmt_dal)
-                triggers.append(pctmt_dal)
+                db.update_dal(fttc_dal)
+                triggers.append(fttc_dal)
     elif trigger_mode == "aligned-chunks": # Make a "start", "body" and "end" trigger
         earliest_start = -1
         latest_start = -1
@@ -194,16 +194,16 @@ def generate_transform_objs(oksfile, files, trigger_mode):
             print(f"Warning: Latest window start time is after earliest end time! Only creating \"start\" and \"end\" triggers!")
             earliest_end = latest_start
 
-        start_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_start)
-        db.update_dal(start_pctmt_dal)
-        triggers.append(start_pctmt_dal)
+        start_fttc_dal = dal.FixedTimeTCConf(f"ft-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_start)
+        db.update_dal(start_fttc_dal)
+        triggers.append(start_fttc_dal)
         if earliest_end > latest_start:
-            body_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{latest_start}", timestamp_start=latest_start, timestamp_end=earliest_end)
-            db.update_dal(body_pctmt_dal)
-            triggers.append(body_pctmt_dal)
-        end_pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_end}", timestamp_start=earliest_end, timestamp_end=latest_end)
-        db.update_dal(end_pctmt_dal)
-        triggers.append(end_pctmt_dal)
+            body_fttc_dal = dal.FixedTimeTCConf(f"ft-trig-{latest_start}", timestamp_start=latest_start, timestamp_end=earliest_end)
+            db.update_dal(body_fttc_dal)
+            triggers.append(body_fttc_dal)
+        end_fttc_dal = dal.FixedTimeTCConf(f"ft-trig-{earliest_end}", timestamp_start=earliest_end, timestamp_end=latest_end)
+        db.update_dal(end_fttc_dal)
+        triggers.append(end_fttc_dal)
     else: # One big trigger
         earliest_start = -1
         latest_end = -1
@@ -215,13 +215,11 @@ def generate_transform_objs(oksfile, files, trigger_mode):
                 earliest_start = first
             if latest_end == -1 or last > latest_end:
                 latest_end = last
-        pctmt_dal = dal.PreconfiguredTriggerModuleTrigger(f"pc-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_end)
-        db.update_dal(pctmt_dal)
-        triggers.append(pctmt_dal)
+        fttc_dal = dal.FixedTimeTCConf(f"ft-trig-{earliest_start}", timestamp_start=earliest_start, timestamp_end=latest_end)
+        db.update_dal(fttc_dal)
+        triggers.append(fttc_dal)
 
-    tc_readout_dal = dal.TCReadoutMap(f'tc-readout-snb', tc_type_name="kSupernova", time_before=0, time_after=0)
-    db.update_dal(tc_readout_dal)
-    pct_dal = dal.PreconfiguredTriggerModuleConf(f'pc-trig-conf', template_for="PreconfiguredTriggerModule", wait_time_ms=1000, triggers=triggers, tc_readout=tc_readout_dal)
-    db.update_dal(pct_dal)
+    ftmc_dal = dal.FixedTimeTCMakerModuleConf(f'ft-trig-conf', template_for="FixedTimeTCMakerModule", wait_time_ms=1000, triggers=triggers, tc_type_name="kSupernova")
+    db.update_dal(ftmc_dal)
 
     db.commit()
