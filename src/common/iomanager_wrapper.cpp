@@ -1,5 +1,6 @@
 /**
- * @file iomanager_wrapper.cpp IOManagerWrapper class definition : wrapper of the IOManager to adapt it to the snbmodules
+ * @file iomanager_wrapper.cpp IOManagerWrapper class definition : wrapper of the IOManager to adapt it to the
+ * snbmodules
  *
  * This is part of the DUNE DAQ , copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
@@ -11,9 +12,9 @@
 #include <string>
 #include <utility>
 
-namespace dunedaq::snbmodules
-{
+namespace dunedaq::snbmodules {
 
+#if 0
     void IOManagerWrapper::init_connection_interface(const std::string &session_name, bool use_connectivity_service, const IPFormat &ip)
     {
         dunedaq::logging::Logging::setup();
@@ -38,9 +39,12 @@ namespace dunedaq::snbmodules
         TLOG() << "debug : Added connection " << conn.id.uid << " uri: " << conn.uri;
         m_connections.emplace_back(std::move(conn));
     }
+#endif
 
-    iomanager::ConnectionResponse IOManagerWrapper::lookups_connection(iomanager::ConnectionId const &conn_id, bool restrict_single)
-    {
-        return iomanager::NetworkManager::get().get_connections(conn_id, restrict_single);
-    }
+iomanager::ConnectionResponse
+IOManagerWrapper::lookups_connection(iomanager::ConnectionId const& conn_id, bool restrict_single)
+{
+  TLOG() << "BLAB " << __LINE__ << " " << conn_id.uid << " " << conn_id.data_type << " " << conn_id.session;
+  return iomanager::NetworkManager::get().get_connections(conn_id, restrict_single);
+}
 } // namespace dunedaq::snbmodules

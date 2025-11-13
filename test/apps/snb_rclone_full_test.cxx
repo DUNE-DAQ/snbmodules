@@ -6,53 +6,52 @@
  * received with this code.
  */
 
-#include "snbmodules/transfer_client.hpp"
-#include "snbmodules/common/protocols_enum.hpp"
 #include "snbmodules/bookkeeper.hpp"
+#include "snbmodules/common/protocols_enum.hpp"
+#include "snbmodules/transfer_client.hpp"
 
 #include "utilities/WorkerThread.hpp"
 
-#include <iostream>
-#include <string>
-#include <filesystem>
-#include <cassert>
-#include <stdexcept>
 #include <algorithm>
 #include <boost/iostreams/device/mapped_file.hpp>
+#include <cassert>
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 using namespace dunedaq::snbmodules;
 namespace io = boost::iostreams;
 
-int main()
+int
+main()
 {
 
-    try
-    {
-        // Create clients
-        std::string ip0 = "localhost:5009";
-        std::string ip1 = "localhost:5010";
+  try {
+    // Create clients
+    std::string ip0 = "localhost:5009";
+    std::string ip1 = "localhost:5010";
 
-        TransferClient c0(IPFormat(ip0), "client0", "./client0");
-        TransferClient c1(IPFormat(ip1), "client1", "./client1");
+    TransferClient c0(IPFormat(ip0), "client0", "./client0");
+    TransferClient c1(IPFormat(ip1), "client1", "./client1");
 
-        // Initialize connections
-        c0.add_connection(IPFormat(ip0), "client0", "notification_t", true);
-        c0.add_connection(IPFormat(ip1), "client1", "notification_t", true);
-        c0.init_connection_interface();
+    // Initialize connections
+    c0.add_connection(IPFormat(ip0), "client0", "notification_t", true);
+    c0.add_connection(IPFormat(ip1), "client1", "notification_t", true);
+    c0.init_connection_interface();
 
-        // Start client0 in a thread ( listening to notifications, Dowloader )
-        dunedaq::utilities::WorkerThread thread([&](std::atomic<bool> &running)
-                                                { c0.do_work(running); });
-        thread.start_working_thread();
+    // Start client0 in a thread ( listening to notifications, Dowloader )
+    dunedaq::utilities::WorkerThread thread([&](std::atomic<bool>& running) { c0.do_work(running); });
+    thread.start_working_thread();
 
-        // Create file to transfer
-        std::string file_name = "./client1/test.txt";
-        std::ofstream file(file_name);
-        for (int i = 0; i < 100000; i++)
-            file << "Hello World " << i << "!" << std::endl;
-        file.close();
+    // Create file to transfer
+    std::string file_name = "./client1/test.txt";
+    std::ofstream file(file_name);
+    for (int i = 0; i < 100000; i++)
+      file << "Hello World " << i << "!" << std::endl;
+    file.close();
 
-        nlohmann::json transfer_options = R"(
+    nlohmann::json transfer_options = R"(
             {
                 "protocol": "sftp",
                 "rate_limit": "off",
@@ -70,43 +69,39 @@ int main()
             }
         )"_json;
 
-        // Create transfer with client1 as uploader and client0 as downloader
-        c1.create_new_transfer("transfer0", "RCLONE", {c0.get_client_id()}, {file_name}, transfer_options);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+    // Create transfer with client1 as uploader and client0 as downloader
+    c1.create_new_transfer("transfer0", "RCLONE", { c0.get_client_id() }, { file_name }, transfer_options);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        c1.get_session("transfer0")->start_all();
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+    c1.get_session("transfer0")->start_all();
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
-        // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed
-        // c0.get_session("transfer0")->pause_all();
-        // std::this_thread::sleep_for(std::chrono::seconds(5));
+    // note that if input file is too small, the transfer will be completed before the pause and Warning will be printed
+    // c0.get_session("transfer0")->pause_all();
+    // std::this_thread::sleep_for(std::chrono::seconds(5));
 
-        // c0.get_session("transfer0")->resume_all();
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
+    // c0.get_session("transfer0")->resume_all();
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        thread.stop_working_thread();
+    thread.stop_working_thread();
 
-        // Checking if file was transferred
-        io::mapped_file_source f1(file_name);
-        io::mapped_file_source f2("./client0/transfer0/test.txt");
+    // Checking if file was transferred
+    io::mapped_file_source f1(file_name);
+    io::mapped_file_source f2("./client0/transfer0/test.txt");
 
-        if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data())) // NOLINT
-        {
-            TLOG() << "Files are equals";
-        }
-        else
-        {
-            TLOG() << "Files are not equals";
-        }
-
-        // Clean files
-        std::filesystem::remove_all("client0");
-        std::filesystem::remove_all("client1");
-    }
-    catch (const std::exception &e)
+    if (f1.size() == f2.size() && std::equal(f1.data(), f1.data() + f1.size(), f2.data())) // NOLINT
     {
-        TLOG() << e.what();
-        return 1;
+      TLOG() << "Files are equals";
+    } else {
+      TLOG() << "Files are not equals";
     }
-    return 0;
+
+    // Clean files
+    std::filesystem::remove_all("client0");
+    std::filesystem::remove_all("client1");
+  } catch (const std::exception& e) {
+    TLOG() << e.what();
+    return 1;
+  }
+  return 0;
 } // NOLINT

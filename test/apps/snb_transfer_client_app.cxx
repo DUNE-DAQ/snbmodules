@@ -6,36 +6,36 @@
  * received with this code.
  */
 
-#include "snbmodules/transfer_client.hpp"
-#include "snbmodules/transfer_session.hpp"
 #include "snbmodules/ip_format.hpp"
+#include "snbmodules/transfer_client.hpp"
 
-#include <iostream>
-#include <string>
-#include <filesystem>
 #include <cassert>
+#include <filesystem>
+#include <iostream>
 #include <stdexcept>
+#include <string>
 
 using namespace dunedaq::snbmodules;
 
-int main(int argc, char *argv[])
+int
+main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        TLOG() << "Usage: ./client <number>";
-        return 1;
-    }
+  if (argc != 2) {
+    TLOG() << "Usage: ./client <number>";
+    return 1;
+  }
 
-    std::string number = argv[1]; // NOLINT
+  std::string number = argv[1]; // NOLINT
 
-    int base_port = 5002;
-    IPFormat ip = IPFormat("localhost", base_port + std::stoi(number));
+  int base_port = 5002;
+  IPFormat ip = IPFormat("localhost", base_port + std::stoi(number));
 
-    TransferClient transfer_client(ip, "client" + number, "listen");
-    transfer_client.add_connection(IPFormat("localhost:5001"), "snbmodules_bookkeeper_notification", "notification_t", false);
-    transfer_client.add_connection(ip, "snbmodules_client" + number + "_notification", "notification_t", true);
-    transfer_client.init_connection_interface("snbmodules", false, IPFormat("localhost:5000"));
-    transfer_client.start(100000000);
+  TransferClient transfer_client(ip, "client" + number, "listen");
+  transfer_client.add_connection(
+    IPFormat("localhost:5001"), "snbmodules_bookkeeper_notification", "notification_t", false);
+  transfer_client.add_connection(ip, "snbmodules_client" + number + "_notification", "notification_t", true);
+  transfer_client.init_connection_interface("snbmodules", false, IPFormat("localhost:5000"));
+  transfer_client.start(100000000);
 
-    return 0;
+  return 0;
 }

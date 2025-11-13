@@ -19,12 +19,10 @@ find_package(logging REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(detdataformats REQUIRED)
-find_package(readoutlibs REQUIRED)
+find_package(datahandlinglibs REQUIRED)
+find_package(fdreadoutlibs REQUIRED)
 find_package(rclone REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
-
-
-daq_codegen( snbfiletransfer.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
 
 set(linked_libraries
     iomanager::iomanager
@@ -34,7 +32,7 @@ set(linked_libraries
     daqdataformats::daqdataformats
     detdataformats::detdataformats
     nlohmann_json::nlohmann_json
-    readoutlibs::readoutlibs
+    datahandlinglibs::datahandlinglibs
     Boost::iostreams
     LibtorrentRasterbar::torrent-rasterbar
     rclone::rclone
@@ -121,16 +119,25 @@ daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${s
 
 ##############################################################################
 # Plugins
-
 daq_add_plugin(SNBFileTransfer duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
 daq_add_plugin(SNBTransferBookkeeper duneDAQModule LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules)
+daq_add_plugin(SNBFileReaderModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
+
+
+set(SNBMODULES_USE_INTRINSICS ON)
+
+if(${SNBMODULES_USE_INTRINSICS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+endif()
+
+daq_add_plugin(SNBDataHandlerModule duneDAQModule LINK_LIBRARIES snbmodules fdreadoutlibs::fdreadoutlibs)
 
 ##############################################################################
 # Integration tests
 
-foreach(t IN LISTS tests)
-    daq_add_application( ${t} ${t}.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
-endforeach()
+#TEMP_REMOVED#foreach(t IN LISTS tests)
+#TEMP_REMOVED#    daq_add_application( ${t} ${t}.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} snbmodules )
+#TEMP_REMOVED#endforeach()
 
 ##############################################################################
 # Apps

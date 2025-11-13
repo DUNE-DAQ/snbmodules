@@ -1,0 +1,23 @@
+#!/bin/env python3
+import conffwk
+import click
+import os
+import glob
+from snbmodules.simple_transform_test_gen import generate_transform_objs
+
+@click.command()
+@click.option('--trigger-mode', type=click.Choice(["per-file", "aligned-chunks", "single-trigger"]), default="single-trigger")
+@click.argument('oksfile')
+@click.argument('files', nargs=-1)
+def generate(oksfile, files, trigger_mode):
+  """Simple script to create an OKS configuration file that contains a readout map and preconfigured fixed-time triggers for the given binary files
+
+  """
+
+  file_array = []
+  for file in files:
+    file_array.append(file)
+  generate_transform_objs(oksfile, file_array, trigger_mode)
+
+if __name__ == '__main__':
+  generate()
