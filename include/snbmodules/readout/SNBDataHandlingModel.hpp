@@ -155,7 +155,7 @@ protected:
   folly::coro::Task<void> postprocess_schedule();  
 
   // Dispatch data request
-  void dispatch_requests(dfmessages::DataRequest& data_request);
+  void dispatch_requests(dfmessages::DataRequest&& data_request);
   
   // Transform input data type to readout
   virtual std::vector<RDT> transform_payload(IDT& original) const

@@ -467,7 +467,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_timesync()
 
 template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void 
-SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::dispatch_requests(dfmessages::DataRequest& data_request)
+SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::dispatch_requests(dfmessages::DataRequest&& data_request)
 {
   if (data_request.request_information.component != m_sourceid) {
      ers::error(datahandlinglibs::RequestSourceIDMismatch(ERS_HERE, m_sourceid, data_request.request_information.component));
