@@ -109,8 +109,8 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::conf(const appfwk::DAQModule::Com
     m_consume_callback = std::bind(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::consume_callback, this, std::placeholders::_1);
  
     // Register callback
-    auto dmcbr = datahandlinglibs::DataMoveCallbackRegistry::get();
-    dmcbr->register_callback<IDT>(m_raw_data_receiver_connection_name, m_consume_callback);
+    auto dmcbr = iomanager::IOManager::get();
+    dmcbr->add_callback<IDT>(m_raw_data_receiver_connection_name, m_consume_callback);
   }
 
   // Configure threads:

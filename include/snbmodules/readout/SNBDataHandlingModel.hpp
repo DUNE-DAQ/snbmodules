@@ -35,7 +35,6 @@
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
 #include "appmodel/DataHandlerModule.hpp"
 
-#include "datahandlinglibs/DataMoveCallbackRegistry.hpp"
 #include "datahandlinglibs/FrameErrorRegistry.hpp"
 
 #include "datahandlinglibs/concepts/LatencyBufferConcept.hpp"
