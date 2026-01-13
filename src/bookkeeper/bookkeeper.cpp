@@ -202,7 +202,10 @@ Bookkeeper::input_action(char input)
       }
 
       for (const auto& transfer : choosen_transfers) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         start_transfers(transfer);
+#pragma GCC diagnostic pop
       }
       break;
     }
@@ -553,8 +556,8 @@ Bookkeeper::add_update_grp_transfer(GroupMetadata grp_transfers)
   std::string group_id_tmp = grp_transfers.get_group_id();
   if (m_grp_transfers.find(group_id_tmp) != m_grp_transfers.end()) {
     // Already inserted, copy old values
-    grp_transfers.set_transfers_meta(std::move(m_grp_transfers.at(grp_transfers.get_group_id()).get_transfers_meta()));
-    grp_transfers.set_expected_files(std::move(m_grp_transfers.at(grp_transfers.get_group_id()).get_expected_files()));
+    grp_transfers.set_transfers_meta(m_grp_transfers.at(grp_transfers.get_group_id()).get_transfers_meta());
+    grp_transfers.set_expected_files(m_grp_transfers.at(grp_transfers.get_group_id()).get_expected_files());
     m_grp_transfers.erase(group_id_tmp);
   }
   m_grp_transfers.insert({ group_id_tmp, std::move(grp_transfers) });

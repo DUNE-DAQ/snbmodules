@@ -322,7 +322,7 @@ template<class RDT, class RHT, class LBT, class RPT, class IDT>
 folly::coro::Task<void>
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule() {  
 
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Postprocess schedule coroutine started...";
+  //TLOG_DEBUG(TLVL_WORK_STEPS) << "Postprocess schedule coroutine started...";
   timestamp_t newest_ts = 0;
   timestamp_t end_win_ts = 0;
   bool first_cycle = true;
@@ -351,7 +351,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule() {
     now = std::chrono::system_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_post_proc_time);
 
-    if (milliseconds.count() <= m_post_processing_delay_min_wait) {
+    if (static_cast<uint64_t>(milliseconds.count()) <= m_post_processing_delay_min_wait) {
       continue;
     }
 
@@ -365,7 +365,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule() {
       auto head = m_latency_buffer_impl->front();
       processed_element.set_timestamp(head->get_timestamp());
       first_cycle = false;
-      TLOG() << "***** First pass post processing *****";
+      //TLOG() << "***** First pass post processing *****";
     }
 
     if (newest_ts - processed_element.get_timestamp() > m_processing_delay_ticks) {

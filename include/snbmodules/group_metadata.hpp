@@ -88,6 +88,10 @@ public:
     auto o = dynamic_cast<const GroupMetadata&>(other);
     return m_group_id == o.m_group_id;
   }
+  bool operator==(GroupMetadata const& other) const
+  {
+    return m_group_id == other.m_group_id;
+  }
 
   /// @brief  Operator <
   /// @param other  Other GroupMetadata to compare
