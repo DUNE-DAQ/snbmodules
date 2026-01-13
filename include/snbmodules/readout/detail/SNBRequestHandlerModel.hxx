@@ -402,7 +402,7 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
                                   << ", --> distance from window: "
                                   << int64_t(start_win_ts) - int64_t(start_iter->get_timestamp());
 
-        rres.result_code = ResultCode::kFound;
+      rres.result_code = ResultCode::kFound;
 
       auto elements_handled = 0;
 
@@ -410,11 +410,10 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
 
       while (start_iter.good() && element->get_timestamp() <= end_win_ts) {
         std::lock_guard<std::mutex> lk(m_pop_list_mutex);
-        if (m_pop_list.count(element->get_timestamp()) ) {
+        if (m_pop_list.count(element->get_timestamp())) {
           TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
                          << ", already included in trigger.";
-        }
-        else if (element->get_timestamp() < start_win_ts) {
+        } else if (element->get_timestamp() < start_win_ts) {
           TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
                          << ", out of readout window.";
         }

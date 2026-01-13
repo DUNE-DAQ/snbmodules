@@ -9,19 +9,19 @@
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBDATAHANDLINGMODEL_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBDATAHANDLINGMODEL_HPP_
 
-#include "confmodel/DaqModule.hpp"
-#include "confmodel/Connection.hpp"
-#include "appmodel/DataHandlerModule.hpp"
 #include "appmodel/DataHandlerConf.hpp"
-#include "appmodel/RequestHandler.hpp"
-#include "appmodel/LatencyBuffer.hpp"
+#include "appmodel/DataHandlerModule.hpp"
 #include "appmodel/DataProcessor.hpp"
+#include "appmodel/LatencyBuffer.hpp"
+#include "appmodel/RequestHandler.hpp"
+#include "confmodel/Connection.hpp"
+#include "confmodel/DaqModule.hpp"
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"
 
 #include "iomanager/IOManager.hpp"
-#include "iomanager/Sender.hpp"
 #include "iomanager/Receiver.hpp"
+#include "iomanager/Sender.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -31,9 +31,9 @@
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
 
+#include "appmodel/DataHandlerModule.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
-#include "appmodel/DataHandlerModule.hpp"
 
 #include "datahandlinglibs/DataMoveCallbackRegistry.hpp"
 #include "datahandlinglibs/FrameErrorRegistry.hpp"
@@ -63,7 +63,11 @@ using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
 namespace dunedaq {
 namespace snbmodules {
 
-template<class ReadoutType, class RequestHandlerType, class LatencyBufferType, class RawDataProcessorType, class InputDataType = ReadoutType>
+template<class ReadoutType,
+         class RequestHandlerType,
+         class LatencyBufferType,
+         class RawDataProcessorType,
+         class InputDataType = ReadoutType>
 class SNBDataHandlingModel : public datahandlinglibs::DataHandlingConcept
 {
 public:
@@ -120,22 +124,18 @@ public:
   void stop(const appfwk::DAQModule::CommandData_t& args);
 
   // Record function: invokes request handler's record implementation
-  void record(const appfwk::DAQModule::CommandData_t& args) override 
-  { 
-    m_request_handler_impl->record(args); 
-  }
+  void record(const appfwk::DAQModule::CommandData_t& args) override { m_request_handler_impl->record(args); }
 
   // Opmon get_info call implementation
-  //void get_info(opmonlib::InfoCollector& ci, int level);
+  // void get_info(opmonlib::InfoCollector& ci, int level);
 
   // Consume callback
   std::function<void(IDT&&)> m_consume_callback;
 
 protected:
-
   // Perform processing operations on payload
   void process_item(RDT&& payload);
-  
+
   // Transform payload if needed, then perform processing
   void transform_and_process(IDT&& payload);
 
@@ -152,16 +152,13 @@ protected:
   void run_postprocess_scheduler();
 
   // Postprocess schedule coroutine
-  folly::coro::Task<void> postprocess_schedule();  
+  folly::coro::Task<void> postprocess_schedule();
 
   // Dispatch data request
   void dispatch_requests(dfmessages::DataRequest& data_request);
-  
+
   // Transform input data type to readout
-  virtual std::vector<RDT> transform_payload(IDT& original) const
-  {
-    return { reinterpret_cast<RDT&>(original) };
-  }
+  virtual std::vector<RDT> transform_payload(IDT& original) const { return { reinterpret_cast<RDT&>(original) }; }
 
   // Operational monitoring
   virtual void generate_opmon_data() override;
@@ -170,7 +167,7 @@ protected:
   std::atomic<bool>& m_run_marker;
 
   // CONFIGURATION
-  //appfwk::app::ModInit m_queue_config;
+  // appfwk::app::ModInit m_queue_config;
   bool m_callback_mode;
   bool m_fake_trigger;
   bool m_generate_timesync = false;
@@ -183,13 +180,16 @@ protected:
 
   // STATS
   using metric_t = dunedaq::datahandlinglibs::opmon::DataHandlerInfo;
-  using num_payload_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_payloads),metric_t>::type>::type;
-  using sum_payload_t = std::remove_const<std::invoke_result<decltype(&metric_t::sum_payloads),metric_t>::type>::type;
-  using num_request_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_requests),metric_t>::type>::type;
-  using sum_request_t = std::remove_const<std::invoke_result<decltype(&metric_t::sum_requests),metric_t>::type>::type;
-  using rawq_timeout_count_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_data_input_timeouts),metric_t>::type>::type;
-  using num_lb_insert_failures_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_lb_insert_failures),metric_t>::type>::type;
-  using num_post_processing_delay_max_waits_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_post_processing_delay_max_waits),metric_t>::type>::type;
+  using num_payload_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_payloads), metric_t>::type>::type;
+  using sum_payload_t = std::remove_const<std::invoke_result<decltype(&metric_t::sum_payloads), metric_t>::type>::type;
+  using num_request_t = std::remove_const<std::invoke_result<decltype(&metric_t::num_requests), metric_t>::type>::type;
+  using sum_request_t = std::remove_const<std::invoke_result<decltype(&metric_t::sum_requests), metric_t>::type>::type;
+  using rawq_timeout_count_t =
+    std::remove_const<std::invoke_result<decltype(&metric_t::num_data_input_timeouts), metric_t>::type>::type;
+  using num_lb_insert_failures_t =
+    std::remove_const<std::invoke_result<decltype(&metric_t::num_lb_insert_failures), metric_t>::type>::type;
+  using num_post_processing_delay_max_waits_t = std::remove_const<
+    std::invoke_result<decltype(&metric_t::num_post_processing_delay_max_waits), metric_t>::type>::type;
 
   std::atomic<num_payload_t> m_num_payloads{ 0 };
   std::atomic<sum_payload_t> m_sum_payloads{ 0 };
@@ -215,9 +215,9 @@ protected:
   std::shared_ptr<request_receiver_ct> m_data_request_receiver;
 
   // FRAGMENT SENDER
-  //std::chrono::milliseconds m_fragment_sender_timeout_ms;
-  //using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
-  //std::shared_ptr<fragment_sender_ct> m_fragment_sender;
+  // std::chrono::milliseconds m_fragment_sender_timeout_ms;
+  // using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>,
+  // std::string>>; std::shared_ptr<fragment_sender_ct> m_fragment_sender;
 
   // TIME-SYNC
   using timesync_sender_ct = iomanager::SenderConcept<dfmessages::TimeSync>; // no timeout -> published

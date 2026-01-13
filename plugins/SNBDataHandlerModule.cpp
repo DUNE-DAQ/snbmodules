@@ -17,8 +17,8 @@
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
-#include "snbmodules/readout/SNBDataHandlingModel.hpp"
 #include "datahandlinglibs/models/FixedRateQueueModel.hpp"
+#include "snbmodules/readout/SNBDataHandlingModel.hpp"
 
 #include "fdreadoutlibs/DAPHNEEthTypeAdapter.hpp"
 #include "fdreadoutlibs/DAPHNEStreamSuperChunkTypeAdapter.hpp"
@@ -147,10 +147,10 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a PDS DAPHNE using SkipList LB";
     auto readout_model = std::make_shared<
       SNBDataHandlingModel<fdt::DAPHNESuperChunkTypeAdapter,
-                             SNBRequestHandlerModel<fdt::DAPHNESuperChunkTypeAdapter,
-                                                    rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>>,
-                             rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>,
-                             fdl::DAPHNEFrameProcessor>>(run_marker);
+                           SNBRequestHandlerModel<fdt::DAPHNESuperChunkTypeAdapter,
+                                                  rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>>,
+                           rol::FixedRateQueueModel<fdt::DAPHNESuperChunkTypeAdapter>,
+                           fdl::DAPHNEFrameProcessor>>(run_marker);
     register_node("PDSFrameProcessor", readout_model);
     readout_model->init(modconf);
     return readout_model;
@@ -174,10 +174,10 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating readout for a PDS DAPHNE stream mode using BinarySearchQueue LB";
     auto readout_model = std::make_shared<
       SNBDataHandlingModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
-                             SNBRequestHandlerModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
-                                                    rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>>,
-                             rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>,
-                             fdl::DAPHNEStreamFrameProcessor>>(run_marker);
+                           SNBRequestHandlerModel<fdt::DAPHNEStreamSuperChunkTypeAdapter,
+                                                  rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>>,
+                           rol::FixedRateQueueModel<fdt::DAPHNEStreamSuperChunkTypeAdapter>,
+                           fdl::DAPHNEStreamFrameProcessor>>(run_marker);
     register_node("PDSStreamFrameProcessor", readout_model);
     readout_model->init(modconf);
     return readout_model;
