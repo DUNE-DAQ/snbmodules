@@ -16,3 +16,4 @@ cp test.data.xml snbmodules/config/snbmodules/simple-transform-test.data.xml
 pytest -s snbmodules/integtest/simple_transform_test.py
 ```
 
+N.B. rawdatautils/scripts/hdf5_wibeth_to_binary.py may be useful for obtaining a binary file for use with the simple_transform_test.
