@@ -134,7 +134,7 @@ TransferClient::create_new_transfer(const std::string& transfer_id,
       continue;
     } else {
       group_transfer.add_expected_file(file);
-      group_transfer.add_file(std::move(create_metadata_from_file(file)));
+      group_transfer.add_file(create_metadata_from_file(file));
     }
   }
 
