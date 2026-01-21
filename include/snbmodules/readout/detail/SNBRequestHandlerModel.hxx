@@ -185,6 +185,7 @@ SNBRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequ
         // Send fragment
         get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
           ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
+        cleanup_check();
 
       } catch (const ers::Issue& excpt) {
         ers::warning(datahandlinglibs::CannotWriteToQueue(ERS_HERE, m_sourceid, datarequest.data_destination, excpt));
@@ -300,6 +301,9 @@ SNBRequestHandlerModel<RDT, LBT>::cleanup()
   unsigned popped = 0;
   {
     std::lock_guard<std::mutex> lk(m_pop_list_mutex);
+    // TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Cleanup requested, there are " << m_pop_list.size()
+    //                               << " entries in the cleanup list, first TS=" << *m_pop_list.begin()
+    //                               << ", buffer TS=" << m_latency_buffer->front()->get_timestamp();
     while (!m_pop_list.empty() && m_latency_buffer->occupancy() > 1) {
       auto ts = m_latency_buffer->front()->get_timestamp();
       if (m_pop_list.count(ts)) {
@@ -382,7 +386,7 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
   uint64_t last_ts = front_element->get_timestamp();  // NOLINT(build/unsigned)
   uint64_t newest_ts = last_element->get_timestamp(); // NOLINT(build/unsigned)
 
-  if (start_win_ts > newest_ts) {
+  if (start_win_ts > newest_ts || newest_ts < end_win_ts) {
     // No element is as small as the start window-> request is far in the future
     rres.result_code = ResultCode::kNotYet; // give it another chance
   } else if (end_win_ts <= last_ts) {
@@ -414,13 +418,13 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
           TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
                          << ", already included in trigger.";
         } else if (element->get_timestamp() < start_win_ts) {
-          TLOG_DEBUG(50) << "skip processing for current element " << element->get_timestamp()
+          TLOG_DEBUG(51) << "skip processing for current element " << element->get_timestamp()
                          << ", out of readout window.";
         }
 
         else {
-          // TLOG_DEBUG(50) << "Add element " << element->get_timestamp();
-          //  SNB mode, the whole aggregated object (e.g.: superchunk) can be copied
+          // TLOG_DEBUG(52) << "Add element " << element->get_timestamp();
+          //   SNB mode, the whole aggregated object (e.g.: superchunk) can be copied
           frag_pieces.emplace_back(
             std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
 
@@ -466,11 +470,11 @@ SNBRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr)
     uint64_t newest_ts = last_element->get_timestamp(); // NOLINT(build/unsigned)
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for trig/seq_num=" << dr.trigger_number << "." << dr.sequence_number
                                 << " and SourceID[" << m_sourceid << "] with" << " Trigger TS=" << dr.trigger_timestamp
-                                << " Oldest stored TS=" << last_ts << " Newest stored TS=" << newest_ts
                                 << " Start of window TS=" << dr.request_information.window_begin
-                                << " End of window TS=" << dr.request_information.window_end
-                                << " Latency buffer occupancy=" << m_latency_buffer->occupancy()
-                                << " frag_pieces result_code=" << rres.result_code
+                                << " End of window TS=" << dr.request_information.window_end;
+    TLOG_DEBUG(TLVL_WORK_STEPS) << " Oldest stored TS=" << last_ts << " Newest stored TS=" << newest_ts
+                                << " Latency buffer occupancy=" << m_latency_buffer->occupancy();
+    TLOG_DEBUG(TLVL_WORK_STEPS) << " frag_pieces result_code=" << rres.result_code
                                 << " number of frag_pieces=" << frag_pieces.size();
 
     switch (rres.result_code) {
