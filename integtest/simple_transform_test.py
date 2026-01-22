@@ -28,7 +28,7 @@ wibeth_frag_params = {
     "expected_fragment_count": 1,
     "min_size_bytes": 0,
     "max_size_bytes": 0,
-#    "error_bitmask": 0xFFFFFFFC,  # Mask kIncomplete
+#    "status_bitmask": 0xFFFFFFFC,  # Mask kIncomplete
 }
 triggercandidate_frag_params = {
     "fragment_type_description": "Trigger Candidate",
