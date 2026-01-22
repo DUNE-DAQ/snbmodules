@@ -261,7 +261,7 @@ std::unique_ptr<daqdataformats::Fragment>
 SNBRequestHandlerModel<RDT, LBT>::create_empty_fragment(const dfmessages::DataRequest& dr)
 {
   auto frag_header = create_fragment_header(dr);
-  frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+  frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kEmptyFragment));
   auto fragment = std::make_unique<daqdataformats::Fragment>(std::vector<std::pair<void*, size_t>>());
   fragment->set_header_fields(frag_header);
   return fragment;
@@ -458,7 +458,7 @@ SNBRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr)
     if (m_warn_about_empty_buffer) {
       ers::warning(datahandlinglibs::RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
     }
-    frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+    frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kLatencyBufferEmpty));
     rres.result_code = ResultCode::kNotFound;
     ++m_num_requests_bad;
   } else {
@@ -482,29 +482,36 @@ SNBRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr)
         // return empty frag
         ++m_num_requests_old_window;
         ++m_num_requests_bad;
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+        frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kEmptyFragment));
+        frag_header.status_bits |=
+          (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kRequestWindowBeforeBuffer));
         break;
       case ResultCode::kPartiallyOld:
         ++m_num_requests_old_window;
         ++m_num_requests_found;
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+        frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kIncomplete));
+        frag_header.status_bits |=
+          (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kRequestWindowBeforeBuffer));
         break;
       case ResultCode::kFound:
         ++m_num_requests_found;
         break;
       case ResultCode::kPartial:
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
+        frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kIncomplete));
+        frag_header.status_bits |=
+          (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kRequestWindowAfterBuffer));
         ++m_num_requests_delayed;
         break;
       case ResultCode::kNotYet:
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+        frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kEmptyFragment));
+        frag_header.status_bits |=
+          (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kRequestWindowAfterBuffer));
         ++m_num_requests_delayed;
         break;
       default:
         // Unknown result of data search
         ++m_num_requests_bad;
-        frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+        frag_header.status_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentStatusBits::kEmptyFragment));
     }
   }
   // Create fragment from pieces
