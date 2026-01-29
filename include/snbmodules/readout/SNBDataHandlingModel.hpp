@@ -88,13 +88,8 @@ public:
   // Explicit constructor with run marker pass-through
   explicit SNBDataHandlingModel(std::atomic<bool>& run_marker)
     : m_run_marker(run_marker)
-    , m_callback_mode(false)
     , m_fake_trigger(false)
     , m_current_fake_trigger_id(0)
-    , m_consumer_thread(0)
-    , m_raw_receiver_timeout_ms(0)
-    , m_raw_receiver_sleep_us(0)
-    , m_raw_data_receiver(nullptr)
     , m_timesync_thread(0)
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
@@ -142,11 +137,11 @@ protected:
   // Raw data consume callback
   void consume_callback(IDT&& payload);
 
-  // Raw data consumer's work function
-  void run_consume();
-
   // Timesync thread's work function
   void run_timesync();
+
+  // Noop consume function
+  void run_consume() {}
 
   // Postprocess scheduler thread's work function
   void run_postprocess_scheduler();
@@ -168,7 +163,6 @@ protected:
 
   // CONFIGURATION
   // appfwk::app::ModInit m_queue_config;
-  bool m_callback_mode;
   bool m_fake_trigger;
   bool m_generate_timesync = false;
   int m_current_fake_trigger_id;
@@ -201,14 +195,7 @@ protected:
   std::atomic<int> m_stats_packet_count{ 0 };
 
   // CONSUMER
-  utilities::ReusableThread m_consumer_thread;
-
-  // RAW RECEIVER
-  std::chrono::milliseconds m_raw_receiver_timeout_ms;
-  std::chrono::microseconds m_raw_receiver_sleep_us;
-  using raw_receiver_ct = iomanager::ReceiverConcept<InputDataType>;
-  std::shared_ptr<raw_receiver_ct> m_raw_data_receiver;
-  std::string m_raw_data_receiver_connection_name;
+  const appmodel::RawDataCallbackConf* m_raw_data_callback_conf;
 
   // REQUEST RECEIVERS
   using request_receiver_ct = iomanager::ReceiverConcept<dfmessages::DataRequest>;

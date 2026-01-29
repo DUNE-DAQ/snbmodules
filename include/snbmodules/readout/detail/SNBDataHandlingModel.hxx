@@ -18,31 +18,6 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::init(const appmodel::DataHandlerM
     for (auto input : mcfg->get_inputs()) {
       if (input->get_data_type() == "DataRequest") {
         m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(input->UID());
-      } else {
-        m_raw_data_receiver_connection_name = input->UID();
-        // Parse for prefix
-        std::string conn_name = input->UID();
-        const char delim = '_';
-        std::vector<std::string> words;
-        std::size_t start;
-        std::size_t end = 0;
-        while ((start = conn_name.find_first_not_of(delim, end)) != std::string::npos) {
-          end = conn_name.find(delim, start);
-          words.push_back(conn_name.substr(start, end - start));
-        }
-
-        TLOG_DEBUG(TLVL_WORK_STEPS) << "Initialize connection based on uid: " << m_raw_data_receiver_connection_name
-                                    << " front word: " << words.front();
-
-        std::string cb_prefix("cb");
-        if (words.front() == cb_prefix) {
-          m_callback_mode = true;
-        }
-
-        if (!m_callback_mode) {
-          m_raw_data_receiver = get_iom_receiver<IDT>(m_raw_data_receiver_connection_name);
-          m_raw_receiver_timeout_ms = std::chrono::milliseconds(input->get_recv_timeout_ms());
-        }
       }
     }
     for (auto output : mcfg->get_outputs()) {
@@ -57,10 +32,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::init(const appmodel::DataHandlerM
     throw datahandlinglibs::ResourceQueueError(ERS_HERE, "raw_input or frag_output", "SNBDataHandlingModel", excpt);
   }
 
-  // Raw input connection sensibility check
-  if (!m_callback_mode && m_raw_data_receiver == nullptr) {
-    ers::error(datahandlinglibs::ConfigurationError(ERS_HERE, m_sourceid, "Non callback mode, and receiver is unset!"));
-  }
+  m_raw_data_callback_conf = mcfg->get_raw_data_callback();
 
   // Instantiate functionalities
   m_error_registry.reset(new datahandlinglibs::FrameErrorRegistry());
@@ -77,7 +49,6 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::init(const appmodel::DataHandlerM
   // m_raw_processor_impl->init(args);
   m_request_handler_supports_cutoff_timestamp = m_request_handler_impl->supports_cutoff_timestamp();
   m_fake_trigger = false;
-  m_raw_receiver_sleep_us = std::chrono::microseconds::zero();
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
   m_processing_delay_ticks = mcfg->get_module_configuration()->get_post_processing_delay_ticks();
@@ -101,19 +72,15 @@ template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::conf(const appfwk::DAQModule::CommandData_t& /*args*/)
 {
-  // Register callbacks if operating in that mode.
-  if (m_callback_mode) {
     // Configure and register consume callback
     m_consume_callback =
       std::bind(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::consume_callback, this, std::placeholders::_1);
 
     // Register callback
     auto dmcbr = datahandlinglibs::DataMoveCallbackRegistry::get();
-    dmcbr->register_callback<IDT>(m_raw_data_receiver_connection_name, m_consume_callback);
-  }
+    dmcbr->register_callback<IDT>(m_raw_data_callback_conf, m_consume_callback);
 
   // Configure threads:
-  m_consumer_thread.set_name("consumer", m_sourceid.id);
   if (m_generate_timesync) {
     m_timesync_thread.set_name("timesync", m_sourceid.id);
   }
@@ -144,9 +111,6 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::start(const appfwk::DAQModule::Co
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Starting threads...";
   m_raw_processor_impl->start(args);
   m_request_handler_impl->start(args);
-  if (!m_callback_mode) {
-    m_consumer_thread.set_work(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_consume, this);
-  }
   if (m_generate_timesync) {
     m_timesync_thread.set_work(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_timesync, this);
   }
@@ -171,11 +135,6 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::stop(const appfwk::DAQModule::Com
   m_request_handler_impl->stop(args);
   if (m_generate_timesync) {
     while (!m_timesync_thread.get_readiness()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-  }
-  if (!m_callback_mode) {
-    while (!m_consumer_thread.get_readiness()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
@@ -289,36 +248,6 @@ void
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_postprocess_scheduler()
 {
   folly::coro::blockingWait(postprocess_schedule());
-}
-
-template<class RDT, class RHT, class LBT, class RPT, class IDT>
-void
-SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_consume()
-{
-
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
-  m_rawq_timeout_count = 0;
-  m_num_payloads = 0;
-  m_sum_payloads = 0;
-  m_stats_packet_count = 0;
-  m_num_post_processing_delay_max_waits = 0;
-
-  while (m_run_marker.load()) {
-    // Try to acquire data
-
-    auto opt_payload = m_raw_data_receiver->try_receive(m_raw_receiver_timeout_ms);
-
-    if (opt_payload) {
-      IDT& payload = opt_payload.value();
-      transform_and_process(std::move(payload));
-    } else {
-      ++m_rawq_timeout_count;
-      // Protection against a zero sleep becoming a yield
-      if (m_raw_receiver_sleep_us != std::chrono::microseconds::zero())
-        std::this_thread::sleep_for(m_raw_receiver_sleep_us);
-    }
-  }
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread joins... ";
 }
 
 template<class RDT, class RHT, class LBT, class RPT, class IDT>
