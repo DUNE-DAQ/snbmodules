@@ -195,7 +195,7 @@ protected:
   std::atomic<int> m_stats_packet_count{ 0 };
 
   // CONSUMER
-  const appmodel::RawDataCallbackConf* m_raw_data_callback_conf;
+  const appmodel::DataMoveCallbackConf* m_raw_data_callback_conf;
 
   // REQUEST RECEIVERS
   using request_receiver_ct = iomanager::ReceiverConcept<dfmessages::DataRequest>;
