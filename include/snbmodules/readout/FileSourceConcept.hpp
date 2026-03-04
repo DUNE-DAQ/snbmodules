@@ -13,6 +13,7 @@
 #include "confmodel/DetectorStream.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "opmonlib/MonitorableObject.hpp"
+#include "appmodel/DataMoveCallbackConf.hpp"
 
 #include <map>
 #include <string>
@@ -32,7 +33,7 @@ public:
   FileSourceConcept(FileSourceConcept&&) = delete;                 ///< FileSourceConcept is not move-constructible
   FileSourceConcept& operator=(FileSourceConcept&&) = delete;      ///< FileSourceConcept is not move-assignable
 
-  virtual void set_sender(const std::string& /*sink_name*/) = 0;
+  virtual void set_sender(const appmodel::DataMoveCallbackConf* /*sink_name*/) = 0;
   virtual void conf(const confmodel::DetectorStream* conf, const appmodel::SNBFileSourceParameters* emu_conf) = 0;
   virtual void start(const appfwk::DAQModule::CommandData_t& /*args*/) = 0;
   virtual void stop(const appfwk::DAQModule::CommandData_t& /*args*/) = 0;

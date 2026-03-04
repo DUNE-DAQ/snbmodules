@@ -20,6 +20,7 @@
 #include "datahandlinglibs/utils/BufferedFileReader.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "snbmodules/readout/FileSourceConcept.hpp"
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "utilities/ReusableThread.hpp"
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"
@@ -49,13 +50,12 @@ public:
     , m_rate_khz(rate_khz)
     , m_packet_count{ 0 }
     , m_raw_sender_timeout_ms(0)
-    , m_raw_data_sender(nullptr)
     , m_producer_thread(0)
   {
   }
 
   // void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
-  void set_sender(const std::string& conn_name);
+  void set_sender(const appmodel::DataMoveCallbackConf* sink);
 
   void conf(const confmodel::DetectorStream* stream_conf, const appmodel::SNBFileSourceParameters* file_params);
   void scrap(const appfwk::DAQModule::CommandData_t& /*args*/)
@@ -103,10 +103,8 @@ private:
 
   // RAW SENDER
   std::chrono::milliseconds m_raw_sender_timeout_ms;
-  using raw_sender_ct = iomanager::SenderConcept<ReadoutType>;
-  std::shared_ptr<raw_sender_ct> m_raw_data_sender;
-
-  bool m_sender_is_set = false;
+  const appmodel::DataMoveCallbackConf* m_raw_sender_conf{ nullptr };
+  std::shared_ptr<std::function<void(ReadoutType&&)>> m_raw_data_callback{ nullptr };
   // using module_conf_t = dunedaq::snbmodules::sourceemulatorconfig::Conf;
   // module_conf_t m_conf;
   // using link_conf_t = dunedaq::snbmodules::sourceemulatorconfig::LinkConfiguration;
