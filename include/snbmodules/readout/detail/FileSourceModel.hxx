@@ -2,6 +2,7 @@
 
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
+#include "datahandlinglibs/DataMoveCallbackRegistry.hpp"
 
 using dunedaq::datahandlinglibs::CannotWriteToQueue;
 using dunedaq::datahandlinglibs::ConfigurationError;
@@ -14,14 +15,9 @@ namespace snbmodules {
 
 template<class ReadoutType>
 void
-FileSourceModel<ReadoutType>::set_sender(const std::string& conn_name)
+FileSourceModel<ReadoutType>::set_sender(const appmodel::DataMoveCallbackConf* sink)
 {
-  if (!m_sender_is_set) {
-    m_raw_data_sender = get_iom_sender<ReadoutType>(conn_name);
-    m_sender_is_set = true;
-  } else {
-    // ers::error();
-  }
+  m_raw_sender_conf = sink;
 }
 
 template<class ReadoutType>
@@ -132,11 +128,17 @@ FileSourceModel<ReadoutType>::run_produce()
     TLOG_DEBUG(TLVL_BOOKKEEPING) << "Read element with timestamp " << elem.get_timestamp() << " from file";
 
     // send it
-    bool send_successful = false;
-    while (!send_successful && m_run_marker.load()) {
-      ReadoutType elem_copy(elem);
-      send_successful = m_raw_data_sender->try_send(std::move(elem_copy), m_raw_sender_timeout_ms);
+    while (m_raw_data_callback == nullptr && m_run_marker.load()) {
+      m_raw_data_callback =
+        datahandlinglibs::DataMoveCallbackRegistry::get()->get_callback<ReadoutType>(m_raw_sender_conf);
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "Sender not set yet, waiting...";
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    if (!m_run_marker.load()) {
+      break;
+    }
+    (*m_raw_data_callback)(std::move(elem));
 
     // Count packet and limit rate if needed.
     ++m_packet_count;

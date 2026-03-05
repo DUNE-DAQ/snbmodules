@@ -15,6 +15,7 @@
 #include "appfwk/ConfigurationManager.hpp"
 #include "appfwk/DAQModule.hpp"
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "snbmodules/readout/FileReaderBase.hpp"
 
 #include <string>
@@ -42,7 +43,7 @@ public:
 
   void init(std::shared_ptr<appfwk::ConfigurationManager> cfg) override;
 
-  std::shared_ptr<snbmodules::FileSourceConcept> create_source_emulator(std::string qi,
+  std::shared_ptr<snbmodules::FileSourceConcept> create_source_emulator(const appmodel::DataMoveCallbackConf* cb_conf,
                                                                         std::atomic<bool>& run_marker) override;
 };
 

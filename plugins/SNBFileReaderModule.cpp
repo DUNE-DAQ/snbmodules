@@ -68,7 +68,7 @@ SNBFileReaderModule::init(std::shared_ptr<appfwk::ConfigurationManager> cfg)
 }
 
 std::shared_ptr<snbmodules::FileSourceConcept>
-SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>& run_marker)
+SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf* cb_conf, std::atomic<bool>& run_marker)
 {
   //! Values suitable to emulation
 
@@ -89,21 +89,17 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
   static constexpr double crtbern_rate_khz = 100;
   static constexpr double crtgrenoble_rate_khz = 100;
 
-  auto datatypes = dunedaq::iomanager::IOManager::get()->get_datatypes(q_id);
-  if (datatypes.size() != 1) {
-    ers::error(dunedaq::datahandlinglibs::GenericConfigurationError(
-      ERS_HERE, "Multiple output data types specified! Expected only a single type!"));
-  }
-  std::string raw_dt{ *datatypes.begin() };
-  TLOG() << "Choosing specialization for SourceEmulator with raw_input" << " [uid:" << q_id << " , data_type:" << raw_dt
+  std::string raw_dt = cb_conf->get_data_type();
+  TLOG() << "Choosing specialization for SourceEmulator with raw_input" << " [uid:" << cb_conf->UID()
+         << " , data_type:" << raw_dt
          << ']';
 
   // IF WIBETH
   if (raw_dt.find("WIBEthFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake wibeth link";
     auto source_emu_model = std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::DUNEWIBEthTypeAdapter>>(
-      q_id, run_marker, wibeth_rate_khz);
-    register_node(q_id, source_emu_model);
+      cb_conf->UID(), run_marker, wibeth_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
@@ -112,8 +108,8 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake pds link";
     auto source_emu_model =
       std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::DAPHNESuperChunkTypeAdapter>>(
-        q_id, run_marker, daphne_rate_khz);
-    register_node(q_id, source_emu_model);
+        cb_conf->UID(), run_marker, daphne_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
@@ -122,8 +118,8 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake pds stream link";
     auto source_emu_model =
       std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::DAPHNEStreamSuperChunkTypeAdapter>>(
-        q_id, run_marker, daphnestream_rate_khz);
-    register_node(q_id, source_emu_model);
+        cb_conf->UID(), run_marker, daphnestream_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
@@ -131,8 +127,8 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
   if (raw_dt.find("TDEEthFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake tde link";
     auto source_emu_model = std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::TDEEthTypeAdapter>>(
-      q_id, run_marker, tdeeth_rate_khz);
-    register_node(q_id, source_emu_model);
+      cb_conf->UID(), run_marker, tdeeth_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
@@ -140,8 +136,8 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
   if (raw_dt.find("CRTBernFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake crt bern link";
     auto source_emu_model = std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::CRTBernTypeAdapter>>(
-      q_id, run_marker, crtbern_rate_khz);
-    register_node(q_id, source_emu_model);
+      cb_conf->UID(), run_marker, crtbern_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
@@ -149,8 +145,8 @@ SNBFileReaderModule::create_source_emulator(std::string q_id, std::atomic<bool>&
   if (raw_dt.find("CRTGrenobleFrame") != std::string::npos) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Creating fake crt grenoble link";
     auto source_emu_model = std::make_shared<snbmodules::FileSourceModel<fdreadoutlibs::types::CRTGrenobleTypeAdapter>>(
-      q_id, run_marker, crtgrenoble_rate_khz);
-    register_node(q_id, source_emu_model);
+      cb_conf->UID(), run_marker, crtgrenoble_rate_khz);
+    register_node(cb_conf->UID(), source_emu_model);
     return source_emu_model;
   }
 
