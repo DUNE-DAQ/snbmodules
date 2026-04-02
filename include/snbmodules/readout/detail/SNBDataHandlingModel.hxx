@@ -52,8 +52,8 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::init(const appmodel::DataHandlerM
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
   m_processing_delay_ticks = mcfg->get_module_configuration()->get_post_processing_delay_ticks();
-  m_post_processing_delay_min_wait = mcfg->get_module_configuration()->get_post_processing_delay_min_wait();
-  m_post_processing_delay_max_wait = mcfg->get_module_configuration()->get_post_processing_delay_max_wait();
+  m_post_processing_delay_min_wait_ms = mcfg->get_module_configuration()->get_post_processing_delay_min_wait_ms();
+  m_post_processing_delay_max_wait_ms = mcfg->get_module_configuration()->get_post_processing_delay_max_wait_ms();
 
   // Configure implementations:
   m_raw_processor_impl->conf(mcfg);
@@ -102,7 +102,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::start(const appfwk::DAQModule::Co
   m_num_lb_insert_failures = 0;
   m_stats_packet_count = 0;
   m_rawq_timeout_count = 0;
-  m_num_post_processing_delay_max_waits = 0;
+  m_num_postprocess_schedule_timeouts = 0;
 
   m_t0 = std::chrono::high_resolution_clock::now();
 
@@ -176,7 +176,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::generate_opmon_data()
   ri.set_num_lb_insert_failures(local_num_lb_insert_failures);
   ri.set_sum_requests(m_sum_requests.load());
   ri.set_num_requests(m_num_requests.exchange(0));
-  ri.set_num_post_processing_delay_max_waits(m_num_post_processing_delay_max_waits.exchange(0));
+  ri.set_num_postprocess_schedule_timeouts(m_num_postprocess_schedule_timeouts.exchange(0));
   ri.set_last_daq_timestamp(m_raw_processor_impl->get_last_daq_time());
   ri.set_newest_timestamp(m_raw_processor_impl->get_last_daq_time());
   ri.set_oldest_timestamp(m_request_handler_impl->get_oldest_time());
@@ -270,10 +270,10 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule()
   while (m_run_marker.load()) {
     try {
       co_await folly::coro::timeout(
-        m_baton.operator co_await(), std::chrono::milliseconds{ m_post_processing_delay_max_wait }, m_timekeeper.get());
+        m_baton.operator co_await(), std::chrono::milliseconds{ m_post_processing_delay_max_wait_ms }, m_timekeeper.get());
       m_baton.reset();
     } catch (const folly::FutureTimeout&) {
-      ++m_num_post_processing_delay_max_waits;
+      ++m_num_postprocess_schedule_timeouts;
     }
 
     if (m_latency_buffer_impl->occupancy() == 0) {
@@ -283,7 +283,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule()
     now = std::chrono::system_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_post_proc_time);
 
-    if (static_cast<uint64_t>(milliseconds.count()) <= m_post_processing_delay_min_wait) {
+    if (static_cast<uint64_t>(milliseconds.count()) <= m_post_processing_delay_min_wait_ms) {
       continue;
     }
 
