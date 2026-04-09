@@ -7,8 +7,13 @@ import conffwk
 from daqconf.assets import resolve_asset_file
 import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
+import integrationtest.basic_checks as basic_checks
 import integrationtest.data_classes as data_classes
+from integrationtest.verbosity_helper import IntegtestVerbosityLevels
 from hdf5libs import HDF5RawDataFile
+
+import functools
+print = functools.partial(print, flush=True)  # always flush print() output
 
 pytest_plugins = "integrationtest.integrationtest_drunc"
 
@@ -56,7 +61,7 @@ ignored_logfile_problems = {
 
 # The next three variable declarations *must* be present as globals in the test
 # file. They're read by the "fixtures" in conftest.py to determine how
-# to run the config generation and nanorc
+# to run the config generation and drunc
 
 # The arguments to pass to the config generator, excluding the json
 # output directory (the test framework handles that)
@@ -153,8 +158,8 @@ confgen_arguments = {
 if wibeth_frag_params["max_size_bytes"] < 1024 * 1024 * 1024: # 1 GB
     confgen_arguments["SNBTransformSingle"] = conf_dict
 
-# The commands to run in nanorc, as a list
-nanorc_command_list = (
+# The commands to run in dunerc, as a list
+dunerc_command_list = (
     "boot conf start --run-number 101 wait 1 enable-triggers wait ".split()
     + [str(run_duration)]
     + "disable-triggers wait 2 drain-dataflow wait 2 stop-trigger-sources stop scrap terminate".split()
@@ -163,50 +168,52 @@ nanorc_command_list = (
 # The tests themselves
 
 
-def test_nanorc_success(run_nanorc):
-    # Check that nanorc completed correctly
-    assert run_nanorc.completed_process.returncode == 0
+def test_dunerc_success(run_dunerc, caplog):
+    # check for run control success, problems during pytest setup, etc.
+    basic_checks.basic_checks(run_dunerc, caplog, print_test_name=False)
 
 
-def test_log_files(run_nanorc):
+def test_log_files(run_dunerc):
 
     # Check that at least some of the expected log files are present
     assert any(
-        f"{run_nanorc.session}_df-01" in str(logname)
-        for logname in run_nanorc.log_files
+        f"{run_dunerc.session}_df-01" in str(logname)
+        for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_nanorc.session}_dfo" in str(logname) for logname in run_nanorc.log_files
+        f"{run_dunerc.session}_dfo" in str(logname) for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_nanorc.session}_mlt" in str(logname) for logname in run_nanorc.log_files
+        f"{run_dunerc.session}_mlt" in str(logname) for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_nanorc.session}_ru" in str(logname) for logname in run_nanorc.log_files
+        f"{run_dunerc.session}_ru" in str(logname) for logname in run_dunerc.log_files
     )
 
     if check_for_logfile_errors:
         # Check that there are no warnings or errors in the log files
         assert log_file_checks.logs_are_error_free(
-            run_nanorc.log_files, True, True, ignored_logfile_problems
+            run_dunerc.log_files, True, True, ignored_logfile_problems,
+            verbosity_helper=run_dunerc.verbosity_helper
         )
 
 
-def test_data_files(run_nanorc):
+def test_data_files(run_dunerc):
     # Run some tests on the output data file
     current_test = os.environ.get("PYTEST_CURRENT_TEST")
     all_ok = True
     # Don't care how many files are written with sequences
     if "WithSequences" not in current_test:
-        all_ok = len(run_nanorc.data_files) == expected_number_of_data_files
-        print("")  # Clear potential dot from pytest
+        all_ok = len(run_dunerc.data_files) == expected_number_of_data_files
+        #print("")  # Clear potential dot from pytest
         if all_ok:
-            print(
-                f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})"
-            )
+            if run_dunerc.verbosity_helper.compare_level(IntegtestVerbosityLevels.drunc_transitions):
+                print(
+                    f"\N{WHITE HEAVY CHECK MARK} The correct number of raw data files was found ({expected_number_of_data_files})"
+                )
         else:
             print(
-                f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_nanorc.data_files)} \N{POLICE CARS REVOLVING LIGHT}"
+                f"\N{POLICE CARS REVOLVING LIGHT} An incorrect number of raw data files was found, expected {expected_number_of_data_files}, found {len(run_dunerc.data_files)} \N{POLICE CARS REVOLVING LIGHT}"
             )
 
     local_expected_event_count = expected_event_count
@@ -223,8 +230,8 @@ def test_data_files(run_nanorc):
     total_record_count=0
     fragment_size_by_id={}
 
-    for idx in range(len(run_nanorc.data_files)):
-        data_file = data_file_checks.DataFile(run_nanorc.data_files[idx])
+    for idx in range(len(run_dunerc.data_files)):
+        data_file = data_file_checks.DataFile(run_dunerc.data_files[idx], run_dunerc.verbosity_helper)
         all_ok &= data_file_checks.sanity_check(data_file)
         all_ok &= data_file_checks.check_file_attributes(data_file)
         
@@ -262,7 +269,8 @@ def test_data_files(run_nanorc):
         correct_count = (total_record_count == local_expected_event_count)
         all_ok &= correct_count
         if correct_count:
-            print(f"\N{WHITE HEAVY CHECK MARK} Record count {total_record_count} matches expected count {local_expected_event_count}")
+            if run_dunerc.verbosity_helper.compare_level(IntegtestVerbosityLevels.drunc_transitions):
+                print(f"\N{WHITE HEAVY CHECK MARK} Record count {total_record_count} matches expected count {local_expected_event_count}")
         else:
             print(f"\N{POLICE CARS REVOLVING LIGHT} Record count {total_record_count} DOES NOT match expected count {local_expected_event_count} \N{POLICE CARS REVOLVING LIGHT} ")
         correct_sizes = True
@@ -272,9 +280,11 @@ def test_data_files(run_nanorc):
                 print(f"\N{POLICE CARS REVOLVING LIGHT} Fragments with source ID {src_id} have total size {size}, expected {expected_size} \N{POLICE CARS REVOLVING LIGHT} ")
                 correct_sizes = False
             else:
-                print(f"\N{WHITE HEAVY CHECK MARK} Fragments with source ID {src_id} have total size {size}, expected {expected_size}")
+                if run_dunerc.verbosity_helper.compare_level(IntegtestVerbosityLevels.drunc_transitions):
+                    print(f"\N{WHITE HEAVY CHECK MARK} Fragments with source ID {src_id} have total size {size}, expected {expected_size}")
             all_ok &= (size == expected_size)
         if correct_sizes:
-            print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
+            if run_dunerc.verbosity_helper.compare_level(IntegtestVerbosityLevels.drunc_transitions):
+                print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
 
     assert all_ok
