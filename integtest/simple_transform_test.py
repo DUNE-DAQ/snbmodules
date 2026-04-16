@@ -122,7 +122,7 @@ for trig_n,trig in enumerate(ft_conf.triggers):
 conf_dict = data_classes.drunc_config()
 conf_dict.dro_map_config = None
 conf_dict.op_env = "integtest"
-conf_dict.session = "snb-transform-simple"
+conf_dict.config_session_name = "snb-transform-simple"
 conf_dict.tpg_enabled = False
 conf_dict.frame_file = frame_file
 
@@ -177,17 +177,17 @@ def test_log_files(run_dunerc):
 
     # Check that at least some of the expected log files are present
     assert any(
-        f"{run_dunerc.session}_df-01" in str(logname)
+        f"{run_dunerc.daq_session_name}_df-01" in str(logname)
         for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_dunerc.session}_dfo" in str(logname) for logname in run_dunerc.log_files
+        f"{run_dunerc.daq_session_name}_dfo" in str(logname) for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_dunerc.session}_mlt" in str(logname) for logname in run_dunerc.log_files
+        f"{run_dunerc.daq_session_name}_mlt" in str(logname) for logname in run_dunerc.log_files
     )
     assert any(
-        f"{run_dunerc.session}_ru" in str(logname) for logname in run_dunerc.log_files
+        f"{run_dunerc.daq_session_name}_ru" in str(logname) for logname in run_dunerc.log_files
     )
 
     if check_for_logfile_errors:
