@@ -3,7 +3,7 @@
 The integration tests of `snbmodules` are located in the integtest folder, and the tests are usually executed under the `snbmodules/integtest/` folder as follows:
 
 ```
-pytest -s <test_file_name>.py --nanorc-option partition-number 2
+pytest -s <test_file_name>.py
 ```
 
 ## Nomenclature
@@ -34,16 +34,16 @@ as expected. This test doesn't test actual transfers! There are individual tests
 2. Modify `snbmodules` configurations.
 3. Add `bookkeeper` to `snbmodules` configuration.
 4. Add `client` apps, in this case three.
-5. Populate nanorc command list: 
+5. Populate dunerc command list: 
 
 ```
-nanorc_command_list = "integtest-partition boot conf start 111 wait 1 enable_triggers ".split()
-nanorc_command_list += ["wait"] + [str(run_duration)]
-nanorc_command_list += "stop_run wait 2 scrap terminate".split()
+dunerc_command_list = "integtest-partition boot conf start 111 wait 1 enable_triggers ".split()
+dunerc_command_list += ["wait"] + [str(run_duration)]
+dunerc_command_list += "stop_run wait 2 scrap terminate".split()
 ```
 
 **Pass criteria**:
-1. test_nanorc_success: nanorc completed processes return code is 0 (no errors)
+1. test_dunerc_success: dunerc completed processes return code is 0 (no errors)
 2. test_log_files: log files are error free
 3. test_local_transfer_snbmodules: snb client process spawned and controlled successfully
 4. test_bookkeeper_snbmodules: snb bookkeeper process spawned and controlled succesffully
@@ -82,11 +82,11 @@ torrent based transfer implementation is also demonstrated and tested here.
 4. Prepare `record-cmd.json` to record raw content for 1 second from every data producers in the `rulocalhosteth0` app.
 5. Prepare `new-torrent-transfer.json` expert command for registering a transfer -> source and destination clients and file list. (Protocol arguments: select BITTORRENT and port to be used)
 6. Prepare `start-torrent-transfer.json` expert command to start the upload/download procedure for the registered transfers.
-7. Populate nanorc command list:
+7. Populate dunerc command list:
 
 ```
-# The commands to run in nanorc, as a list
-nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
+# The commands to run in dunerc, as a list
+dunerc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
 ("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}/record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
 f"expert_command /json0/json0/snbclient {root_path_commands}/new-torrent-transfer.json ".split() + \
@@ -95,7 +95,7 @@ f"expert_command /json0/json0/snbclient {root_path_commands}/start-torrent-trans
 ```
 
 **Pass criteria**:
-1. test_nanorc_success: nanorc completed processes return code is 0 (no errors)
+1. test_dunerc_success: dunerc completed processes return code is 0 (no errors)
 2. test_log_files: log files are error free
 3. test_data_files: sanity check of the nominal request/response path (expected num. of Fragments and content is correct)
 4. test_local_transfer_snbmodules: checks if the content of transferred files are matching with the source files (size and byte-by-byte match)
@@ -150,11 +150,11 @@ RClone based transfer implementation is also demonstrated and tested here.
 4. Prepare `record-cmd.json` to record raw content for 1 second from every data producers in the `rulocalhosteth0` app.
 5. Prepare `new-RClone-transfer.json` expert command for registering a transfer -> source and destination clients and file list. (Protocol arguments: select RClone, HTTP protocol and port to be used -which is specified by the server process spawned in the `prerequisites` subsection of this test description)
 6. Prepare `start-transfer.json` expert command to start the upload/download procedure for the registered transfers.
-7. Populate nanorc command list:
+7. Populate dunerc command list:
 
 ```
-# The commands to run in nanorc, as a list
-nanorc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
+# The commands to run in dunerc, as a list
+dunerc_command_list="integtest-partition boot conf start 111 wait 1 enable_triggers wait ".split() + [str(run_duration)] + \
 ("expert_command /json0/json0/ru" + interface_name + f" {root_path_commands}/record-cmd.json ").split() + \
 ["wait"] + [str(record_duration)] + \
 f"expert_command /json0/json0/snbclient {root_path_commands}/new-RClone-transfer.json ".split() + \
@@ -163,7 +163,7 @@ f"expert_command /json0/json0/snbclient {root_path_commands}/start-transfer.json
 ```
 
 **Pass criteria**:
-1. test_nanorc_success: nanorc completed processes return code is 0 (no errors)
+1. test_dunerc_success: dunerc completed processes return code is 0 (no errors)
 2. test_log_files: log files are error free
 3. test_data_files: sanity check of the nominal request/response path (expected num. of Fragments and content is correct)
 4. test_local_transfer_snbmodules: checks if the content of transferred files are matching with the source files (size and byte-by-byte match)
