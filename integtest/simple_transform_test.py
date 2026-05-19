@@ -59,20 +59,6 @@ ignored_logfile_problems = {
     "ru-det-conn": ["Request timed out for trig/seq_num"],
 }
 
-# The next three variable declarations *must* be present as globals in the test
-# file. They're read by the "fixtures" in conftest.py to determine how
-# to run the config generation and drunc
-
-# The arguments to pass to the config generator, excluding the json
-# output directory (the test framework handles that)
-
-# CCM includes FSM, hosts; moduleconfs includes connections
-object_databases = [
-    "config/daqsystemtest/integrationtest-objects.data.xml",
-    "config/snbmodules/simple-transform-test.data.xml",
-]
-
-
 dal = conffwk.dal.module("generated", "schema/appmodel/fdmodules.schema.xml")
 db = conffwk.Configuration(
     "oksconflibs:config/snbmodules/simple-transform-test.data.xml"
@@ -119,7 +105,11 @@ for trig_n,trig in enumerate(ft_conf.triggers):
     sequence_count = sequence_count + (trig_len // sequence_length) + 1
 
 
-conf_dict = data_classes.drunc_config()
+conf_dict = data_classes.integtest_params_for_generated_dunedaq_config()
+conf_dict.object_databases = [
+    "config/daqsystemtest/integrationtest-objects.data.xml",
+    "config/snbmodules/simple-transform-test.data.xml",
+]
 conf_dict.dro_map_config = None
 conf_dict.op_env = "integtest"
 conf_dict.config_session_name = "snb-transform-simple"
