@@ -7,8 +7,8 @@ import conffwk
 from daqconf.assets import resolve_asset_file
 import integrationtest.data_file_checks as data_file_checks
 import integrationtest.log_file_checks as log_file_checks
-import integrationtest.basic_checks as basic_checks
 import integrationtest.data_classes as data_classes
+import integrationtest.utility_functions as utility_functions
 from integrationtest.verbosity_helper import IntegtestVerbosityLevels
 from hdf5libs import HDF5RawDataFile
 
@@ -160,7 +160,7 @@ dunerc_command_list = (
 
 def test_dunerc_success(run_dunerc, caplog):
     # check for run control success, problems during pytest setup, etc.
-    basic_checks.basic_checks(run_dunerc, caplog, print_test_name=False)
+    utility_functions.basic_checks(run_dunerc, caplog, print_test_name=False)
 
 
 def test_log_files(run_dunerc):
@@ -278,3 +278,7 @@ def test_data_files(run_dunerc):
                 print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
 
     assert all_ok
+
+
+def test_cleanup(run_dunerc):
+    utility_functions.remove_hdf5_files_if_requested(run_dunerc, this_test_requests_hdf5_file_removal=False)
