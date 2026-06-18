@@ -278,7 +278,3 @@ def test_data_files(run_dunerc):
                 print(f"\N{WHITE HEAVY CHECK MARK} All source IDs had total data size equal to expected")
 
     assert all_ok
-
-
-def test_cleanup(run_dunerc):
-    utility_functions.remove_hdf5_files_if_requested(run_dunerc, this_test_requests_hdf5_file_removal=False)
