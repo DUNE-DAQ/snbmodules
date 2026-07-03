@@ -55,6 +55,16 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::init(const appmodel::DataHandlerM
   m_post_processing_delay_min_wait = mcfg->get_module_configuration()->get_post_processing_delay_min_wait();
   m_post_processing_delay_max_wait = mcfg->get_module_configuration()->get_post_processing_delay_max_wait();
 
+  if (m_processing_delay_ticks) {
+    if constexpr (datahandlinglibs::ExpectsOrder<LBT>) {
+      ers::error(datahandlinglibs::ConfigurationError(
+        ERS_HERE,
+        m_sourceid,
+        "Queue buffers (FixedRateQueue, BinarySearchQueue) expect in-order data and must use "
+        "post_processing_delay_ticks = 0."));
+    }
+  }
+
   // Configure implementations:
   m_raw_processor_impl->conf(mcfg);
   // Configure the latency buffer before the request handler so the request handler can check for alignment
@@ -233,8 +243,26 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::process_item(RDT&& payload)
     return;
   }
 
+  const RDT* written = nullptr;
+  if constexpr (datahandlinglibs::ExpectsOrder<LBT>) {
+    if (!m_latency_buffer_impl->write(std::move(payload))) {
+      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" << payload.get_timestamp() << ")";
+      m_num_lb_insert_failures++;
+      return;
+    }
+    written = m_latency_buffer_impl->back();
+  } else {
+    const auto [returned, result] = m_latency_buffer_impl->write_and_return(std::move(payload));
+    if (!result) {
+      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" << payload.get_timestamp() << ")";
+      m_num_lb_insert_failures++;
+      return;
+    }
+    written = returned;
+  }
+
   if (m_processing_delay_ticks == 0) {
-    m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
+    m_raw_processor_impl->postprocess_item(written);
     ++m_num_payloads;
     ++m_sum_payloads;
     ++m_stats_packet_count;
