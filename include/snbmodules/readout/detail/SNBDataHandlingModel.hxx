@@ -236,12 +236,6 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::process_item(RDT&& payload)
   while (m_latency_buffer_impl->isFull()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  if (!m_latency_buffer_impl->write(std::move(payload))) {
-    // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" <<
-    // payload.get_timestamp() << ")";
-    m_num_lb_insert_failures++;
-    return;
-  }
 
   const RDT* written = nullptr;
   if constexpr (datahandlinglibs::ExpectsOrder<LBT>) {
