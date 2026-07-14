@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(snbmodules VERSION 2.1.0)
+project(snbmodules VERSION 2.1.1)
 
 find_package(daq-cmake REQUIRED)
 
