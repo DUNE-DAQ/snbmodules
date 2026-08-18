@@ -137,7 +137,7 @@ template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::stop(const appfwk::DAQModule::CommandData_t& args)
 {
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Stoppping threads...";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "Stopping threads...";
 
   // Stop receiving data requests as first thing
   m_data_request_receiver->remove_callback();
@@ -272,12 +272,18 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_postprocess_scheduler()
   folly::coro::blockingWait(postprocess_schedule());
 }
 
+#pragma GCC diagnostic push
+// Interesting, as yet unreproducible in self-contained test, subobject-linkage warning when
+// using TLOG in a coroutine in a template class. The following pragma suppresses the warning,
+// which could also be suppressed by wrapping TLOG in a lambda: [&](){TLOG...}();
+#pragma GCC diagnostic ignored "-Wsubobject-linkage"
+
 template<class RDT, class RHT, class LBT, class RPT, class IDT>
 folly::coro::Task<void>
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule()
 {
 
-  // TLOG_DEBUG(TLVL_WORK_STEPS) << "Postprocess schedule coroutine started...";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "Postprocess schedule coroutine started...";
   timestamp_t newest_ts = 0;
   timestamp_t end_win_ts = 0;
   bool first_cycle = true;
@@ -319,7 +325,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule()
       auto head = m_latency_buffer_impl->front();
       processed_element.set_timestamp(head->get_timestamp());
       first_cycle = false;
-      // TLOG() << "***** First pass post processing *****";
+      TLOG() << "***** First pass post processing *****";
     }
 
     if (newest_ts - processed_element.get_timestamp() > m_processing_delay_ticks) {
@@ -337,6 +343,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::postprocess_schedule()
     }
   }
 }
+#pragma GCC diagnostic pop
 
 template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void
