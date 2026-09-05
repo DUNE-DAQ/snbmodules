@@ -169,8 +169,8 @@ protected:
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
   uint64_t m_processing_delay_ticks;
-  uint64_t m_post_processing_delay_min_wait;
-  uint64_t m_post_processing_delay_max_wait;
+  uint64_t m_post_processing_delay_min_wait_ms;
+  uint64_t m_post_processing_delay_max_wait_ms;
 
   // STATS
   using metric_t = dunedaq::datahandlinglibs::opmon::DataHandlerInfo;
@@ -182,8 +182,8 @@ protected:
     std::remove_const<std::invoke_result<decltype(&metric_t::num_data_input_timeouts), metric_t>::type>::type;
   using num_lb_insert_failures_t =
     std::remove_const<std::invoke_result<decltype(&metric_t::num_lb_insert_failures), metric_t>::type>::type;
-  using num_post_processing_delay_max_waits_t = std::remove_const<
-    std::invoke_result<decltype(&metric_t::num_post_processing_delay_max_waits), metric_t>::type>::type;
+  using num_postprocess_schedule_timeouts_t = std::remove_const<
+    std::invoke_result<decltype(&metric_t::num_postprocess_schedule_timeouts), metric_t>::type>::type;
 
   std::atomic<num_payload_t> m_num_payloads{ 0 };
   std::atomic<sum_payload_t> m_sum_payloads{ 0 };
@@ -191,7 +191,7 @@ protected:
   std::atomic<sum_request_t> m_sum_requests{ 0 };
   std::atomic<rawq_timeout_count_t> m_rawq_timeout_count{ 0 };
   std::atomic<num_lb_insert_failures_t> m_num_lb_insert_failures{ 0 };
-  std::atomic<num_post_processing_delay_max_waits_t> m_num_post_processing_delay_max_waits{ 0 };
+  std::atomic<num_postprocess_schedule_timeouts_t> m_num_postprocess_schedule_timeouts{ 0 };
   std::atomic<int> m_stats_packet_count{ 0 };
 
   // CONSUMER
