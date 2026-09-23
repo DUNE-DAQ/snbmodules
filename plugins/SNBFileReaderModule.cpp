@@ -68,7 +68,8 @@ SNBFileReaderModule::init(std::shared_ptr<appfwk::ConfigurationManager> cfg)
 }
 
 std::shared_ptr<snbmodules::FileSourceConcept>
-SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf* cb_conf, std::atomic<bool>& run_marker)
+SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf* cb_conf,
+                                            std::atomic<bool>& run_marker)
 {
   //! Values suitable to emulation
 
@@ -91,8 +92,7 @@ SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf
 
   std::string raw_dt = cb_conf->get_data_type();
   TLOG() << "Choosing specialization for SourceEmulator with raw_input" << " [uid:" << cb_conf->UID()
-         << " , data_type:" << raw_dt
-         << ']';
+         << " , data_type:" << raw_dt << ']';
 
   // IF WIBETH
   if (raw_dt.find("WIBEthFrame") != std::string::npos) {

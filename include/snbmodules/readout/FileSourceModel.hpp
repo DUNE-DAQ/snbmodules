@@ -16,11 +16,11 @@
 #include "confmodel/DetectorStream.hpp"
 #include "confmodel/GeoId.hpp"
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/utils/BufferedFileReader.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "snbmodules/readout/FileSourceConcept.hpp"
-#include "appmodel/DataMoveCallbackConf.hpp"
 #include "utilities/ReusableThread.hpp"
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"

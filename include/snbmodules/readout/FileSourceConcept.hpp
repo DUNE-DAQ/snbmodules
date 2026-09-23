@@ -9,11 +9,11 @@
 #ifndef snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
 #define snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "appmodel/SNBFileSourceParameters.hpp"
 #include "confmodel/DetectorStream.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "opmonlib/MonitorableObject.hpp"
-#include "appmodel/DataMoveCallbackConf.hpp"
 
 #include <map>
 #include <string>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(snbmodules VERSION 2.2.0)
+project(snbmodules VERSION 2.2.1)
 
 find_package(daq-cmake REQUIRED)
 
@@ -10,7 +10,7 @@ daq_setup_environment()
 # Boost unit_test_framework: for the unit tests
 # Boost program_options: to allow command line options with descriptions/default values
 
-find_package(ers REQUIRED)     
+find_package(ers REQUIRED)
 find_package(TRACE REQUIRED)
 find_package(Boost COMPONENTS unit_test_framework program_options iostreams REQUIRED)
 find_package(iomanager REQUIRED)
