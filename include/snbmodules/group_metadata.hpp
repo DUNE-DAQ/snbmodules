@@ -16,6 +16,7 @@
 #include "snbmodules/transfer_metadata.hpp"
 
 #include <filesystem>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
@@ -85,7 +86,7 @@ public:
   /// @return  True if the transfer_id are equal, false otherwise
   bool operator==(MetadataAbstract const& other) const override
   {
-    auto o = dynamic_cast<const GroupMetadata&>(other);
+    auto o = dynamic_cast<const GroupMetadata&>(other); // NOLINT
     return m_group_id == o.m_group_id;
   }
   bool operator==(GroupMetadata const& other) const { return m_group_id == other.m_group_id; }
@@ -95,7 +96,7 @@ public:
   /// @return  True if the transfer_id is less than the other transfer_id, false otherwise
   bool operator<(MetadataAbstract const& other) const override
   {
-    auto o = dynamic_cast<const GroupMetadata&>(other);
+    auto o = dynamic_cast<const GroupMetadata&>(other); // NOLINT
     return m_group_id.compare(o.m_group_id);
   }
 

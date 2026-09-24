@@ -1,7 +1,7 @@
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
-#include "appmodel/DataMoveCallbackConf.hpp"
 
 namespace dunedaq {
 namespace snbmodules {
@@ -74,8 +74,7 @@ FileReaderBase::do_conf(const appfwk::DAQModule::CommandData_t& /*args*/)
         throw datahandlinglibs::GenericConfigurationError(ERS_HERE, "Emulator configured twice: " + cb->UID());
       }
       m_source_emus[cb->UID()]->set_sender(cb);
-      m_source_emus[cb->UID()]->conf(streams[cb->get_source_id()],
-                                            cfg->get_configuration()->get_snb_conf());
+      m_source_emus[cb->UID()]->conf(streams[cb->get_source_id()], cfg->get_configuration()->get_snb_conf());
     }
     for (auto& [name, emu] : m_source_emus) {
       if (!emu->is_configured()) {

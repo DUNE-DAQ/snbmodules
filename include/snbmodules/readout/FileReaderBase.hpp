@@ -9,15 +9,15 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_
 
 // package
 #include "snbmodules/readout/FileSourceConcept.hpp"
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "appmodel/DataReaderConf.hpp"
 #include "appmodel/DataReaderModule.hpp"
-#include "appmodel/DataMoveCallbackConf.hpp"
 #include "confmodel/Connection.hpp"
 #include "confmodel/DaqModule.hpp"
 #include "confmodel/DetDataSender.hpp"
@@ -61,8 +61,9 @@ public:
   void init(std::shared_ptr<appfwk::ConfigurationManager> cfg);
 
   // To be implemented by final module
-  virtual std::shared_ptr<snbmodules::FileSourceConcept> create_source_emulator(const appmodel::DataMoveCallbackConf* cb_conf,
-                                                                                std::atomic<bool>& run_marker) = 0;
+  virtual std::shared_ptr<snbmodules::FileSourceConcept> create_source_emulator(
+    const appmodel::DataMoveCallbackConf* cb_conf,
+    std::atomic<bool>& run_marker) = 0;
 
   // Commands
   void do_conf(const appfwk::DAQModule::CommandData_t& /*args*/);
@@ -90,4 +91,4 @@ private:
 // Declarations
 #include "detail/FileReaderBase.hxx"
 
-#endif // SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_

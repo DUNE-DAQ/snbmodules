@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
-#define snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_
 
 #include "iomanager/IOManager.hpp"
 #include "iomanager/Sender.hpp"
@@ -16,21 +16,21 @@
 #include "confmodel/DetectorStream.hpp"
 #include "confmodel/GeoId.hpp"
 
+#include "appmodel/DataMoveCallbackConf.hpp"
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/utils/BufferedFileReader.hpp"
 #include "datahandlinglibs/utils/RateLimiter.hpp"
 #include "snbmodules/readout/FileSourceConcept.hpp"
-#include "appmodel/DataMoveCallbackConf.hpp"
 #include "utilities/ReusableThread.hpp"
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"
 
-#include "unistd.h"
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <random>
 #include <string>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -75,7 +75,7 @@ public:
 protected:
   // The data emulator function that the worker thread runs
   void run_produce();
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() override;
 
   void open_next_file();
 
@@ -90,7 +90,7 @@ private:
 
   std::vector<std::string> m_file_names;
   std::vector<std::string>::const_iterator m_file_iterator;
-  uint32_t m_input_buffer_size;
+  uint32_t m_input_buffer_size; // NOLINT(build/unsigned)
   std::string m_compression_algorithm;
 
   daqdataformats::SourceID m_sourceid;
@@ -122,4 +122,4 @@ private:
 // Declarations
 #include "detail/FileSourceModel.hxx"
 
-#endif // snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_

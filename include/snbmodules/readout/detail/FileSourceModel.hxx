@@ -1,8 +1,8 @@
 // Declarations for FileSourceModel
 
 #include "datahandlinglibs/DataHandlingIssues.hpp"
-#include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/DataMoveCallbackRegistry.hpp"
+#include "datahandlinglibs/ReadoutLogging.hpp"
 
 using dunedaq::datahandlinglibs::CannotWriteToQueue;
 using dunedaq::datahandlinglibs::ConfigurationError;

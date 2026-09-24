@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>

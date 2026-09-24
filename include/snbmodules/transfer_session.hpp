@@ -22,6 +22,7 @@
 #include "snbmodules/interfaces/transfer_interface_bittorrent.hpp"
 
 #include <fstream>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>

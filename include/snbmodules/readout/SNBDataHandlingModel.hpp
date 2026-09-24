@@ -31,7 +31,6 @@
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
 
-#include "appmodel/DataHandlerModule.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
 
@@ -153,10 +152,13 @@ protected:
   void dispatch_requests(dfmessages::DataRequest& data_request);
 
   // Transform input data type to readout
-  virtual std::vector<RDT> transform_payload(IDT& original) const { return { reinterpret_cast<RDT&>(original) }; }
+  virtual std::vector<RDT> transform_payload(IDT& original) const
+  {
+    return { reinterpret_cast<RDT&>(original) };
+  } // NOLINT
 
   // Operational monitoring
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() override;
 
   // Constructor params
   std::atomic<bool>& m_run_marker;
@@ -168,9 +170,9 @@ protected:
   int m_current_fake_trigger_id;
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
-  uint64_t m_processing_delay_ticks;
-  uint64_t m_post_processing_delay_min_wait;
-  uint64_t m_post_processing_delay_max_wait;
+  uint64_t m_processing_delay_ticks;         // NOLINT(build/unsigned)
+  uint64_t m_post_processing_delay_min_wait; // NOLINT(build/unsigned)
+  uint64_t m_post_processing_delay_max_wait; // NOLINT(build/unsigned)
 
   // STATS
   using metric_t = dunedaq::datahandlinglibs::opmon::DataHandlerInfo;

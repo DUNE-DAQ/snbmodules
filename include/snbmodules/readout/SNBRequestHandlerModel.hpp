@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
-#define DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_
 
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/concepts/RequestHandlerConcept.hpp"
@@ -46,6 +46,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <set>
 #include <string>
 #include <thread>
 #include <utility>
@@ -70,7 +71,7 @@ namespace snbmodules {
 // trigger)
 
 template<class T>
-uint64_t
+uint64_t // NOLINT(build/unsigned)
 get_frame_iterator_timestamp(T iter)
 {
   return iter->get_timestamp();
@@ -142,7 +143,7 @@ public:
   void cleanup_check() override;
 
   // Periodic data transmission method invoked at configurable interval
-  virtual void periodic_data_transmission() override;
+  void periodic_data_transmission() override;
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
   void issue_request(dfmessages::DataRequest datarequest, bool is_retry = false) override;
@@ -212,15 +213,15 @@ protected:
   void check_waiting_requests();
 
   // Function that gathers fragment pieces from LB
-  std::vector<std::pair<void*, size_t>> get_fragment_pieces(uint64_t start_win_ts,
-                                                            uint64_t end_win_ts,
+  std::vector<std::pair<void*, size_t>> get_fragment_pieces(uint64_t start_win_ts, // NOLINT(build/unsigned)
+                                                            uint64_t end_win_ts,   // NOLINT(build/unsigned)
                                                             RequestResult& rres);
 
   // Override data_request functionality
   RequestResult data_request(dfmessages::DataRequest dr) override;
 
   // operational monitoring
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() override;
 
   // Data access (LB)
   std::shared_ptr<LatencyBufferType>& m_latency_buffer;
@@ -261,16 +262,16 @@ protected:
   // Configuration
   bool m_configured;
   std::mutex m_pop_list_mutex;
-  std::set<uint64_t> m_pop_list;
+  std::set<uint64_t> m_pop_list; // NOLINT(build/unsigned)
   size_t m_buffer_capacity;
   daqdataformats::SourceID m_sourceid;
-  uint16_t m_detid;
+  uint16_t m_detid; // NOLINT(build/unsigned)
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
-  bool m_warn_on_timeout = true;         // Whether to warn when a request times out
-  bool m_warn_about_empty_buffer = true; // Whether to warn about an empty buffer when processing a request
-  uint32_t m_periodic_data_transmission_ms = 0;
+  bool m_warn_on_timeout = true;                // Whether to warn when a request times out
+  bool m_warn_about_empty_buffer = true;        // Whether to warn about an empty buffer when processing a request
+  uint32_t m_periodic_data_transmission_ms = 0; // NOLINT(build/unsigned)
   std::vector<std::string> m_frag_out_conn_ids;
 
   // Stats
@@ -313,4 +314,4 @@ private:
 // Declarations
 #include "detail/SNBRequestHandlerModel.hxx"
 
-#endif // DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_
