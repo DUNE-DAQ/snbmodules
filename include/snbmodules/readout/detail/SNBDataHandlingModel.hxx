@@ -82,13 +82,13 @@ template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void
 SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::conf(const appfwk::DAQModule::CommandData_t& /*args*/)
 {
-    // Configure and register consume callback
-    m_consume_callback =
-      std::bind(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::consume_callback, this, std::placeholders::_1);
+  // Configure and register consume callback
+  m_consume_callback =
+    std::bind(&SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::consume_callback, this, std::placeholders::_1);
 
-    // Register callback
-    auto dmcbr = datahandlinglibs::DataMoveCallbackRegistry::get();
-    dmcbr->register_callback<IDT>(m_raw_data_callback_conf, m_consume_callback);
+  // Register callback
+  auto dmcbr = datahandlinglibs::DataMoveCallbackRegistry::get();
+  dmcbr->register_callback<IDT>(m_raw_data_callback_conf, m_consume_callback);
 
   // Configure threads:
   if (m_generate_timesync) {
@@ -240,7 +240,8 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::process_item(RDT&& payload)
   const RDT* written = nullptr;
   if constexpr (datahandlinglibs::ExpectsOrder<LBT>) {
     if (!m_latency_buffer_impl->write(std::move(payload))) {
-      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" << payload.get_timestamp() << ")";
+      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" <<
+      // payload.get_timestamp() << ")";
       m_num_lb_insert_failures++;
       return;
     }
@@ -248,7 +249,8 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::process_item(RDT&& payload)
   } else {
     const auto [returned, result] = m_latency_buffer_impl->write_and_return(std::move(payload));
     if (!result) {
-      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" << payload.get_timestamp() << ")";
+      // TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer insert failed! (Payload timestamp=" <<
+      // payload.get_timestamp() << ")";
       m_num_lb_insert_failures++;
       return;
     }
