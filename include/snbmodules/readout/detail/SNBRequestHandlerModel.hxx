@@ -1,7 +1,6 @@
 // Declarations for SNBRequestHandlerModel
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class RDT, class LBT>
 void
@@ -15,11 +14,11 @@ SNBRequestHandlerModel<RDT, LBT>::conf(const appmodel::DataHandlerModule* conf)
 
   m_buffer_capacity = conf->get_module_configuration()->get_latency_buffer()->get_size();
   m_num_request_handling_threads = reqh_conf->get_handler_threads();
-  m_request_timeout_ms = reqh_conf->get_request_timeout();
+  m_request_timeout_ms = static_cast<int>(reqh_conf->get_request_timeout());
 
   for (auto output : conf->get_outputs()) {
     if (output->get_data_type() == "Fragment") {
-      m_fragment_send_timeout_ms = output->get_send_timeout_ms();
+      m_fragment_send_timeout_ms = static_cast<int>(output->get_send_timeout_ms());
       // 19-Dec-2024, KAB: store the names/IDs of the Fragment output connections so that
       // we can confirm that they are ready for sending at 'start' time.
       m_frag_out_conn_ids.push_back(output->UID());
@@ -81,7 +80,7 @@ SNBRequestHandlerModel<RDT, LBT>::start(const appfwk::DAQModule::CommandData_t& 
   m_payloads_written = 0;
   m_bytes_written = 0;
 
-  m_t0 = std::chrono::high_resolution_clock::now();
+  m_t0 = std::chrono::steady_clock::now();
 
   // 19-Dec-2024, KAB: check that Fragment senders are ready to send. This is done so
   // that the IOManager infrastructure fetches the necessary connection details from
@@ -89,7 +88,7 @@ SNBRequestHandlerModel<RDT, LBT>::start(const appfwk::DAQModule::CommandData_t& 
   // is used to send data.  This avoids delays in the sending of the first fragment in
   // the first data-taking run in a DAQ session. Such delays can lead to undesirable
   // system behavior like trigger inhibits.
-  for (auto frag_out_conn : m_frag_out_conn_ids) {
+  for (auto const& frag_out_conn : m_frag_out_conn_ids) {
     auto sender = get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(frag_out_conn);
     if (sender != nullptr) {
       bool is_ready = sender->is_ready_for_sending(std::chrono::milliseconds(100));
@@ -133,7 +132,6 @@ void
 SNBRequestHandlerModel<RDT, LBT>::record(const appfwk::DAQModule::CommandData_t& /*args*/)
 {
   ers::error(datahandlinglibs::CommandError(ERS_HERE, m_sourceid, "DLH is not configured for recording"));
-  return;
 }
 
 template<class RDT, class LBT>
@@ -151,10 +149,10 @@ SNBRequestHandlerModel<RDT, LBT>::cleanup_check()
 
 template<class RDT, class LBT>
 void
-SNBRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest, bool is_retry)
+SNBRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest, bool is_retry) // NOLINT
 {
   boost::asio::post(*m_request_handler_thread_pool, [&, datarequest, is_retry]() { // start a thread from pool
-    auto t_req_begin = std::chrono::high_resolution_clock::now();
+    auto t_req_begin = std::chrono::steady_clock::now();
     {
       std::unique_lock<std::mutex> lock(m_cv_mutex);
       m_cv.wait(lock, [&] { return !m_cleanup_requested; });
@@ -172,7 +170,7 @@ SNBRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequ
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                   << " with timestamp=" << result.data_request.trigger_timestamp;
       std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now()));
+      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::steady_clock::now()));
     } else {
       try { // Send to fragment connection
         TLOG_DEBUG(TLVL_WORK_STEPS) << "Sending fragment with trigger/sequence_number "
@@ -192,14 +190,15 @@ SNBRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequ
       }
     }
 
-    auto t_req_end = std::chrono::high_resolution_clock::now();
-    auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Responding to data request took: " << us_req_took.count() << "[us]";
-    m_response_time_acc.fetch_add(us_req_took.count());
-    if (us_req_took.count() > m_response_time_max.load())
-      m_response_time_max.store(us_req_took.count());
-    if (us_req_took.count() < m_response_time_min.load())
-      m_response_time_min.store(us_req_took.count());
+    auto t_req_end = std::chrono::steady_clock::now();
+    auto us_req_took =
+      static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin).count());
+    TLOG_DEBUG(TLVL_WORK_STEPS) << "Responding to data request took: " << us_req_took << "[us]";
+    m_response_time_acc.fetch_add(us_req_took);
+    if (us_req_took > m_response_time_max.load())
+      m_response_time_max.store(us_req_took);
+    if (us_req_took < m_response_time_min.load())
+      m_response_time_min.store(us_req_took);
     m_handled_requests++;
   });
 }
@@ -225,7 +224,7 @@ SNBRequestHandlerModel<RDT, LBT>::generate_opmon_data()
   info.set_tot_request_response_time(m_response_time_acc.exchange(0));
   info.set_max_request_response_time(m_response_time_max.exchange(0));
   info.set_min_request_response_time(m_response_time_min.exchange(std::numeric_limits<int>::max()));
-  auto now = std::chrono::high_resolution_clock::now();
+  auto now = std::chrono::steady_clock::now();
   new_pop_reqs = m_pop_reqs.exchange(0);
   new_pop_count = m_pops_count.exchange(0);
   new_occupancy = m_occupancy;
@@ -316,7 +315,7 @@ SNBRequestHandlerModel<RDT, LBT>::cleanup()
     }
   }
   m_occupancy = m_latency_buffer->occupancy();
-  m_pops_count += popped;
+  m_pops_count += static_cast<int>(popped);
   m_error_registry->remove_errors_until(m_latency_buffer->front()->get_timestamp());
 
   // Update hte oldest timestamp monitorable
@@ -345,7 +344,7 @@ SNBRequestHandlerModel<RDT, LBT>::check_waiting_requests()
         if ((*iter).request.request_information.window_end <= newest_ts) {
           issue_request((*iter).request, true);
           iter = m_waiting_requests.erase(iter);
-        } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+        } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                          (*iter).start_time)
                      .count() >= m_request_timeout_ms) {
           issue_request((*iter).request, true);
@@ -404,11 +403,10 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
     } else {
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Lower bound found " << start_iter->get_timestamp()
                                   << ", --> distance from window: "
-                                  << int64_t(start_win_ts) - int64_t(start_iter->get_timestamp());
+                                  << static_cast<int64_t>(start_win_ts) -
+                                       static_cast<int64_t>(start_iter->get_timestamp());
 
       rres.result_code = ResultCode::kFound;
-
-      auto elements_handled = 0;
 
       RDT* element = &(*start_iter);
 
@@ -431,7 +429,6 @@ SNBRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts, uin
           m_pop_list.insert(element->get_timestamp());
         }
 
-        elements_handled++;
         ++start_iter;
         element = &(*start_iter);
       }
@@ -523,5 +520,4 @@ SNBRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr)
   return rres;
 }
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules

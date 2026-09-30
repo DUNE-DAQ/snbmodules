@@ -6,6 +6,9 @@
  * received with this code.
  */
 
+// TODO: Eric Flumerfelt <eflumerf@github.com> Sep-30-2026: Re-enable test applications
+// NOLINTBEGIN
+
 #include "logging/Logging.hpp"
 #include "snbmodules/ip_format.hpp"
 
@@ -50,3 +53,5 @@ main()
     return 1;
   }
 }
+
+// NOLINTEND

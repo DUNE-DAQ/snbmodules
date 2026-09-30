@@ -31,7 +31,6 @@
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
 
-#include "appmodel/DataHandlerModule.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 #include "datahandlinglibs/concepts/DataHandlingConcept.hpp"
 
@@ -55,13 +54,12 @@
 #include <utility>
 #include <vector>
 
-using dunedaq::datahandlinglibs::logging::TLVL_QUEUE_POP;
-using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;
-using dunedaq::datahandlinglibs::logging::TLVL_TIME_SYNCS;
-using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
+using dunedaq::datahandlinglibs::logging::TLVL_QUEUE_POP;  // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;  // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_TIME_SYNCS; // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS; // NOLINT
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class ReadoutType,
          class RequestHandlerType,
@@ -99,13 +97,13 @@ public:
   virtual ~SNBDataHandlingModel() = default;
 
   // Initializes the readoutmodel and its internals
-  void init(const appmodel::DataHandlerModule* modconf);
+  void init(const appmodel::DataHandlerModule* modconf) override;
 
   // Configures the readoutmodel and its internals
-  void conf(const appfwk::DAQModule::CommandData_t& args);
+  void conf(const appfwk::DAQModule::CommandData_t& args) override;
 
   // Unconfigures readoutmodel's internals
-  void scrap(const appfwk::DAQModule::CommandData_t& args)
+  void scrap(const appfwk::DAQModule::CommandData_t& args) override
   {
     m_request_handler_impl->scrap(args);
     m_latency_buffer_impl->scrap(args);
@@ -113,10 +111,10 @@ public:
   }
 
   // Starts readoutmodel's internals
-  void start(const appfwk::DAQModule::CommandData_t& args);
+  void start(const appfwk::DAQModule::CommandData_t& args) override;
 
   // Stops readoutmodel's internals
-  void stop(const appfwk::DAQModule::CommandData_t& args);
+  void stop(const appfwk::DAQModule::CommandData_t& args) override;
 
   // Record function: invokes request handler's record implementation
   void record(const appfwk::DAQModule::CommandData_t& args) override { m_request_handler_impl->record(args); }
@@ -138,10 +136,10 @@ protected:
   void consume_callback(IDT&& payload);
 
   // Timesync thread's work function
-  void run_timesync();
+  void run_timesync() override;
 
   // Noop consume function
-  void run_consume() {}
+  void run_consume() override {}
 
   // Postprocess scheduler thread's work function
   void run_postprocess_scheduler();
@@ -153,10 +151,13 @@ protected:
   void dispatch_requests(dfmessages::DataRequest& data_request);
 
   // Transform input data type to readout
-  virtual std::vector<RDT> transform_payload(IDT& original) const { return { reinterpret_cast<RDT&>(original) }; }
+  virtual std::vector<RDT> transform_payload(IDT& original) const
+  {
+    return { reinterpret_cast<RDT&>(original) }; // NOLINT
+  }
 
   // Operational monitoring
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() override;
 
   // Constructor params
   std::atomic<bool>& m_run_marker;
@@ -168,9 +169,9 @@ protected:
   int m_current_fake_trigger_id;
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
-  uint64_t m_processing_delay_ticks;
-  uint64_t m_post_processing_delay_min_wait;
-  uint64_t m_post_processing_delay_max_wait;
+  uint64_t m_processing_delay_ticks;         // NOLINT(build/unsigned)
+  uint64_t m_post_processing_delay_min_wait; // NOLINT(build/unsigned)
+  uint64_t m_post_processing_delay_max_wait; // NOLINT(build/unsigned)
 
   // STATS
   using metric_t = dunedaq::datahandlinglibs::opmon::DataHandlerInfo;
@@ -231,11 +232,10 @@ protected:
   std::unique_ptr<datahandlinglibs::FrameErrorRegistry> m_error_registry;
 
   // RUN START T0
-  std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
+  std::chrono::time_point<std::chrono::steady_clock> m_t0;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 // Declarations
 #include "detail/SNBDataHandlingModel.hxx"

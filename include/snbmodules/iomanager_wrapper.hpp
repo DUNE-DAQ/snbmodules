@@ -20,6 +20,7 @@
 #include "iomanager/network/NetworkIssues.hpp"
 
 #include <string>
+#include <vector>
 
 namespace dunedaq::snbmodules {
 // Singleton

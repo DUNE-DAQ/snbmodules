@@ -6,9 +6,10 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
-#define snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_
 
+#include "appfwk/DAQModule.hpp"
 #include "appmodel/DataMoveCallbackConf.hpp"
 #include "appmodel/SNBFileSourceParameters.hpp"
 #include "confmodel/DetectorStream.hpp"
@@ -19,8 +20,7 @@
 #include <string>
 #include <thread>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 class FileSourceConcept : public opmonlib::MonitorableObject
 {
@@ -43,7 +43,6 @@ public:
 private:
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
-#endif // snbmodules_INCLUDE_snbmodules_CONCEPTS_FileSourceConcept_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_

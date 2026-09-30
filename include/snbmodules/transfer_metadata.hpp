@@ -37,16 +37,16 @@ public:
   virtual std::string export_to_string_partial(bool force_all);
 
   // Overriden methods
-  std::string export_to_string() override { return export_to_string_partial(true); }
-  void from_string(const std::string&) override;
+  std::string export_to_string() final { return export_to_string_partial(true); }
+  void from_string(const std::string&) final;
 
   // Used to export the metadata to a json file
-  void generate_metadata_file(std::filesystem::path dest) override;
-  void load_metadata_from_meta_file(std::filesystem::path src) override;
+  void generate_metadata_file(std::filesystem::path dest) final;
+  void load_metadata_from_meta_file(std::filesystem::path src) final;
 
-  bool operator==(MetadataAbstract const& other) const override
+  bool operator==(MetadataAbstract const& other) const final
   {
-    auto o = dynamic_cast<const TransferMetadata&>(other);
+    auto o = dynamic_cast<const TransferMetadata&>(other); // NOLINT
     return m_file_path == o.m_file_path && m_src == o.m_src && m_dest == o.m_dest && m_group_id == o.m_group_id;
   }
   bool operator==(TransferMetadata const& o) const
@@ -57,9 +57,9 @@ public:
   /// @brief Operator < overload
   /// @param other
   /// @return
-  bool operator<(MetadataAbstract const& other) const override
+  bool operator<(MetadataAbstract const& other) const final
   {
-    auto o = dynamic_cast<const TransferMetadata&>(other);
+    auto o = dynamic_cast<const TransferMetadata&>(other); // NOLINT
     return m_file_path.string().compare(o.m_file_path.string());
   }
 
@@ -72,12 +72,12 @@ public:
   /// @param bytes_transferred
   /// @param status
   TransferMetadata(const std::filesystem::path& file_path,
-                   uint64_t bytes_size,
+                   uint64_t bytes_size, // NOLINT(build/unsigned)
                    const IPFormat& src,
                    const std::string& hash = "",
                    const IPFormat& dest = IPFormat(),
                    const std::string& group_id = "",
-                   uint64_t bytes_transferred = 0,
+                   uint64_t bytes_transferred = 0, // NOLINT(build/unsigned)
                    status_type::e_status status = status_type::e_status::WAITING)
     : m_hash(hash)
     , m_bytes_size(bytes_size)
@@ -171,13 +171,13 @@ public:
     m_modified_fields["hash"] = true;
   }
 
-  inline void set_size(uint64_t size)
+  inline void set_size(uint64_t size) // NOLINT(build/unsigned)
   {
     m_bytes_size = size;
     m_modified_fields["size"] = true;
   }
 
-  inline void set_bytes_transferred(uint64_t bytes_transferred)
+  inline void set_bytes_transferred(uint64_t bytes_transferred) // NOLINT(build/unsigned)
   {
     m_bytes_transferred = bytes_transferred;
     m_modified_fields["bytes_transferred"] = true;
@@ -257,8 +257,8 @@ public:
   inline std::string get_hash() const { return m_hash; }
   inline IPFormat get_src() const { return m_src; }
   inline IPFormat get_dest() const { return m_dest; }
-  inline uint64_t get_size() const { return m_bytes_size; }
-  inline uint64_t get_bytes_transferred() const { return m_bytes_transferred; }
+  inline uint64_t get_size() const { return m_bytes_size; }                     // NOLINT(build/unsigned)
+  inline uint64_t get_bytes_transferred() const { return m_bytes_transferred; } // NOLINT(build/unsigned)
   inline status_type::e_status get_status() const { return m_status; }
   inline std::string get_magnet_link() const { return m_magnet_link; }
   inline std::string get_group_id() const { return m_group_id; }
@@ -314,10 +314,10 @@ private:
   std::string m_hash = "";
 
   /// @brief Total size of the file in bytes
-  uint64_t m_bytes_size = 0;
+  uint64_t m_bytes_size = 0; // NOLINT(build/unsigned)
 
   /// @brief Number of bytes transferred or received
-  uint64_t m_bytes_transferred = 0;
+  uint64_t m_bytes_transferred = 0; // NOLINT(build/unsigned)
 
   /// @brief Transmission speed in bytes/s
   int32_t m_transmission_speed = 0;

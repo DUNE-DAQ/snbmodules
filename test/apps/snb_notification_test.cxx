@@ -6,6 +6,9 @@
  * received with this code.
  */
 
+// TODO: Eric Flumerfelt <eflumerf@github.com> Sep-30-2026: Re-enable test applications
+// NOLINTBEGIN
+
 #include "snbmodules/bookkeeper.hpp"
 #include "snbmodules/transfer_client.hpp"
 
@@ -106,3 +109,5 @@ main()
 
   return 0;
 } // NOLINT
+
+// NOLINTEND

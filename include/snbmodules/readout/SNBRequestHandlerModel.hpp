@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
-#define DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_
 
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/concepts/RequestHandlerConcept.hpp"
@@ -46,17 +46,17 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <set>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
 
-using dunedaq::datahandlinglibs::logging::TLVL_HOUSEKEEPING;
-using dunedaq::datahandlinglibs::logging::TLVL_QUEUE_PUSH;
-using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
+using dunedaq::datahandlinglibs::logging::TLVL_HOUSEKEEPING; // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_QUEUE_PUSH;   // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;   // NOLINT
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 // This function takes the type returned by the begin() and end()
 // functions in a ReadoutType object and returns the timestamp that
@@ -70,7 +70,7 @@ namespace snbmodules {
 // trigger)
 
 template<class T>
-uint64_t
+uint64_t // NOLINT(build/unsigned)
 get_frame_iterator_timestamp(T iter)
 {
   return iter->get_timestamp();
@@ -113,42 +113,42 @@ public:
   struct RequestElement
   {
     RequestElement(const dfmessages::DataRequest& data_request,
-                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value)
+                   const std::chrono::time_point<std::chrono::steady_clock>& tp_value)
       : request(data_request)
       , start_time(tp_value)
     {
     }
 
     dfmessages::DataRequest request;
-    std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+    std::chrono::time_point<std::chrono::steady_clock> start_time;
   };
 
   // Default configuration mechanism
-  void conf(const dunedaq::appmodel::DataHandlerModule*);
+  void conf(const dunedaq::appmodel::DataHandlerModule*) final;
 
   // Default un-configure mechanism
-  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/) override;
+  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/) final;
 
   // Default start mechanism
-  void start(const appfwk::DAQModule::CommandData_t& /*args*/);
+  void start(const appfwk::DAQModule::CommandData_t& /*args*/) final;
 
   // Default stop mechanism
-  void stop(const appfwk::DAQModule::CommandData_t& /*args*/);
+  void stop(const appfwk::DAQModule::CommandData_t& /*args*/) final;
 
   // Raw data recording implementation
-  void record(const appfwk::DAQModule::CommandData_t& args) override;
+  void record(const appfwk::DAQModule::CommandData_t& args) final;
 
   // A function that determines if a cleanup request should be issued based on LB occupancy
-  void cleanup_check() override;
+  void cleanup_check() final;
 
   // Periodic data transmission method invoked at configurable interval
-  virtual void periodic_data_transmission() override;
+  void periodic_data_transmission() final;
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
-  void issue_request(dfmessages::DataRequest datarequest, bool is_retry = false) override;
+  void issue_request(dfmessages::DataRequest datarequest, bool is_retry = false) final;
 
   // Opmon get_info implementation
-  // void get_info(opmonlib::InfoCollector& ci, int /*level*/) override;
+  // void get_info(opmonlib::InfoCollector& ci, int /*level*/) ofinalverride;
 
   virtual dunedaq::daqdataformats::timestamp_t get_cutoff_timestamp() { return 0; }
   virtual bool supports_cutoff_timestamp() { return false; }
@@ -157,7 +157,7 @@ public:
   void reset_oldest_time() { m_oldest_timestamp.store(0); }
 
   // Returns last processed ReadoutTyped element's DAQ timestamp
-  std::uint64_t get_oldest_time() override { return m_oldest_timestamp.load(); } // NOLINT(build/unsigned)
+  std::uint64_t get_oldest_time() final { return m_oldest_timestamp.load(); } // NOLINT(build/unsigned)
 
 protected:
   // An inline helper function that creates a fragment header based on a data request
@@ -190,7 +190,7 @@ protected:
     auto bytes_to_copy = size;
     while (bytes_to_copy > 0) {
       auto n = std::min(bytes_to_copy, buffer_size - buffer_pos);
-      std::memcpy(static_cast<char*>(buffer) + buffer_pos, static_cast<const char*>(data), n);
+      std::memcpy(static_cast<char*>(buffer) + buffer_pos, static_cast<const char*>(data), n); // NOLINT
       buffer_pos += n;
       bytes_to_copy -= n;
       if (buffer_pos == buffer_size) {
@@ -206,21 +206,21 @@ protected:
   void periodic_data_transmissions();
 
   // LB cleanup implementation
-  void cleanup();
+  void cleanup() final;
 
   // Function that checks delayed requests that are waiting for not yet present data in LB
   void check_waiting_requests();
 
   // Function that gathers fragment pieces from LB
-  std::vector<std::pair<void*, size_t>> get_fragment_pieces(uint64_t start_win_ts,
-                                                            uint64_t end_win_ts,
+  std::vector<std::pair<void*, size_t>> get_fragment_pieces(uint64_t start_win_ts, // NOLINT(build/unsigned)
+                                                            uint64_t end_win_ts,   // NOLINT(build/unsigned)
                                                             RequestResult& rres);
 
   // Override data_request functionality
-  RequestResult data_request(dfmessages::DataRequest dr) override;
+  RequestResult data_request(dfmessages::DataRequest dr) final;
 
   // operational monitoring
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() final;
 
   // Data access (LB)
   std::shared_ptr<LatencyBufferType>& m_latency_buffer;
@@ -249,7 +249,7 @@ protected:
 
   // Error registry
   std::unique_ptr<datahandlinglibs::FrameErrorRegistry>& m_error_registry;
-  std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
+  std::chrono::time_point<std::chrono::steady_clock> m_t0;
 
   // The run marker
   std::atomic<bool> m_run_marker = false;
@@ -261,16 +261,16 @@ protected:
   // Configuration
   bool m_configured;
   std::mutex m_pop_list_mutex;
-  std::set<uint64_t> m_pop_list;
+  std::set<uint64_t> m_pop_list; // NOLINT(build/unsigned)
   size_t m_buffer_capacity;
   daqdataformats::SourceID m_sourceid;
-  uint16_t m_detid;
+  uint16_t m_detid; // NOLINT(build/unsigned)
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
-  bool m_warn_on_timeout = true;         // Whether to warn when a request times out
-  bool m_warn_about_empty_buffer = true; // Whether to warn about an empty buffer when processing a request
-  uint32_t m_periodic_data_transmission_ms = 0;
+  bool m_warn_on_timeout = true;                // Whether to warn when a request times out
+  bool m_warn_about_empty_buffer = true;        // Whether to warn about an empty buffer when processing a request
+  uint32_t m_periodic_data_transmission_ms = 0; // NOLINT(build/unsigned)
   std::vector<std::string> m_frag_out_conn_ids;
 
   // Stats
@@ -307,10 +307,9 @@ private:
   int m_request_timeout_ms;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 // Declarations
 #include "detail/SNBRequestHandlerModel.hxx"
 
-#endif // DATAHANDLINGLIBS_INCLUDE_DATAHANDLINGLIBS_MODELS_SNBRequestHandlerModel_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_SNBREQUESTHANDLERMODEL_HPP_

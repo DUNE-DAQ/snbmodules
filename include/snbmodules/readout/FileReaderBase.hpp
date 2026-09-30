@@ -9,8 +9,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
-#define SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_
 
 // package
 #include "snbmodules/readout/FileSourceConcept.hpp"
@@ -40,8 +40,7 @@
 #include <string>
 #include <vector>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 class FileReaderBase
 {
@@ -85,10 +84,6 @@ private:
   std::atomic<bool> m_run_marker;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
-// Declarations
-#include "detail/FileReaderBase.hxx"
-
-#endif // SNBMODULES_INCLUDE_SNBMODULES_FILEREADERBASE_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_

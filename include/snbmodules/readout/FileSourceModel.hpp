@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
-#define snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
+#ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_
+#define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_
 
 #include "iomanager/IOManager.hpp"
 #include "iomanager/Sender.hpp"
@@ -25,20 +25,19 @@
 
 #include "datahandlinglibs/opmon/datahandling_info.pb.h"
 
-#include "unistd.h"
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <random>
 #include <string>
+#include <unistd.h>
 #include <utility>
 #include <vector>
 
-using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;
-using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
+using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;  // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS; // NOLINT
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class ReadoutType>
 class FileSourceModel : public FileSourceConcept
@@ -55,10 +54,11 @@ public:
   }
 
   // void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
-  void set_sender(const appmodel::DataMoveCallbackConf* sink);
+  void set_sender(const appmodel::DataMoveCallbackConf* sink) override;
 
-  void conf(const confmodel::DetectorStream* stream_conf, const appmodel::SNBFileSourceParameters* file_params);
-  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/)
+  void conf(const confmodel::DetectorStream* stream_conf,
+            const appmodel::SNBFileSourceParameters* file_params) override;
+  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/) override
   {
     if (m_file_reader != nullptr) {
       m_file_reader->close();
@@ -68,14 +68,14 @@ public:
   }
   bool is_configured() override { return m_is_configured; }
 
-  void start(const appfwk::DAQModule::CommandData_t& /*args*/);
-  void stop(const appfwk::DAQModule::CommandData_t& /*args*/);
+  void start(const appfwk::DAQModule::CommandData_t& /*args*/) override;
+  void stop(const appfwk::DAQModule::CommandData_t& /*args*/) override;
   //  void get_info(opmonlib::InfoCollector& ci, int /*level*/);
 
 protected:
   // The data emulator function that the worker thread runs
   void run_produce();
-  virtual void generate_opmon_data() override;
+  void generate_opmon_data() override;
 
   void open_next_file();
 
@@ -90,7 +90,7 @@ private:
 
   std::vector<std::string> m_file_names;
   std::vector<std::string>::const_iterator m_file_iterator;
-  uint32_t m_input_buffer_size;
+  uint32_t m_input_buffer_size; // NOLINT(build/unsigned)
   std::string m_compression_algorithm;
 
   daqdataformats::SourceID m_sourceid;
@@ -116,10 +116,9 @@ private:
   utilities::ReusableThread m_producer_thread;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 // Declarations
 #include "detail/FileSourceModel.hxx"
 
-#endif // snbmodules_INCLUDE_snbmodules_MODELS_FileSourceModel_HPP_
+#endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCEMODEL_HPP_
