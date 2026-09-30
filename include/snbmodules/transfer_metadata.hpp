@@ -37,14 +37,14 @@ public:
   virtual std::string export_to_string_partial(bool force_all);
 
   // Overriden methods
-  std::string export_to_string() override { return export_to_string_partial(true); }
-  void from_string(const std::string&) override;
+  std::string export_to_string() final { return export_to_string_partial(true); }
+  void from_string(const std::string&) final;
 
   // Used to export the metadata to a json file
-  void generate_metadata_file(std::filesystem::path dest) override;
-  void load_metadata_from_meta_file(std::filesystem::path src) override;
+  void generate_metadata_file(std::filesystem::path dest) final;
+  void load_metadata_from_meta_file(std::filesystem::path src) final;
 
-  bool operator==(MetadataAbstract const& other) const override
+  bool operator==(MetadataAbstract const& other) const final
   {
     auto o = dynamic_cast<const TransferMetadata&>(other); // NOLINT
     return m_file_path == o.m_file_path && m_src == o.m_src && m_dest == o.m_dest && m_group_id == o.m_group_id;
@@ -57,7 +57,7 @@ public:
   /// @brief Operator < overload
   /// @param other
   /// @return
-  bool operator<(MetadataAbstract const& other) const override
+  bool operator<(MetadataAbstract const& other) const final
   {
     auto o = dynamic_cast<const TransferMetadata&>(other); // NOLINT
     return m_file_path.string().compare(o.m_file_path.string());

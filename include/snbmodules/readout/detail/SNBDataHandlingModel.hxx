@@ -5,8 +5,7 @@
 
 #include <typeinfo>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class RDT, class RHT, class LBT, class RPT, class IDT>
 void
@@ -114,7 +113,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::start(const appfwk::DAQModule::Co
   m_rawq_timeout_count = 0;
   m_num_post_processing_delay_max_waits = 0;
 
-  m_t0 = std::chrono::high_resolution_clock::now();
+  m_t0 = std::chrono::steady_clock::now();
 
   m_run_number = args.value<dunedaq::daqdataformats::run_number_t>("run", 1);
 
@@ -170,7 +169,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::generate_opmon_data()
 
   ri.set_num_data_input_timeouts(m_rawq_timeout_count.exchange(0));
 
-  auto now = std::chrono::high_resolution_clock::now();
+  auto now = std::chrono::steady_clock::now();
   int new_packets = m_stats_packet_count.exchange(0);
   double seconds = std::chrono::duration_cast<std::chrono::microseconds>(now - m_t0).count() / 1000000.;
   m_t0 = now;
@@ -371,7 +370,7 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::run_timesync()
                                     << " source_id=" << timesyncmsg.source_id;
         try {
           dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
-          m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500));
+          m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500)); // NOLINT
         } catch (ers::Issue& excpt) {
           ers::warning(
             datahandlinglibs::TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, excpt));
@@ -446,5 +445,4 @@ SNBDataHandlingModel<RDT, RHT, LBT, RPT, IDT>::dispatch_requests(dfmessages::Dat
   ++m_sum_requests;
 }
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules

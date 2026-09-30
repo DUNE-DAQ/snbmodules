@@ -73,9 +73,9 @@ public:
   explicit GroupMetadata(const std::filesystem::path& src, bool is_path = true)
   {
     if (is_path) {
-      load_metadata_from_meta_file(src);
+      GroupMetadata::load_metadata_from_meta_file(src);
     } else {
-      from_string(src.string());
+      GroupMetadata::from_string(src.string());
     }
   }
 

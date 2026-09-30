@@ -40,8 +40,7 @@
 #include <string>
 #include <vector>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 class FileReaderBase
 {
@@ -85,10 +84,6 @@ private:
   std::atomic<bool> m_run_marker;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
-
-// Declarations
-#include "detail/FileReaderBase.hxx"
+} // namespace dunedaq::snbmodules
 
 #endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILEREADERBASE_HPP_

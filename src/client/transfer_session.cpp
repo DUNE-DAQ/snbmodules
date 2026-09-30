@@ -29,7 +29,7 @@ TransferSession::TransferSession(GroupMetadata transfer_options,
   , m_type(type)
   , m_session_id(std::move(id))
   , m_ip(ip)
-  , m_transfer_options(std::move(transfer_options))
+  , m_transfer_options(transfer_options)
   ,
   //   m_threads(std::vector<pid_t>()),
   m_work_dir(std::move(work_dir))
@@ -52,9 +52,10 @@ TransferSession::TransferSession(GroupMetadata transfer_options,
       // Generate torrent files and magnet links
       if (type == e_session_type::Uploader) {
         TLOG() << "Generating torrent files...";
+        // NOLINTNEXTLINE(runtime/rtti)
         dynamic_cast<TransferInterfaceBittorrent&>(*m_transfer_interface).generate_torrents_files(m_work_dir, "");
 
-        for (auto f_meta : m_transfer_options.get_transfers_meta()) {
+        for (auto const& f_meta : m_transfer_options.get_transfers_meta()) {
           TLOG() << "Writing magnet link data into transfer Metadata "
                  << get_work_dir().append(f_meta->get_file_name() + ".torrent");
           lt::error_code ec;
@@ -121,7 +122,7 @@ bool
 TransferSession::action_on_receive_notification(NotificationData notif)
 {
   (void)notif;
-  // TODO : now in client
+  // now in client
   return true;
 }
 
@@ -150,7 +151,7 @@ TransferSession::update_metadatas_to_bookkeeper()
                                          get_transfer_options().export_to_string());
   }
 
-  for (std::shared_ptr<TransferMetadata> f_meta : m_transfer_options.get_transfers_meta()) {
+  for (std::shared_ptr<TransferMetadata> const& f_meta : m_transfer_options.get_transfers_meta()) {
     result = result && update_metadata_to_bookkeeper(*f_meta);
   }
 
@@ -394,7 +395,7 @@ TransferSession::pause_all()
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   bool result = true;
-  for (auto file : m_transfer_options.get_transfers_meta()) {
+  for (auto const& file : m_transfer_options.get_transfers_meta()) {
     result = result && pause_file(*file, true);
   }
 
@@ -406,7 +407,7 @@ bool
 TransferSession::resume_all()
 {
   bool result = true;
-  for (auto file : m_transfer_options.get_transfers_meta()) {
+  for (auto const& file : m_transfer_options.get_transfers_meta()) {
     result = result && resume_file(*file, true);
   }
 
@@ -422,7 +423,7 @@ bool
 TransferSession::cancel_all()
 {
   bool result = true;
-  for (auto file : m_transfer_options.get_transfers_meta()) {
+  for (auto const& file : m_transfer_options.get_transfers_meta()) {
     result = result && cancel_file(*file, true);
   }
 
@@ -440,7 +441,7 @@ TransferSession::download_all(const std::filesystem::path& dest)
   }
 
   bool result = true;
-  for (auto file : m_transfer_options.get_transfers_meta()) {
+  for (auto const& file : m_transfer_options.get_transfers_meta()) {
     result = result && download_file(*file, dest, true);
   }
   update_metadatas_to_bookkeeper();
@@ -456,7 +457,7 @@ TransferSession::upload_all()
   }
 
   bool result = true;
-  for (auto file : m_transfer_options.get_transfers_meta()) {
+  for (auto const& file : m_transfer_options.get_transfers_meta()) {
     result = result && upload_file(*file, true);
   }
   send_notification_to_targets(notification_type::e_notification_type::START_TRANSFER);

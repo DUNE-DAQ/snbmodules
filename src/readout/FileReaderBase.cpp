@@ -1,10 +1,26 @@
+/**
+ * @file FileReaderBase.cpp Generate payloads from input file
+ * Generates user payloads at a given rate, from raw binary data files.
+ * This implementation is purely software based, no I/O devices and tools
+ * are needed to use this module.
+ *
+ *
+ * This is part of the DUNE DAQ , copyright 2020.
+ * Licensing/copyright details are in the COPYING file that you should have
+ * received with this code.
+ */
+
+#include "snbmodules/readout/FileReaderBase.hpp"
 
 #include "appmodel/DataMoveCallbackConf.hpp"
 #include "datahandlinglibs/DataHandlingIssues.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 
-namespace dunedaq {
-namespace snbmodules {
+#include <map>
+#include <memory>
+#include <string>
+
+namespace dunedaq::snbmodules {
 
 FileReaderBase::FileReaderBase(const std::string& name)
   : m_configured(false)
@@ -56,7 +72,7 @@ FileReaderBase::do_conf(const appfwk::DAQModule::CommandData_t& /*args*/)
   } else {
     auto cfg = m_cfg->get_dal<appmodel::DataReaderModule>(get_fcr_name());
 
-    std::map<uint32_t, const confmodel::DetectorStream*> streams;
+    std::map<uint32_t, const confmodel::DetectorStream*> streams; // NOLINT(build/unsigned)
     for (const auto& det_connections : cfg->get_connections()) {
 
       for (const auto& stream : det_connections->streams()) {
@@ -137,5 +153,4 @@ FileReaderBase::do_stop(const appfwk::DAQModule::CommandData_t& args)
     << get_fcr_name() << ": Exiting do_stop() method";
 }
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules

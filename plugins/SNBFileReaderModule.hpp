@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef FDREADOUTMODULES_PLUGINS_FDFAKECARDREADER_HPP_
-#define FDREADOUTMODULES_PLUGINS_FDFAKECARDREADER_HPP_
+#ifndef SNBMODULES_PLUGINS_SNBFILEREADERMODULE_HPP_
+#define SNBMODULES_PLUGINS_SNBFILEREADERMODULE_HPP_
 
 // #include "appfwk/cmd/Nljs.hpp"
 // #include "appfwk/app/Nljs.hpp"
@@ -18,10 +18,10 @@
 #include "appmodel/DataMoveCallbackConf.hpp"
 #include "snbmodules/readout/FileReaderBase.hpp"
 
+#include <memory>
 #include <string>
 
-namespace dunedaq {
-namespace fdreadoutmodules {
+namespace dunedaq::snbmodules {
 
 class SNBFileReaderModule
   : public dunedaq::appfwk::DAQModule
@@ -47,7 +47,6 @@ public:
                                                                         std::atomic<bool>& run_marker) override;
 };
 
-} // namespace fdreadoutmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
-#endif // FDREADOUTMODULES_PLUGINS_FDFAKECARDREADER_HPP_
+#endif // SNBMODULES_PLUGINS_SNBFILEREADERMODULE_HPP_

@@ -9,6 +9,7 @@
 #ifndef SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_
 #define SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_
 
+#include "appfwk/DAQModule.hpp"
 #include "appmodel/DataMoveCallbackConf.hpp"
 #include "appmodel/SNBFileSourceParameters.hpp"
 #include "confmodel/DetectorStream.hpp"
@@ -19,8 +20,7 @@
 #include <string>
 #include <thread>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 class FileSourceConcept : public opmonlib::MonitorableObject
 {
@@ -43,7 +43,6 @@ public:
 private:
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 #endif // SNBMODULES_INCLUDE_SNBMODULES_READOUT_FILESOURCECONCEPT_HPP_

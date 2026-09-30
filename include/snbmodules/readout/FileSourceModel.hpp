@@ -34,11 +34,10 @@
 #include <utility>
 #include <vector>
 
-using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;
-using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
+using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;  // NOLINT
+using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS; // NOLINT
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class ReadoutType>
 class FileSourceModel : public FileSourceConcept
@@ -55,10 +54,11 @@ public:
   }
 
   // void init(const appfwk::DAQModule::CommandData_t& /*args*/) {}
-  void set_sender(const appmodel::DataMoveCallbackConf* sink);
+  void set_sender(const appmodel::DataMoveCallbackConf* sink) override;
 
-  void conf(const confmodel::DetectorStream* stream_conf, const appmodel::SNBFileSourceParameters* file_params);
-  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/)
+  void conf(const confmodel::DetectorStream* stream_conf,
+            const appmodel::SNBFileSourceParameters* file_params) override;
+  void scrap(const appfwk::DAQModule::CommandData_t& /*args*/) override
   {
     if (m_file_reader != nullptr) {
       m_file_reader->close();
@@ -68,8 +68,8 @@ public:
   }
   bool is_configured() override { return m_is_configured; }
 
-  void start(const appfwk::DAQModule::CommandData_t& /*args*/);
-  void stop(const appfwk::DAQModule::CommandData_t& /*args*/);
+  void start(const appfwk::DAQModule::CommandData_t& /*args*/) override;
+  void stop(const appfwk::DAQModule::CommandData_t& /*args*/) override;
   //  void get_info(opmonlib::InfoCollector& ci, int /*level*/);
 
 protected:
@@ -116,8 +116,7 @@ private:
   utilities::ReusableThread m_producer_thread;
 };
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 // Declarations
 #include "detail/FileSourceModel.hxx"

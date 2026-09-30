@@ -10,7 +10,7 @@ daq_setup_environment()
 # Boost unit_test_framework: for the unit tests
 # Boost program_options: to allow command line options with descriptions/default values
 
-find_package(ers REQUIRED)     
+find_package(ers REQUIRED)
 find_package(TRACE REQUIRED)
 find_package(Boost COMPONENTS unit_test_framework program_options iostreams REQUIRED)
 find_package(iomanager REQUIRED)
@@ -115,7 +115,7 @@ list(TRANSFORM includes_common PREPEND common/)
 # Note that when the ers library is linked in, it uses a "::" because
 # it's in an external package, not a local CMake target. The semantics
 # are <namespace>::<shared library / executable>
-daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} LINK_LIBRARIES ${linked_libraries})
+daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} readout/FileReaderBase.cpp LINK_LIBRARIES ${linked_libraries})
 
 ##############################################################################
 # Plugins
