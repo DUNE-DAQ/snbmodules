@@ -12,10 +12,10 @@
 
 #include "datahandlinglibs/RawDataHandlerBase.hpp"
 
+#include <memory>
 #include <string>
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 class SNBDataHandlerModule
   : public dunedaq::appfwk::DAQModule
@@ -45,7 +45,6 @@ protected:
   void generate_opmon_data() override;
 };
 
-} // namespace fdreadoutmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules
 
 #endif // SNBMODULES_PLUGINS_SNBDATAHANDLERMODULE_HPP_

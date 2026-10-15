@@ -6,6 +6,9 @@
  * received with this code.
  */
 
+// TODO: Eric Flumerfelt <eflumerf@github.com> Sep-30-2026: Re-enable test applications
+// NOLINTBEGIN
+
 #include "snbmodules/ip_format.hpp"
 #include "snbmodules/transfer_client.hpp"
 
@@ -39,3 +42,5 @@ main(int argc, char* argv[])
 
   return 0;
 }
+
+// NOLINTEND

@@ -8,6 +8,7 @@
 
 #include "snbmodules/bookkeeper.hpp"
 
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
@@ -143,7 +144,7 @@ Bookkeeper::input_action(char input)
       TLOG() << "Choose file to transmit (q when finished)";
       std::set<std::shared_ptr<TransferMetadata>> choosen_files;
       while (true) {
-        uint64_t initial_size = choosen_files.size();
+        uint64_t initial_size = choosen_files.size(); // NOLINT(build/unsigned)
         std::string file;
         std::cin >> file;
         if (file == "q") {
@@ -154,7 +155,7 @@ Bookkeeper::input_action(char input)
           // Check input
           auto& list = get_transfers().at(client);
           bool found = false;
-          for (std::shared_ptr<TransferMetadata> filemeta : list) {
+          for (std::shared_ptr<TransferMetadata> const& filemeta : list) {
             if (filemeta->get_file_name() == file) {
               choosen_files.emplace(filemeta);
               found = true;
@@ -214,7 +215,7 @@ Bookkeeper::input_action(char input)
       TLOG() << "Unknown command";
       break;
   }
-}
+} // NOLINT(readability/fn_size)
 
 void
 Bookkeeper::start_transfers(const std::string& transfer_id)
@@ -245,7 +246,7 @@ Bookkeeper::do_work(std::atomic<bool>& running_flag)
   }
   TLOG() << "JAB " << __LINE__;
 
-  auto time_point = std::chrono::high_resolution_clock::now();
+  auto time_point = std::chrono::steady_clock::now();
 
   while (running_flag.load()) {
     TLOG() << "JAB " << __LINE__;
@@ -263,9 +264,9 @@ Bookkeeper::do_work(std::atomic<bool>& running_flag)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Auto update metadata every 2 seconds
-    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - time_point)
-          .count() >= m_refresh_rate) {
-      time_point = std::chrono::high_resolution_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - time_point).count() >=
+        m_refresh_rate) {
+      time_point = std::chrono::steady_clock::now();
       request_update_metadata();
       display_information();
     }
@@ -275,7 +276,7 @@ Bookkeeper::do_work(std::atomic<bool>& running_flag)
 bool
 Bookkeeper::start()
 {
-  auto time_point = std::chrono::high_resolution_clock::now();
+  auto time_point = std::chrono::steady_clock::now();
 
   // Just one request on startup, after that the clients will have to send by themself
   for (const std::string& client : get_clients_conn()) {
@@ -307,9 +308,8 @@ Bookkeeper::start()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Auto update metadata every 2 seconds
-    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - time_point)
-          .count() >= 5) {
-      time_point = std::chrono::high_resolution_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - time_point).count() >= 5) {
+      time_point = std::chrono::steady_clock::now();
       request_update_metadata();
       display_information();
     }
@@ -397,7 +397,7 @@ Bookkeeper::action_on_receive_notification(NotificationData notif)
 
       // Store it
       m_clients_per_grp_transfer[group_meta.get_group_id()].insert(notif.m_source_id);
-      add_update_grp_transfer(std::move(group_meta));
+      add_update_grp_transfer(group_meta);
       break;
     }
 
@@ -418,6 +418,7 @@ Bookkeeper::display_information()
     // open file
     output = new std::ofstream();
     output_line_log = new std::ofstream();
+    // NOLINTBEGIN(runtime/rtti)
     dynamic_cast<std::ofstream*>(output)->open(m_file_log_path + get_bookkeeper_id() + ".log", std::fstream::out);
     dynamic_cast<std::ofstream*>(output_line_log)
       ->open(m_file_log_path + get_bookkeeper_id() + "_line.csv", std::fstream::app | std::fstream::out);
@@ -436,6 +437,7 @@ Bookkeeper::display_information()
 
                        << "end_time" << sep << "error" << sep << std::endl;
     }
+    // NOLINTEND(runtime/rtti)
   } else {
     output = &std::cout;
   }
@@ -515,12 +517,12 @@ Bookkeeper::display_information()
   }
 
   if (m_file_log_path != "") {
-    dynamic_cast<std::ofstream*>(output)->close();
-    dynamic_cast<std::ofstream*>(output_line_log)->close();
+    dynamic_cast<std::ofstream*>(output)->close();          // NOLINT(runtime/rtti)
+    dynamic_cast<std::ofstream*>(output_line_log)->close(); // NOLINT(runtime/rtti)
   } else {
     output->flush();
   }
-}
+} // NOLINT(readability/fn_size)
 
 void
 Bookkeeper::add_update_transfer(const std::string& client_id, const std::string& data)

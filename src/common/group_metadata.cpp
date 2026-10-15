@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -23,7 +24,7 @@ const std::string GroupMetadata::m_file_extension = ".gmetadata"; // NOLINT
 TransferMetadata&
 GroupMetadata::get_transfer_meta_from_file_path(const std::string& file_path)
 {
-  for (std::shared_ptr<TransferMetadata> meta : get_transfers_meta()) {
+  for (std::shared_ptr<TransferMetadata> const& meta : get_transfers_meta()) {
     if (meta->get_file_path() == file_path) {
       return *meta;
     }

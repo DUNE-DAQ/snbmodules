@@ -135,7 +135,7 @@ public:
         TLOG() << "CCC " << __LINE__ << " adding bookkeeper conn.uid=" << conn.uid;
         m_bookkeepers_conn.push_back(conn.uid);
       }
-    } catch (...) // Ignore if no connection found
+    } catch (...) // Ignore if no connection found NOLINT
     {
       TLOG() << "LAB " << __LINE__;
     }
@@ -147,7 +147,7 @@ public:
         TLOG() << "CCC " << __LINE__ << " adding transfer conn.uid=" << conn.uid;
         m_clients_conn.insert(conn.uid);
       }
-    } catch (...) // Ignore if no connection found
+    } catch (...) // Ignore if no connection found NOLINT
     {
       TLOG() << "LAB " << __LINE__;
     }

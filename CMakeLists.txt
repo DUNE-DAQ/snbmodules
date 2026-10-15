@@ -115,7 +115,7 @@ list(TRANSFORM includes_common PREPEND common/)
 # Note that when the ers library is linked in, it uses a "::" because
 # it's in an external package, not a local CMake target. The semantics
 # are <namespace>::<shared library / executable>
-daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} LINK_LIBRARIES ${linked_libraries})
+daq_add_library(${sources_client} ${sources_interface} ${sources_bookkeeper} ${sources_common} readout/FileReaderBase.cpp LINK_LIBRARIES ${linked_libraries})
 
 ##############################################################################
 # Plugins

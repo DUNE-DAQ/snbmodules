@@ -88,11 +88,11 @@ public:
     char* next_token = nullptr;
 
     char* ip_char = new char[ip.length() + 1];
-    strcpy(ip_char, ip.c_str());
+    strcpy(ip_char, ip.c_str()); // NOLINT
 
     char* token = strtok_s(ip_char, ":", &next_token);
     while (token != nullptr) {
-      ip_port_pair.emplace_back(std::string(token));
+      ip_port_pair.emplace_back(token);
       token = strtok_s(nullptr, ":", &next_token);
     }
 
