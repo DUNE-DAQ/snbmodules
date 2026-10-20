@@ -147,9 +147,6 @@ public:
   // Implementation of default request handling. (boost::asio post to a thread pool)
   void issue_request(dfmessages::DataRequest datarequest, bool is_retry = false) final;
 
-  // Opmon get_info implementation
-  // void get_info(opmonlib::InfoCollector& ci, int /*level*/) ofinalverride;
-
   virtual dunedaq::daqdataformats::timestamp_t get_cutoff_timestamp() { return 0; }
   virtual bool supports_cutoff_timestamp() { return false; }
 
