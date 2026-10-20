@@ -150,7 +150,7 @@ TransferClient::create_new_transfer(const std::string& transfer_id,
   }
 
   // Create local session, can take time depending on protocol
-  auto& s = create_session(std::move(group_transfer),
+  auto& s = create_session(group_transfer,
                            e_session_type::Uploader,
                            session_name,
                            get_listening_dir().append(transfer_id),
@@ -168,7 +168,7 @@ TransferClient::create_new_transfer(const std::string& transfer_id,
                       s.get_transfer_options().export_to_string());
 
     // Send transfer metadata
-    for (auto file : s.get_transfer_options().get_transfers_meta()) {
+    for (auto const& file : s.get_transfer_options().get_transfers_meta()) {
       send_notification(notification_type::e_notification_type::TRANSFER_METADATA,
                         get_client_id(),
                         new_session_name,
@@ -248,7 +248,7 @@ TransferClient::get_session(std::string transfer_id)
   return nullptr;
 }
 
-// TODO ip useless ?
+// ip useless ?
 TransferSession&
 TransferClient::create_session(GroupMetadata transfer_options,
                                e_session_type type,
@@ -261,8 +261,7 @@ TransferClient::create_session(GroupMetadata transfer_options,
     ip = get_ip();
   }
 
-  TransferSession new_session(
-    std::move(transfer_options), type, id, ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
+  TransferSession new_session(transfer_options, type, id, ip, work_dir, get_bookkeepers_conn(), get_clients_conn());
 
   m_sessions.emplace_back(std::move(new_session));
   TLOG() << "debug : session created " << TransferSession::session_type_to_string(type);
@@ -448,7 +447,7 @@ TransferClient::action_on_receive_notification(NotificationData notif)
       ers::warning(NotHandledNotificationError(ERS_HERE, get_client_id(), notif.m_source_id, notif.m_notification));
   }
   return true;
-}
+} // NOLINT(readability/fn_size)
 
 // TransferSession &TransferClient::add_session(TransferSession session)
 // {

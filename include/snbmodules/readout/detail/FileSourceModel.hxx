@@ -4,14 +4,15 @@
 #include "datahandlinglibs/DataMoveCallbackRegistry.hpp"
 #include "datahandlinglibs/ReadoutLogging.hpp"
 
+// NOLINTBEGIN
 using dunedaq::datahandlinglibs::CannotWriteToQueue;
 using dunedaq::datahandlinglibs::ConfigurationError;
 using dunedaq::datahandlinglibs::logging::TLVL_BOOKKEEPING;
 using dunedaq::datahandlinglibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::datahandlinglibs::logging::TLVL_WORK_STEPS;
+// NOLINTEND
 
-namespace dunedaq {
-namespace snbmodules {
+namespace dunedaq::snbmodules {
 
 template<class ReadoutType>
 void
@@ -149,5 +150,4 @@ FileSourceModel<ReadoutType>::run_produce()
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_sourceid.to_string() << " finished";
 }
 
-} // namespace snbmodules
-} // namespace dunedaq
+} // namespace dunedaq::snbmodules

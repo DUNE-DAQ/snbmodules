@@ -22,10 +22,12 @@
 #include <filesystem>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <unistd.h>
 #include <utility>
+#include <vector>
 
 namespace dunedaq::snbmodules {
 /// @brief TransferClient class, represent a client that can create session and communicate with Bookkeepers.

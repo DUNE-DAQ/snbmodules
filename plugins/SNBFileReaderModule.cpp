@@ -47,7 +47,7 @@ DUNE_DAQ_TYPESTRING(dunedaq::fdreadoutlibs::types::TDEEthTypeAdapter, "TDEEthFra
 DUNE_DAQ_TYPESTRING(dunedaq::fdreadoutlibs::types::CRTBernTypeAdapter, "CRTBernFrame")
 DUNE_DAQ_TYPESTRING(dunedaq::fdreadoutlibs::types::CRTGrenobleTypeAdapter, "CRTGrenobleFrame")
 
-namespace fdreadoutmodules {
+namespace snbmodules {
 
 SNBFileReaderModule::SNBFileReaderModule(const std::string& name)
   : DAQModule(name)
@@ -90,7 +90,7 @@ SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf
   static constexpr double crtbern_rate_khz = 100;
   static constexpr double crtgrenoble_rate_khz = 100;
 
-  std::string raw_dt = cb_conf->get_data_type();
+  std::string const& raw_dt = cb_conf->get_data_type();
   TLOG() << "Choosing specialization for SourceEmulator with raw_input" << " [uid:" << cb_conf->UID()
          << " , data_type:" << raw_dt << ']';
 
@@ -153,7 +153,7 @@ SNBFileReaderModule::create_source_emulator(const appmodel::DataMoveCallbackConf
   return nullptr;
 }
 
-} // namespace fdreadoutmodules
+} // namespace snbmodules
 } // namespace dunedaq
 
-DEFINE_DUNE_DAQ_MODULE(dunedaq::fdreadoutmodules::SNBFileReaderModule)
+DEFINE_DUNE_DAQ_MODULE(dunedaq::snbmodules::SNBFileReaderModule)

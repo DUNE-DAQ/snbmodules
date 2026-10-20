@@ -184,7 +184,7 @@ SNBDataHandlerModule::create_readout(const appmodel::DataHandlerModule* modconf,
   }
 
   return nullptr;
-}
+} // NOLINT(readability/fn_size)
 
 } // namespace snbmodules
 } // namespace dunedaq

@@ -78,7 +78,7 @@ try {
       for (const auto& h : handles) {
         h.save_resume_data(lt::torrent_handle::only_if_modified | lt::torrent_handle::save_info_dict);
       }
-      m_done = true;
+      m_done = true; // NOLINT
       goto done;
     }
 
@@ -209,7 +209,7 @@ try {
           continue;
         }
 
-        for (uint64_t i = 0; i < st->status.size(); i++) {
+        for (uint64_t i = 0; i < st->status.size(); i++) { // NOLINT(build/unsigned)
           lt::torrent_status const& s = st->status[i];
 
           if (m_filename_to_metadata[s.name]->get_status() != status_type::e_status::PAUSED) {
@@ -386,9 +386,9 @@ done:
   }
   return;
 } catch (std::exception& e) {
-  // TODO: handle error
-  std::cerr << "Error: " << e.what() << std::endl;
-}
+  // handle error
+  TLOG(TLVL_ERROR) << "Error: " << e.what();
+} // NOLINT(readability/fn_size)
 
 bool
 TransferInterfaceBittorrent::add_magnet(lt::string_view uri, const std::filesystem::path& dest)
@@ -694,7 +694,7 @@ TransferInterfaceBittorrent::set_settings(const IPFormat& listen_interface, cons
   }
 
   return sp;
-}
+} // NOLINT(readability/fn_size)
 
 std::vector<char>
 TransferInterfaceBittorrent::load_file(std::string const& filename)
@@ -795,7 +795,7 @@ try {
 
   lt::add_files(fs, full_path.string(), file_filter, flags);
   if (fs.num_files() == 0) {
-    std::cerr << "no files specified.\n";
+    TLOG(TLVL_ERROR) << "no files specified.";
     return true;
   }
 
@@ -814,9 +814,8 @@ try {
 
   auto const num = t.num_pieces();
   lt::set_piece_hashes(
-    t, branch_path(full_path), [num](lt::piece_index_t const p) { std::cerr << "\r" << p << "/" << num; });
+    t, branch_path(full_path), [num](lt::piece_index_t const p) { TLOG(TLVL_ERROR) << p << "/" << num; });
 
-  std::cerr << "\n";
   t.set_creator(creator_str.c_str());
   if (!comment_str.empty()) {
     t.set_comment(comment_str.c_str());
@@ -843,7 +842,7 @@ try {
 
   return true;
 } catch (std::exception& e) {
-  std::cerr << "ERROR: " << e.what() << "\n";
+  TLOG(TLVL_ERROR) << "ERROR: " << e.what();
   return false;
 }
 
@@ -923,7 +922,7 @@ TransferInterfaceBittorrent::resume_file(TransferMetadata& f_meta)
       m_paused--;
       h.resume();
       // lt::error_code ec;
-      // TODO
+      //
       // h.connect_peer(lt::tcp::endpoint(boost::asio::ip::make_address("192.168.0.106", ec), std::uint16_t(5010)));
       // if (!peer.empty())
       // {
@@ -994,7 +993,7 @@ TransferInterfaceBittorrent::cancel_file(TransferMetadata& f_meta)
   return true;
 }
 
-// TODO necessary ?
+// necessary ?
 bool
 TransferInterfaceBittorrent::hash_file(TransferMetadata& f_meta)
 {
