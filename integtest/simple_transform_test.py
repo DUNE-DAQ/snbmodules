@@ -10,7 +10,7 @@ import integrationtest.log_file_checks as log_file_checks
 import integrationtest.data_classes as data_classes
 import integrationtest.utility_functions as utility_functions
 from integrationtest.verbosity_helper import IntegtestVerbosityLevels
-from hdf5libs import HDF5RawDataFile
+import rawdatafilelibs
 
 import functools
 print = functools.partial(print, flush=True)  # always flush print() output
@@ -242,7 +242,7 @@ def test_data_files(run_dunerc):
                 data_file, nontrig_fragment_check_list[kdx]
             )
         if "WithSequences" in current_test:
-            h5_file = HDF5RawDataFile(data_file.name)
+            h5_file = rawdatafilelibs.open(data_file.name)
             records = h5_file.get_all_record_ids()
             total_record_count += len(records)
             for rec in records:
